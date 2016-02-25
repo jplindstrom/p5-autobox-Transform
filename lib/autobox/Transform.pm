@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use parent qw/autobox/;
 
+our $VERSION = "1.000";
+
 =head1 NAME
 
 autobox::Transform - Autobox methods to transform Arrays and Hashes

@@ -1,7 +1,7 @@
 {
-   "abstract" : "It's new $module",
+   "abstract" : "Autobox methods to transform Arrays and Hashes",
    "author" : [
-      "Johan Lindstrom <buzzwordninja [ AT ] googlemail.com>"
+      "Johan Lindstrom, C<< <johanl [AT] cpan.org> >>"
    ],
    "dynamic_config" : 0,
    "generated_by" : "Minilla/v3.0.1, CPAN::Meta::Converter version 2.150005",
@@ -52,7 +52,10 @@
       }
    },
    "release_status" : "unstable",
-   "version" : "0.01",
+   "version" : "1.000",
    "x_authority" : "cpan:JOHANL",
+   "x_contributors" : [
+      "Johan Lindstrom <jpl@nospam>"
+   ],
    "x_serialization_backend" : "JSON::PP version 2.27300"
 }
