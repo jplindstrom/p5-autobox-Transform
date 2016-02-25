@@ -52,6 +52,17 @@
       }
    },
    "release_status" : "unstable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/jplindstrom/p5-autobox-Transform/issues"
+      },
+      "homepage" : "https://github.com/jplindstrom/p5-autobox-Transform",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/jplindstrom/p5-autobox-Transform.git",
+         "web" : "https://github.com/jplindstrom/p5-autobox-Transform"
+      }
+   },
    "version" : "1.000",
    "x_authority" : "cpan:JOHANL",
    "x_contributors" : [
