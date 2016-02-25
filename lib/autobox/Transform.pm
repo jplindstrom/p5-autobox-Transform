@@ -68,6 +68,9 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
 =head1 DESCRIPTION
 
+Note: This module supercedes autobox::Array::Transform which was
+unfortunately named.
+
 High level autobox methods you can call on arrays, arrayrefs, hashes
 and hashrefs e.g. map_by(), grep_by(), group_by()
 
