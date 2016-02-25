@@ -33,7 +33,7 @@ it under the same terms as Perl itself.
 
 =head1 AUTHOR
 
-Johan Lindstrom E<lt>jpl@nospamE<gt>
+Johan Lindstrom E<lt>buzzwordninja [ AT ] googlemail.comE<gt>
 
 =cut
 

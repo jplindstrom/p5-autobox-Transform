@@ -19,4 +19,4 @@ it under the same terms as Perl itself.
 
 # AUTHOR
 
-Johan Lindstrom &lt;jpl@nospam>
+Johan Lindstrom &lt;buzzwordninja [ AT ] googlemail.com>

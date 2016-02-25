@@ -1,7 +1,7 @@
 {
    "abstract" : "It's new $module",
    "author" : [
-      "Johan Lindstrom <jpl@nospam>"
+      "Johan Lindstrom <buzzwordninja [ AT ] googlemail.com>"
    ],
    "dynamic_config" : 0,
    "generated_by" : "Minilla/v3.0.1, CPAN::Meta::Converter version 2.150005",
