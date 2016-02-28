@@ -142,7 +142,7 @@ sub import {
 sub throw {
     my ($error) = @_;
     ###JPL: remove lib
-    $error =~ s/ at [\\\/\w ]*?lib.autobox.Transform\.pm line \d+\.\n?$//;
+    $error =~ s/ at [\\\/\w ]*?\bautobox.Transform\.pm line \d+\.\n?$//;
     local $Carp::CarpLevel = 1;
     croak($error);
 }
