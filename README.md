@@ -31,20 +31,28 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
     ### group_by
 
-    $books->group_by("genre"),
+    $books->group_by("title"),
+    # {
+    #     "Leviathan Wakes"       => $books->[0],
+    #     "Caliban's War"         => $books->[1],
+    #     "The Tree-Body Problem" => $books->[2],
+    #     "The Name of the Wind"  => $books->[3],
+    # },
+
+    $authors->group_by(publisher_affiliation => ["with"]),
+    # {
+    #     'James A. Corey with Orbit'     => $authors->[0],
+    #     'Cixin Liu with Head of Zeus'   => $authors->[1],
+    #     'Patrick Rothfuss with Gollanz' => $authors->[2],
+    # },
+
+    $books->group_by_count("genre"),
     # {
     #     "Sci-fi"  => 3,
     #     "Fantasy" => 1,
     # },
 
-    $authors->group_by(publisher_affiliation => ["with"]),
-    # {
-    #     'James A. Corey with Orbit'     => 1,
-    #     'Cixin Liu with Head of Zeus'   => 1,
-    #     'Patrick Rothfuss with Gollanz' => 1,
-    # },
-
-    my $genre_books = $books->group_by( "genre", undef, []->gather_sub );
+    my $genre_books = $books->group_by_array("genre");
     # {
     #     "Sci-fi"  => [ $sf_book_1, $sf_book_2, $sf_book_3 ],
     #     "Fantasy" => [ $fantasy_book_1 ],
@@ -194,22 +202,6 @@ where:
 - $current value is the current hash value for this key (or undef if the first one).
 - $object is the current item in the list. The current $\_ is also set to this.
 - $key is the key returned by $object->$method(@$args)
-
-### \[\]->gather\_sub
-
-This is a utility method to collect all the objects into an array for
-the hash values. Example:
-
-    my $genre_books = $books->group_by( "genre", undef, []->gather_sub );
-    # keys: genre string
-    # values: arrayref with the Book objects in $books for each genre string
-
-Note: the undef is to avoid calling "genre" with any arguments.
-
-Note: the slightly weird way of calling \[\]->gather\_sub is just a
-sneaky way to call the gather\_sub in the autobox::Transform
-namespace without exporting anything (the empty array is not actually
-used for anything).
 
 ## flat() : @array | @$array
 

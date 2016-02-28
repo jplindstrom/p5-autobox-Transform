@@ -19,27 +19,54 @@ my $authors    = $literature->{authors};
 
 subtest group_by => sub {
     note "ArrayRef call, list context result";
+
+    my $book_object = {
+        "Leviathan Wakes"       => $books->[0],
+        "Caliban's War"         => $books->[1],
+        "The Tree-Body Problem" => $books->[2],
+        "The Name of the Wind"  => $books->[3],
+    };
     eq_or_diff(
-        { $books->group_by("genre") },
-        {
-            "Sci-fi"  => 3,
-            "Fantasy" => 1,
-        },
+        { $books->group_by("title") },
+        $book_object,
         "Group by simple method call works",
     );
 
     note "list call, list context result";
     my @books = @$books;
-    my $genre_exists = @books->group_by("genre");
+    my $genre_exists = @books->group_by("title");
     eq_or_diff(
         $genre_exists,
-        {
-            "Sci-fi"  => 3,
-            "Fantasy" => 1,
-        },
+        $book_object,
         "Group by simple method call works",
     );
 };
+
+subtest group_by_count => sub {
+    note "ArrayRef call, list context result";
+
+    my $genre_count = {
+        "Sci-fi"  => 3,
+        "Fantasy" => 1,
+    };
+
+    eq_or_diff(
+        { $books->group_by_count("genre") },
+        $genre_count,
+        "Group by simple method call works",
+    );
+
+    note "list call, list context result";
+    my @books = @$books;
+    my $genre_exists = @books->group_by_count("genre");
+    eq_or_diff(
+        $genre_exists,
+        $genre_count,
+        "Group by simple method call works",
+    );
+};
+
+
 
 subtest group_by__missing_method => sub {
     throws_ok(
@@ -60,7 +87,7 @@ subtest group_by__not_a_method => sub {
 
 subtest group_by__args => sub {
     eq_or_diff(
-        { $authors->group_by(publisher_affiliation => ["with"]) },
+        { $authors->group_by_count(publisher_affiliation => ["with"]) },
         {
             'James A. Corey with Orbit'     => 1,
             'Cixin Liu with Head of Zeus'   => 1,
@@ -89,8 +116,8 @@ subtest group_by__sub_ref => sub {
     );
 };
 
-subtest group_by__gather_sub => sub {
-    my $genre_books = $books->group_by( "genre", undef, []->gather_sub );
+subtest group_by_array => sub {
+    my $genre_books = $books->group_by_array("genre");
     my $genre_book_titles = {
         map {
             $_ => $genre_books->{$_}->map_by("title")->sort->join(", ");
@@ -104,7 +131,7 @@ subtest group_by__gather_sub => sub {
             "Sci-fi"  => "Caliban's War, Leviathan Wakes, The Tree-Body Problem",
             "Fantasy" => "The Name of the Wind",
         },
-        "group_by with gather_sub work",
+        "group_by_array work",
     );
 };
 

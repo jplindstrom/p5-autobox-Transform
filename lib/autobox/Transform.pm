@@ -39,20 +39,28 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
     ### group_by
 
-    $books->group_by("genre"),
+    $books->group_by("title"),
+    # {
+    #     "Leviathan Wakes"       => $books->[0],
+    #     "Caliban's War"         => $books->[1],
+    #     "The Tree-Body Problem" => $books->[2],
+    #     "The Name of the Wind"  => $books->[3],
+    # },
+
+    $authors->group_by(publisher_affiliation => ["with"]),
+    # {
+    #     'James A. Corey with Orbit'     => $authors->[0],
+    #     'Cixin Liu with Head of Zeus'   => $authors->[1],
+    #     'Patrick Rothfuss with Gollanz' => $authors->[2],
+    # },
+
+    $books->group_by_count("genre"),
     # {
     #     "Sci-fi"  => 3,
     #     "Fantasy" => 1,
     # },
 
-    $authors->group_by(publisher_affiliation => ["with"]),
-    # {
-    #     'James A. Corey with Orbit'     => 1,
-    #     'Cixin Liu with Head of Zeus'   => 1,
-    #     'Patrick Rothfuss with Gollanz' => 1,
-    # },
-
-    my $genre_books = $books->group_by( "genre", undef, []->gather_sub );
+    my $genre_books = $books->group_by_array("genre");
     # {
     #     "Sci-fi"  => [ $sf_book_1, $sf_book_2, $sf_book_3 ],
     #     "Fantasy" => [ $fantasy_book_1 ],
@@ -62,7 +70,6 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     #### flat
     my $prolific_author_books = [ map { @{$_->books} } @$authors ]
     my $prolific_author_books = $authors->map_by("books")->flat
-
 
 
 
@@ -134,6 +141,7 @@ sub import {
 
 sub throw {
     my ($error) = @_;
+    ###JPL: remove lib
     $error =~ s/ at [\\\/\w ]*?lib.autobox.Transform\.pm line \d+\.\n?$//;
     local $Carp::CarpLevel = 1;
     croak($error);
@@ -309,9 +317,7 @@ sub group_by {
     ref($args) eq "ARRAY"
         or Carp::croak("group_by('$method', \$args, \$value_sub): \$args ($args) is not an array ref");
 
-    $value_sub //= sub {
-        my $count = shift // 0; return ++$count;
-    };
+    $value_sub //= sub { $_ };
     ref($value_sub) eq "CODE"
         or Carp::croak("group_by('$method', [], \$value_sub): \$value_sub ($value_sub) is not a sub ref");
 
@@ -331,35 +337,41 @@ sub group_by {
     return wantarray ? %key_value : \%key_value;
 }
 
-=head3 []->gather_sub
+sub group_by_count {
+    my $array = shift;
+    my( $method, $args ) = @_;
+    ###JPL: extract args checking
+    @_ > 0 or Carp::croak("->group_by_count() missing argument: \$method");
 
-This is a utility method to collect all the objects into an array for
-the hash values. Example:
+    $args //= [];
+    ref($args) eq "ARRAY"
+        or Carp::croak("group_by_count('$method', \$args): \$args ($args) is not an array ref");
 
-    my $genre_books = $books->group_by( "genre", undef, []->gather_sub );
-    # keys: genre string
-    # values: arrayref with the Book objects in $books for each genre string
+    my $value_sub = sub {
+        my $count = shift // 0; return ++$count;
+    };
 
-Note: the undef is to avoid calling "genre" with any arguments.
+    return group_by($array, $method, $args, $value_sub);
+}
 
-Note: the slightly weird way of calling []->gather_sub is just a
-sneaky way to call the gather_sub in the autobox::Transform
-namespace without exporting anything (the empty array is not actually
-used for anything).
+sub group_by_array {
+    my $array = shift;
+    my( $method, $args ) = @_;
+    ###JPL: extract args checking
+    @_ > 0 or Carp::croak("->group_by_array() missing argument: \$method");
 
-=cut
+    $args //= [];
+    ref($args) eq "ARRAY"
+        or Carp::croak("group_by_array('$method', \$args): \$args ($args) is not an array ref");
 
-sub gather_sub {
-    my ($original_array) = @_;
-    return sub {
+    my $value_sub = sub {
         my $array = shift // [];
         push( @$array, $_ );
         return $array;
-    }
+    };
+
+    return group_by($array, $method, $args, $value_sub);
 }
-
-
-# Hash::Transform: map_by() maps values from one thing to another
 
 
 =head2 flat() : @array | @$array
@@ -404,6 +416,10 @@ sub flat {
 # compact - without undefined
 # compactTrue - without false
 # without - grep -v value
+
+
+# Hash::Transform: map_by() maps values from one thing to another
+
 
 
 
