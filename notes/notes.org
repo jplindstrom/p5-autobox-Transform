@@ -1,0 +1,8 @@
+* Stuff
+** DONE group_by default function
+** DONE group_by_count
+** group_by_array
+** Remove special subs
+**** docs
+** Release
+** Deprecate Array::Transform, point to new
