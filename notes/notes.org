@@ -4,5 +4,6 @@
 ** group_by_array
 ** Remove special subs
 **** docs
+** TODO Fix throw, remove lib
 ** Release
 ** Deprecate Array::Transform, point to new
