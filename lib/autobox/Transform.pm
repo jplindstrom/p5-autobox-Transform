@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use parent qw/autobox/;
 
-our $VERSION = "1.000";
+our $VERSION = "1.001";
 
 =head1 NAME
 

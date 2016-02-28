@@ -170,26 +170,30 @@ Examples:
 
     my @books_to_charge_for = $books->grep_by("price_with_tax", [ $tax_pct ]);
 
-## group\_by($method, @$args = \[\], $value\_sub = count) : %key\_value | %$key\_value
+## group\_by($method, @$args = \[\], $value\_sub = object) : %key\_value | %$key\_value
 
 Call ->$method(@$args) on each object in the array (just like ->map\_by)
 and group the return values as keys in a hashref.
 
-The default $value\_sub gives the count of each value as the values of
-the hashref.
+The default $value\_sub puts the objects in the list as the hash
+values.
 
 Example:
 
-    my $genre_count = $books->group_by("genre");
+    my $title_book = $books->group_by("title");
     # {
-    #     "Sci-fi"  => 3,
-    #     "Fantasy" => 1,
+    #     "Leviathan Wakes"       => $books->[0],
+    #     "Caliban's War"         => $books->[1],
+    #     "The Tree-Body Problem" => $books->[2],
+    #     "The Name of the Wind"  => $books->[3],
     # },
 
 ### The $value\_sub
 
 This is a bit tricky to use, so the most common thing would probably
-be to use canned utility subs which do common things (see below).
+be to use one of the more specific group\_by-methods which do common
+things (see below). It should be capable enough to achieve what you
+need though, so here's how it works:
 
 The hash key is whatever is returned from $object->$method(@$args).
 
@@ -202,6 +206,38 @@ where:
 - $current value is the current hash value for this key (or undef if the first one).
 - $object is the current item in the list. The current $\_ is also set to this.
 - $key is the key returned by $object->$method(@$args)
+
+## group\_by\_count($method, @$args = \[\]) : %key\_count | %$key\_count
+
+Just like group\_by, but the hash values are the the number of
+instances each $method value occurs in the list.
+
+Example:
+
+    $books->group_by_count("genre"),
+    # {
+    #     "Sci-fi"  => 3,
+    #     "Fantasy" => 1,
+    # },
+
+$book->genre() returns the genre string. There are three books counted
+for the "Sci-fi" key.
+
+## group\_by\_array($method, @$args = \[\]) : %key\_objects | %$key\_objects
+
+Just like group\_by, but the hash values are arrayrefs containing the
+objects which has each $method value.
+
+Example:
+
+    my $genre_books = $books->group_by_array("genre");
+    # {
+    #     "Sci-fi"  => [ $sf_book_1, $sf_book_2, $sf_book_3 ],
+    #     "Fantasy" => [ $fantasy_book_1 ],
+    # },
+
+$book->genre() returns the genre string. The three Sci-fi book objects
+are collected under the Sci-fi key.
 
 ## flat() : @array | @$array
 
