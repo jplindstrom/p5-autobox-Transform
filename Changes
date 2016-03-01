@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+1.002 2016-03-01T14:00:06Z
+
  * Fix #1: Add cpanfile deps
 
 
