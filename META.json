@@ -4,7 +4,7 @@
       "Johan Lindstrom, C<< <johanl [AT] cpan.org> >>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.0.1, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Minilla/v3.0.1, CPAN::Meta::Converter version 2.143240",
    "license" : [
       "perl_5"
    ],
@@ -42,12 +42,19 @@
       },
       "runtime" : {
          "requires" : {
-            "perl" : "5.008001"
+            "Carp" : "0",
+            "autobox" : "0",
+            "perl" : "5.008001",
+            "true" : "0"
          }
       },
       "test" : {
          "requires" : {
-            "Test::More" : "0.98"
+            "Moo" : "0",
+            "Test::Differences" : "0",
+            "Test::Exception" : "0",
+            "Test::More" : "0.98",
+            "autobox::Core" : "0"
          }
       }
    },
@@ -66,7 +73,7 @@
    "version" : "1.001",
    "x_authority" : "cpan:JOHANL",
    "x_contributors" : [
-      "Johan Lindstrom <jpl@nospam>"
-   ],
-   "x_serialization_backend" : "JSON::PP version 2.27300"
+      "Johan Lindstrom <jpl@nospam>",
+      "Johan Lindstrom <johan.lindstrom@broadbean.com>"
+   ]
 }
