@@ -356,18 +356,21 @@ $key is the key returned by $object->$accessor(@$args)
 =cut
 
 sub __validate_group {
-    my ($array, $accessor) = @_;
+    my ($name, $array, $accessor, $args) = @_;
 
+    $accessor or Carp::croak("->$name() missing argument: \$accessor");
+
+    $args //= [];
+    ref($args) eq "ARRAY"
+        or Carp::croak("$name('$accessor', \$args, \$value_sub): \$args ($args) is not an array ref");
+
+    return $args;
 }
 
 sub group_by {
     my $array = shift;
     my( $accessor, $args, $value_sub ) = @_;
-    @_ > 0 or Carp::croak("->group_by() missing argument: \$accessor");
-
-    $args //= [];
-    ref($args) eq "ARRAY"
-        or Carp::croak("group_by('$accessor', \$args, \$value_sub): \$args ($args) is not an array ref");
+    $args = __validate_group("group_by", $array, $accessor, $args);
 
     $value_sub //= sub { $_ };
     ref($value_sub) eq "CODE"
@@ -410,12 +413,7 @@ for the "Sci-fi" key.
 sub group_by_count {
     my $array = shift;
     my( $accessor, $args ) = @_;
-    ###JPL: extract args checking
-    @_ > 0 or Carp::croak("->group_by_count() missing argument: \$accessor");
-
-    $args //= [];
-    ref($args) eq "ARRAY"
-        or Carp::croak("group_by_count('$accessor', \$args): \$args ($args) is not an array ref");
+    $args = __validate_group("group_by_count", $array, $accessor, $args);
 
     my $value_sub = sub {
         my $count = shift // 0; return ++$count;
@@ -445,12 +443,7 @@ are collected under the Sci-fi key.
 sub group_by_array {
     my $array = shift;
     my( $accessor, $args ) = @_;
-    ###JPL: extract args checking
-    @_ > 0 or Carp::croak("->group_by_array() missing argument: \$accessor");
-
-    $args //= [];
-    ref($args) eq "ARRAY"
-        or Carp::croak("group_by_array('$accessor', \$args): \$args ($args) is not an array ref");
+    $args = __validate_group("group_by_array", $array, $accessor, $args);
 
     my $value_sub = sub {
         my $array = shift // [];
