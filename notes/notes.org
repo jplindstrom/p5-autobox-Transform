@@ -3,7 +3,22 @@
 ** DONE group_by_count
 ** DONE group_by_array
 ** DONE Remove special subs
-**** docs
+**** DONE docs
 ** DONE Fix throw, remove lib
-** Release
-** Deprecate Array::Transform, point to new
+** DONE Release
+** DONE Deprecate Array::Transform, point to new
+** map_by, grep_by, group_by hash key lookup
+*** if first item is ref HASH
+** grep_by - value
+** group (group_count)
+*** group_array
+*** group_element
+** find(sub), like grep
+** find_by($method, $args, $value), like grep_by but first
+** contains value
+** compact - without undefined
+** compactTrue - without false
+** without - grep -v value
+* Hash
+** map_values
+** map_values_by() maps values from one thing to another
