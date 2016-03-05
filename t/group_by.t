@@ -71,7 +71,7 @@ subtest group_by_count__method => sub {
 subtest group_by__missing_method => sub {
     throws_ok(
         sub { $books->group_by() },
-        qr{^->group_by\(\)[ ]missing[ ]argument:[ ]\$method \s at .+? t.group_by.t }x,
+        qr{^->group_by\(\)[ ]missing[ ]argument:[ ]\$accessor \s at .+? t.group_by.t }x,
         "Missing arg croaks from the caller, not from the lib"
     )
 };

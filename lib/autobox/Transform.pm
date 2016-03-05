@@ -237,11 +237,14 @@ sub __invoke_by {
     return wantarray ? @$result : $result;
 }
 
-=head2 map_by($method, @$args?) : @array | @$array
+=head2 map_by($accessor, @$args?) : @array | @$array
 
-Call the $method on each item in the list. Like:
+Call the $accessor on each object in the list, or get the hash key
+value on each hashref in the list. Like:
 
-    map { $_->$method() }
+    map { $_->$accessor() }
+    # or
+    map { $_->{$accessor} }
 
 Examples:
 
@@ -250,12 +253,16 @@ Examples:
 
 Optionally pass in @$args in the method call. Like:
 
-    map { $_->$method(@$args) }
+    map { $_->$accessor(@$args) }
 
 Examples:
 
     my @prices_including_tax = $books->map_by("price_with_tax", [ $tax_pct ]);
     my $prices_including_tax = $books->map_by(price_with_tax => [ $tax_pct ]);
+
+Or get the hash key value. Examples:
+
+    my @review_scores = $reviews->map_by("score");
 
 =cut
 
@@ -265,11 +272,13 @@ sub map_by {
 
 
 
-=head2 grep_by($method, @$args?) : @array | @$array
+=head2 grep_by($accessor, @$args?) : @array | @$array
 
-Call the $method on each item in the list. Like:
+Call the $accessor on each object in the list, or get the hash key
+value on each hashref in the list. Like:
 
-    grep { $_->$method() }
+    grep { $_->$accessor() }
+    grep { $_->{$accessor} }
 
 Examples:
 
@@ -277,7 +286,7 @@ Examples:
 
 Optionally pass in @$args in the method call. Like:
 
-    grep { $_->$method(@$args) }
+    grep { $_->$accessor(@$args) }
 
 Examples:
 
@@ -294,10 +303,11 @@ sub grep_by {
 
 
 
-=head2 group_by($method, @$args = [], $value_sub = object) : %key_value | %$key_value
+=head2 group_by($accessor, @$args = [], $value_sub = object) : %key_value | %$key_value
 
-Call ->$method(@$args) on each object in the array (just like ->map_by)
-and group the return values as keys in a hashref.
+Call ->$accessor(@$args) on each object in the array, or get the hash
+key for each hashref in the array (just like ->map_by) and group the
+return values as keys in a hashref.
 
 The default $value_sub puts the objects in the list as the hash
 values.
@@ -319,7 +329,7 @@ be to use one of the more specific group_by-methods which do common
 things (see below). It should be capable enough to achieve what you
 need though, so here's how it works:
 
-The hash key is whatever is returned from $object->$method(@$args).
+The hash key is whatever is returned from $object->$accessor(@$args).
 
 The hash value is whatever is returned from
 
@@ -339,28 +349,33 @@ $object is the current item in the list. The current $_ is also set to this.
 
 =item
 
-$key is the key returned by $object->$method(@$args)
+$key is the key returned by $object->$accessor(@$args)
 
 =back
 
 =cut
 
+sub __validate_group {
+    my ($array, $accessor) = @_;
+
+}
+
 sub group_by {
     my $array = shift;
-    my( $method, $args, $value_sub ) = @_;
-    @_ > 0 or Carp::croak("->group_by() missing argument: \$method");
+    my( $accessor, $args, $value_sub ) = @_;
+    @_ > 0 or Carp::croak("->group_by() missing argument: \$accessor");
 
     $args //= [];
     ref($args) eq "ARRAY"
-        or Carp::croak("group_by('$method', \$args, \$value_sub): \$args ($args) is not an array ref");
+        or Carp::croak("group_by('$accessor', \$args, \$value_sub): \$args ($args) is not an array ref");
 
     $value_sub //= sub { $_ };
     ref($value_sub) eq "CODE"
-        or Carp::croak("group_by('$method', [], \$value_sub): \$value_sub ($value_sub) is not a sub ref");
+        or Carp::croak("group_by('$accessor', [], \$value_sub): \$value_sub ($value_sub) is not a sub ref");
 
     my %key_value;
     for my $object (@$array) {
-        my $key_ref = eval { [ $object->$method(@$args) ] }
+        my $key_ref = eval { [ $object->$accessor(@$args) ] }
             or autobox::Transform::throw($@);
         my $key = $key_ref->[0];
 
@@ -374,10 +389,10 @@ sub group_by {
     return wantarray ? %key_value : \%key_value;
 }
 
-=head2 group_by_count($method, @$args = []) : %key_count | %$key_count
+=head2 group_by_count($accessor, @$args = []) : %key_count | %$key_count
 
 Just like group_by, but the hash values are the the number of
-instances each $method value occurs in the list.
+instances each $accessor value occurs in the list.
 
 Example:
 
@@ -394,25 +409,25 @@ for the "Sci-fi" key.
 
 sub group_by_count {
     my $array = shift;
-    my( $method, $args ) = @_;
+    my( $accessor, $args ) = @_;
     ###JPL: extract args checking
-    @_ > 0 or Carp::croak("->group_by_count() missing argument: \$method");
+    @_ > 0 or Carp::croak("->group_by_count() missing argument: \$accessor");
 
     $args //= [];
     ref($args) eq "ARRAY"
-        or Carp::croak("group_by_count('$method', \$args): \$args ($args) is not an array ref");
+        or Carp::croak("group_by_count('$accessor', \$args): \$args ($args) is not an array ref");
 
     my $value_sub = sub {
         my $count = shift // 0; return ++$count;
     };
 
-    return group_by($array, $method, $args, $value_sub);
+    return group_by($array, $accessor, $args, $value_sub);
 }
 
-=head2 group_by_array($method, @$args = []) : %key_objects | %$key_objects
+=head2 group_by_array($accessor, @$args = []) : %key_objects | %$key_objects
 
 Just like group_by, but the hash values are arrayrefs containing the
-objects which has each $method value.
+objects which has each $accessor value.
 
 Example:
 
@@ -429,13 +444,13 @@ are collected under the Sci-fi key.
 
 sub group_by_array {
     my $array = shift;
-    my( $method, $args ) = @_;
+    my( $accessor, $args ) = @_;
     ###JPL: extract args checking
-    @_ > 0 or Carp::croak("->group_by_array() missing argument: \$method");
+    @_ > 0 or Carp::croak("->group_by_array() missing argument: \$accessor");
 
     $args //= [];
     ref($args) eq "ARRAY"
-        or Carp::croak("group_by_array('$method', \$args): \$args ($args) is not an array ref");
+        or Carp::croak("group_by_array('$accessor', \$args): \$args ($args) is not an array ref");
 
     my $value_sub = sub {
         my $array = shift // [];
@@ -443,7 +458,7 @@ sub group_by_array {
         return $array;
     };
 
-    return group_by($array, $method, $args, $value_sub);
+    return group_by($array, $accessor, $args, $value_sub);
 }
 
 
