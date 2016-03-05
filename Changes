@@ -2,6 +2,11 @@
 
 {{$NEXT}}
 
+ * map_by, grep_by, group_by can look up hash keys as well as make
+   method calls
+
+
+
 1.002 2016-03-01T14:00:06Z
 
  * Fix #1: Add cpanfile deps

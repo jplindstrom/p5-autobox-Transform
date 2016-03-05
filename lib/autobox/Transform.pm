@@ -14,7 +14,7 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
     # These are equivalent ways to transform arrays and arrayrefs
 
-    ### map_by
+    ### map_by - method call
     my @genres = map { $_->genre() } @$books;
     my @genres = $books->map_by("genre");
 
@@ -28,16 +28,24 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     my $book_order_total = $order->books
         ->map_by(price_with_tax => [$tax_pct])->sum;
 
+    ### map_by - hash key
+    my @genres = map { $_->{genre} } @$books; # $books are hashrefs
+    my @genres = $books->map_by("genre");
 
-    ### grep_by
+
+    ### grep_by - method call
     my $sold_out_books = [ grep { $_->is_sold_out } @$books ];
     my $sold_out_books = $books->grep_by("is_sold_out");
 
     my $books_in_library = [ grep { $_->is_in_library($library) } @$books ];
     my $books_in_library = $books->grep_by(is_in_library => [$library]);
 
+    ### grep_by - hash key
+    my $sold_out_books = [ grep { $_->{is_sold_out} } @$books ]; # $books are hashrefs
+    my $sold_out_books = $books->grep_by("is_sold_out");
 
-    ### group_by
+
+    ### group_by - method call
 
     $books->group_by("title"),
     # {
@@ -65,6 +73,9 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     #     "Sci-fi"  => [ $sf_book_1, $sf_book_2, $sf_book_3 ],
     #     "Fantasy" => [ $fantasy_book_1 ],
     # },
+
+    ### group_by - hash key
+    $books->group_by("title"), # $books are hashrefs
 
 
     #### flat
@@ -179,6 +190,18 @@ context. E.g.
     ),
 
 
+=head2 Transforming lists of objects vs list of hashrefs
+
+map_by, grep_by etc are called the same way regardless of whether the
+list contains objects or hashrefs. The items in the list must all be
+either objects or hashrefs.
+
+If an item is an object, the a method is called on it (possibly with
+the arguments provided).
+
+If it's a hashref, the hash key is looked up.
+
+
 
 =head1 AUTOBOX ARRAY METHODS
 
@@ -189,6 +212,10 @@ sub __invoke_by {
     my $array = shift;
     my( $method, $args ) = @_;
     @_ > 0 or Carp::croak("->${invoke}_by() missing argument: \$method");
+
+    ###JPL: check first item, or return empty list. Change $invoke
+    ###JPL: if key and $args, die
+
     $args //= [];
     ref($args) eq "ARRAY"
         or Carp::croak("${invoke}_by('$method', \$args): \$args ($args) is not an array ref");
@@ -446,20 +473,6 @@ sub flat {
     my $result = [ map { @$_ } @$array ];
     return wantarray ? @$result : $result;
 }
-
-
-
-# TODO:
-# find(sub), like grep
-# find_by($method, $args, $value), like grep_by but first
-# contains value
-# compact - without undefined
-# compactTrue - without false
-# without - grep -v value
-
-
-# Hash::Transform: map_by() maps values from one thing to another
-
 
 
 
