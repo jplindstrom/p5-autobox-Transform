@@ -90,7 +90,27 @@ Note: This module supercedes autobox::Array::Transform which was
 unfortunately named.
 
 High level autobox methods you can call on arrays, arrayrefs, hashes
-and hashrefs e.g. map_by(), grep_by(), group_by()
+and hashrefs e.g.
+
+=over 4
+
+=item
+
+$array->map_by()
+
+=item
+
+$array->grep_by()
+
+=item
+
+$array->group_by()
+
+=item
+
+$array->flat()
+
+=back
 
 
 =head2 Raison d'etre
