@@ -17,7 +17,20 @@ my $literature = Literature::literature();
 my $books      = $literature->{books};
 my $authors    = $literature->{authors};
 
-subtest map_by => sub {
+
+subtest map_by__empty => sub {
+    note "Empty arrayref with method args";
+    eq_or_diff(
+        [ []->map_by(genre => [ 34 ]) ],
+        [
+        ],
+        "Empty list gives empty list",
+    );
+};
+
+### method
+
+subtest map_by__method => sub {
     note "ArrayRef call, list context result";
     eq_or_diff(
         [ $books->map_by("genre") ],
@@ -53,7 +66,7 @@ subtest map_by__missing_method => sub {
     )
 };
 
-subtest map_by__not_a_method => sub {
+subtest map_by__method__not_a_method => sub {
     # Invalid arg, not a method
     throws_ok(
         sub { $books->map_by("not_a_method") },
@@ -62,7 +75,7 @@ subtest map_by__not_a_method => sub {
     )
 };
 
-subtest map_by__args => sub {
+subtest map_by__method__args => sub {
     eq_or_diff(
         [ $authors->map_by(publisher_affiliation => ["with"]) ],
         [
@@ -74,13 +87,16 @@ subtest map_by__args => sub {
     );
 };
 
-subtest map_by__args__invalid_type => sub {
+subtest map_by__method__args__invalid_type => sub {
     throws_ok(
         sub { $authors->map_by(publisher_affiliation => 342) },
         qr{ map_by .+? 'publisher_affiliation' .+? \$args .+? \(342\) .+? array[ ]ref .+? t.map_by.t}x,
         "map_by with argument which isn't an array ref",
     )
 };
+
+
+### hash key
 
 
 subtest examples => sub {
