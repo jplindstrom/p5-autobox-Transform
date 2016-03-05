@@ -17,7 +17,7 @@ my $literature = Literature::literature();
 my $books      = $literature->{books};
 my $authors    = $literature->{authors};
 
-subtest group_by => sub {
+subtest group_by__method => sub {
     note "ArrayRef call, list context result";
 
     my $book_object = {
@@ -42,7 +42,7 @@ subtest group_by => sub {
     );
 };
 
-subtest group_by_count => sub {
+subtest group_by_count__method => sub {
     note "ArrayRef call, list context result";
 
     my $genre_count = {
@@ -85,7 +85,7 @@ subtest group_by__not_a_method => sub {
     )
 };
 
-subtest group_by__args => sub {
+subtest group_by__method__args => sub {
     eq_or_diff(
         { $authors->group_by_count(publisher_affiliation => ["with"]) },
         {
@@ -97,7 +97,7 @@ subtest group_by__args => sub {
     );
 };
 
-subtest group_by__args__invalid_type => sub {
+subtest group_by__method__args__invalid_type => sub {
     throws_ok(
         sub { $authors->group_by(publisher_affiliation => 342) },
         qr{ group_by .+? 'publisher_affiliation' .+? \$args .+? \(342\) .+? array[ ]ref .+? t.group_by.t}x,
@@ -116,7 +116,7 @@ subtest group_by__sub_ref => sub {
     );
 };
 
-subtest group_by_array => sub {
+subtest group_by__method__array => sub {
     my $genre_books = $books->group_by_array("genre");
     my $genre_book_titles = {
         map {
