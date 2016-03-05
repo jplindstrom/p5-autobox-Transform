@@ -105,6 +105,14 @@ subtest group_by__method__args__invalid_type => sub {
     )
 };
 
+subtest group_by_count__method__args__invalid_type => sub {
+    throws_ok(
+        sub { $authors->group_by_count(publisher_affiliation => 342) },
+        qr{ group_by .+? 'publisher_affiliation' .+? \$args .+? \(342\) .+? array[ ]ref .+? t.group_by.t}x,
+        "group_by with argument which isn't an array ref",
+    )
+};
+
 subtest group_by__sub_ref => sub {
     eq_or_diff(
         { $books->group_by("genre", [], sub { 1 }) },

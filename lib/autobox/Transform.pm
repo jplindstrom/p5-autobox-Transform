@@ -367,14 +367,10 @@ sub __validate_group {
     return $args;
 }
 
-sub group_by {
+sub __core_group_by {
     my $array = shift;
     my( $accessor, $args, $value_sub ) = @_;
     $args = __validate_group("group_by", $array, $accessor, $args);
-
-    $value_sub //= sub { $_ };
-    ref($value_sub) eq "CODE"
-        or Carp::croak("group_by('$accessor', [], \$value_sub): \$value_sub ($value_sub) is not a sub ref");
 
     my %key_value;
     for my $object (@$array) {
@@ -390,6 +386,18 @@ sub group_by {
     }
 
     return wantarray ? %key_value : \%key_value;
+}
+
+sub group_by {
+    my $array = shift;
+    my( $accessor, $args, $value_sub ) = @_;
+    $args = __validate_group("group_by", $array, $accessor, $args);
+
+    $value_sub //= sub { $_ };
+    ref($value_sub) eq "CODE"
+        or Carp::croak("group_by('$accessor', [], \$value_sub): \$value_sub ($value_sub) is not a sub ref");
+
+    return __core_group_by($array, $accessor, $args, $value_sub);
 }
 
 =head2 group_by_count($accessor, @$args = []) : %key_count | %$key_count
@@ -419,7 +427,7 @@ sub group_by_count {
         my $count = shift // 0; return ++$count;
     };
 
-    return group_by($array, $accessor, $args, $value_sub);
+    return __core_group_by($array, $accessor, $args, $value_sub);
 }
 
 =head2 group_by_array($accessor, @$args = []) : %key_objects | %$key_objects
@@ -451,7 +459,7 @@ sub group_by_array {
         return $array;
     };
 
-    return group_by($array, $accessor, $args, $value_sub);
+    return __core_group_by($array, $accessor, $args, $value_sub);
 }
 
 
