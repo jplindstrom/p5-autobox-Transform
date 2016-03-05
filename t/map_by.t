@@ -16,6 +16,7 @@ use Literature;
 my $literature = Literature::literature();
 my $books      = $literature->{books};
 my $authors    = $literature->{authors};
+my $reviews    = $literature->{reviews};
 
 
 subtest map_by__empty => sub {
@@ -61,7 +62,7 @@ subtest map_by__method => sub {
 subtest map_by__missing_method => sub {
     throws_ok(
         sub { $books->map_by() },
-        qr{^->map_by\(\)[ ]missing[ ]argument:[ ]\$method \s at .+? t.map_by.t }x,
+        qr{^->map_by\(\)[ ]missing[ ]argument:[ ]\$accessor \s at .+? t.map_by.t }x,
         "Missing arg croaks from the caller, not from the lib"
     )
 };
@@ -97,6 +98,19 @@ subtest map_by__method__args__invalid_type => sub {
 
 
 ### hash key
+
+subtest map_by__key => sub {
+    note "ArrayRef key, list context result";
+    eq_or_diff(
+        [ $reviews->map_by("score") ],
+        [ 7, 6, 9 ],
+        "Map by key call works",
+    );
+};
+
+# map_by__key__with_args
+
+
 
 
 subtest examples => sub {

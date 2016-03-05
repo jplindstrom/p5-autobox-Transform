@@ -210,19 +210,24 @@ If it's a hashref, the hash key is looked up.
 sub __invoke_by {
     my $invoke = shift;
     my $array = shift;
-    my( $method, $args ) = @_;
-    @_ > 0 or Carp::croak("->${invoke}_by() missing argument: \$method");
+    my( $accessor, $args ) = @_;
+    @_ > 0 or Carp::croak("->${invoke}_by() missing argument: \$accessor");
+    @$array or return wantarray ? () : [ ];
 
-    ###JPL: check first item, or return empty list. Change $invoke
-    ###JPL: if key and $args, die
+    if ( ref($array->[0] ) eq "HASH" ) {
+        ###JPL: if key and $args, die
+        $invoke .= "_key";
+    }
 
     $args //= [];
     ref($args) eq "ARRAY"
-        or Carp::croak("${invoke}_by('$method', \$args): \$args ($args) is not an array ref");
+        or Carp::croak("${invoke}_by('$accessor', \$args): \$args ($args) is not an array ref");
 
     my $invoke_sub = {
-        map  => sub { [ CORE::map  { $_->$method( @$args ) } @$array ] },
-        grep => sub { [ CORE::grep { $_->$method( @$args ) } @$array ] },
+        map      => sub { [ CORE::map  { $_->$accessor( @$args ) } @$array ] },
+        grep     => sub { [ CORE::grep { $_->$accessor( @$args ) } @$array ] },
+        map_key  => sub { [ CORE::map  { $_->{$accessor}         } @$array ] },
+        grep_key => sub { [ CORE::grep { $_->{$accessor}         } @$array ] },
     }->{$invoke};
 
     my $result = eval { $invoke_sub->() }

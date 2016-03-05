@@ -102,10 +102,27 @@ sub literature {
         books     => [ $b_wind ],
     });
 
+
+    my $reviews = [
+        {
+            score => 7,
+            book  => $b_leviathan,
+        },
+        {
+            score => 6,
+            book  => $b_leviathan,
+        },
+        {
+            score => 9,
+            book  => $b_wind,
+        },
+    ];
+
     my $literature = {
         books      => ( my $books = [ $b_leviathan, $b_caliban, $b_three, $b_wind ] ),
         authors    => ( my $authors = [ $a_corey, $a_liu, $a_rothfuss ] ),
         publishers => ( my $publishers = [ $p_orbit, $p_zeus, $p_gollancz ] ),
+        reviews    => $reviews,
     };
 
     for my $author (@$authors) {
