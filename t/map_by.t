@@ -93,7 +93,7 @@ subtest map_by__method__args__invalid_type => sub {
         sub { $authors->map_by(publisher_affiliation => 342) },
         qr{ map_by .+? 'publisher_affiliation' .+? \$args .+? \(342\) .+? array[ ]ref .+? t.map_by.t}x,
         "map_by with argument which isn't an array ref",
-    )
+    );
 };
 
 
@@ -105,6 +105,15 @@ subtest map_by__key => sub {
         [ $reviews->map_by("score") ],
         [ 7, 6, 9 ],
         "Map by key call works",
+    );
+};
+
+subtest map_by__key__with_args => sub {
+    note "ArrayRef key, list context result";
+    throws_ok(
+        sub { $reviews->map_by("score" => [ ]) },
+        qr{ map_by .+? 'score' .+? \$args .+? only[ ]supported[ ]for[ ]method[ ]calls.+? t.map_by.t}x,
+ 
     );
 };
 

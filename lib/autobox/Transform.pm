@@ -215,7 +215,8 @@ sub __invoke_by {
     @$array or return wantarray ? () : [ ];
 
     if ( ref($array->[0] ) eq "HASH" ) {
-        ###JPL: if key and $args, die
+        defined($args)
+            and Carp::croak("${invoke}_by('$accessor'): \$args ($args) only supported for method calls, not hash key access");
         $invoke .= "_key";
     }
 
