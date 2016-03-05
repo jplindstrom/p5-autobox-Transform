@@ -355,26 +355,35 @@ $key is the key returned by $object->$accessor(@$args)
 
 =cut
 
-sub __validate_group {
-    my ($name, $array, $accessor, $args) = @_;
-
-    $accessor or Carp::croak("->$name() missing argument: \$accessor");
-
-    $args //= [];
-    ref($args) eq "ARRAY"
-        or Carp::croak("$name('$accessor', \$args, \$value_sub): \$args ($args) is not an array ref");
-
-    return $args;
-}
-
 sub __core_group_by {
-    my $array = shift;
-    my( $accessor, $args, $value_sub ) = @_;
-    $args = __validate_group("group_by", $array, $accessor, $args);
+    my( $name, $array, $accessor, $args, $value_sub ) = @_;
+    $accessor or Carp::croak("->$name() missing argument: \$accessor");
+    @$array or return wantarray ? () : { };
+
+    my $invoke = do {
+        # Hash key
+        if ( ref($array->[0] ) eq "HASH" ) {
+            defined($args)
+                and Carp::croak("$name('$accessor'): \$args ($args) only supported for method calls, not hash key access. Please specify an undef if needed.");
+            "key";
+        }
+        # Method
+        else {
+            $args //= [];
+            ref($args) eq "ARRAY"
+                or Carp::croak("$name('$accessor', \$args, \$value_sub): \$args ($args) is not an array ref");
+            "method";
+        }
+    };
+
+    my $invoke_sub = {
+        method => sub { [ shift->$accessor(@$args) ] },
+        key    => sub { [ shift->{$accessor}       ] },
+    }->{$invoke};
 
     my %key_value;
     for my $object (@$array) {
-        my $key_ref = eval { [ $object->$accessor(@$args) ] }
+        my $key_ref = eval { $invoke_sub->($object) }
             or autobox::Transform::throw($@);
         my $key = $key_ref->[0];
 
@@ -391,13 +400,12 @@ sub __core_group_by {
 sub group_by {
     my $array = shift;
     my( $accessor, $args, $value_sub ) = @_;
-    $args = __validate_group("group_by", $array, $accessor, $args);
 
     $value_sub //= sub { $_ };
     ref($value_sub) eq "CODE"
         or Carp::croak("group_by('$accessor', [], \$value_sub): \$value_sub ($value_sub) is not a sub ref");
 
-    return __core_group_by($array, $accessor, $args, $value_sub);
+    return __core_group_by("group_by", $array, $accessor, $args, $value_sub);
 }
 
 =head2 group_by_count($accessor, @$args = []) : %key_count | %$key_count
@@ -421,13 +429,12 @@ for the "Sci-fi" key.
 sub group_by_count {
     my $array = shift;
     my( $accessor, $args ) = @_;
-    $args = __validate_group("group_by_count", $array, $accessor, $args);
 
     my $value_sub = sub {
         my $count = shift // 0; return ++$count;
     };
 
-    return __core_group_by($array, $accessor, $args, $value_sub);
+    return __core_group_by("group_by_count", $array, $accessor, $args, $value_sub);
 }
 
 =head2 group_by_array($accessor, @$args = []) : %key_objects | %$key_objects
@@ -451,7 +458,6 @@ are collected under the Sci-fi key.
 sub group_by_array {
     my $array = shift;
     my( $accessor, $args ) = @_;
-    $args = __validate_group("group_by_array", $array, $accessor, $args);
 
     my $value_sub = sub {
         my $array = shift // [];
@@ -459,7 +465,7 @@ sub group_by_array {
         return $array;
     };
 
-    return __core_group_by($array, $accessor, $args, $value_sub);
+    return __core_group_by("group_by_array", $array, $accessor, $args, $value_sub);
 }
 
 

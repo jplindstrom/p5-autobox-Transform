@@ -16,6 +16,7 @@ use Literature;
 my $literature = Literature::literature();
 my $books      = $literature->{books};
 my $authors    = $literature->{authors};
+my $reviews    = $literature->{reviews};
 
 subtest group_by__method => sub {
     note "ArrayRef call, list context result";
@@ -39,6 +40,28 @@ subtest group_by__method => sub {
         $genre_exists,
         $book_object,
         "Group by simple method call works",
+    );
+};
+
+subtest group_by__key => sub {
+    note "ArrayRef key lookup";
+    eq_or_diff(
+        { $reviews->group_by("id") },
+        {
+            1 => { id => 1, score => 7 },
+            2 => { id => 2, score => 6 },
+            3 => { id => 3, score => 9 },
+        },
+        "Group by simple hash key lookup works",
+    );
+};
+
+subtest group_by__key__with_args => sub {
+    note "ArrayRef key lookup";
+    throws_ok(
+        sub { $reviews->group_by("id" => 32) },
+        qr{ group_by .+? 'id' .+? \$args .+? \(32\) .+? only[ ]supported[ ]for .+? t.group_by.t}x,
+        "Group by simple hash key lookup with args dies as expected",
     );
 };
 
@@ -102,7 +125,7 @@ subtest group_by__method__args__invalid_type => sub {
         sub { $authors->group_by(publisher_affiliation => 342) },
         qr{ group_by .+? 'publisher_affiliation' .+? \$args .+? \(342\) .+? array[ ]ref .+? t.group_by.t}x,
         "group_by with argument which isn't an array ref",
-    )
+    );
 };
 
 subtest group_by_count__method__args__invalid_type => sub {
@@ -110,7 +133,7 @@ subtest group_by_count__method__args__invalid_type => sub {
         sub { $authors->group_by_count(publisher_affiliation => 342) },
         qr{ group_by .+? 'publisher_affiliation' .+? \$args .+? \(342\) .+? array[ ]ref .+? t.group_by.t}x,
         "group_by with argument which isn't an array ref",
-    )
+    );
 };
 
 subtest group_by__sub_ref => sub {

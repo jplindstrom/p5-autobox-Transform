@@ -107,17 +107,14 @@ sub literature {
         {
             id    => 1,
             score => 7,
-            book  => $b_leviathan,
         },
         {
             id    => 2,
             score => 6,
-            book  => $b_leviathan,
         },
         {
             id    => 3,
             score => 9,
-            book  => $b_wind,
         },
     ];
 
