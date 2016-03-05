@@ -6,7 +6,7 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
     # These are equivalent ways to transform arrays and arrayrefs
 
-    ### map_by
+    ### map_by - method call
     my @genres = map { $_->genre() } @$books;
     my @genres = $books->map_by("genre");
 
@@ -20,16 +20,24 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     my $book_order_total = $order->books
         ->map_by(price_with_tax => [$tax_pct])->sum;
 
+    ### map_by - hash key
+    my @genres = map { $_->{genre} } @$books; # $books are hashrefs
+    my @genres = $books->map_by("genre");
 
-    ### grep_by
+
+    ### grep_by - method call
     my $sold_out_books = [ grep { $_->is_sold_out } @$books ];
     my $sold_out_books = $books->grep_by("is_sold_out");
 
     my $books_in_library = [ grep { $_->is_in_library($library) } @$books ];
     my $books_in_library = $books->grep_by(is_in_library => [$library]);
 
+    ### grep_by - hash key
+    my $sold_out_books = [ grep { $_->{is_sold_out} } @$books ]; # $books are hashrefs
+    my $sold_out_books = $books->grep_by("is_sold_out");
 
-    ### group_by
+
+    ### group_by - method call
 
     $books->group_by("title"),
     # {
@@ -57,6 +65,9 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     #     "Sci-fi"  => [ $sf_book_1, $sf_book_2, $sf_book_3 ],
     #     "Fantasy" => [ $fantasy_book_1 ],
     # },
+
+    ### group_by - hash key
+    $books->group_by("title"), # $books are hashrefs
 
 
     #### flat
@@ -130,13 +141,27 @@ context. E.g.
         books => scalar $books->grep_by("is_published"),
     ),
 
+## Transforming lists of objects vs list of hashrefs
+
+map\_by, grep\_by etc are called the same way regardless of whether the
+list contains objects or hashrefs. The items in the list must all be
+either objects or hashrefs.
+
+If an item is an object, the a method is called on it (possibly with
+the arguments provided).
+
+If it's a hashref, the hash key is looked up.
+
 # AUTOBOX ARRAY METHODS
 
-## map\_by($method, @$args?) : @array | @$array
+## map\_by($accessor, @$args?) : @array | @$array
 
-Call the $method on each item in the list. Like:
+Call the $accessor on each object in the list, or get the hash key
+value on each hashref in the list. Like:
 
-    map { $_->$method() }
+    map { $_->$accessor() }
+    # or
+    map { $_->{$accessor} }
 
 Examples:
 
@@ -145,18 +170,24 @@ Examples:
 
 Optionally pass in @$args in the method call. Like:
 
-    map { $_->$method(@$args) }
+    map { $_->$accessor(@$args) }
 
 Examples:
 
     my @prices_including_tax = $books->map_by("price_with_tax", [ $tax_pct ]);
     my $prices_including_tax = $books->map_by(price_with_tax => [ $tax_pct ]);
 
-## grep\_by($method, @$args?) : @array | @$array
+Or get the hash key value. Examples:
 
-Call the $method on each item in the list. Like:
+    my @review_scores = $reviews->map_by("score");
 
-    grep { $_->$method() }
+## grep\_by($accessor, @$args?) : @array | @$array
+
+Call the $accessor on each object in the list, or get the hash key
+value on each hashref in the list. Like:
+
+    grep { $_->$accessor() }
+    grep { $_->{$accessor} }
 
 Examples:
 
@@ -164,16 +195,17 @@ Examples:
 
 Optionally pass in @$args in the method call. Like:
 
-    grep { $_->$method(@$args) }
+    grep { $_->$accessor(@$args) }
 
 Examples:
 
     my @books_to_charge_for = $books->grep_by("price_with_tax", [ $tax_pct ]);
 
-## group\_by($method, @$args = \[\], $value\_sub = object) : %key\_value | %$key\_value
+## group\_by($accessor, @$args = \[\], $value\_sub = object) : %key\_value | %$key\_value
 
-Call ->$method(@$args) on each object in the array (just like ->map\_by)
-and group the return values as keys in a hashref.
+Call ->$accessor(@$args) on each object in the array, or get the hash
+key for each hashref in the array (just like ->map\_by) and group the
+return values as keys in a hashref.
 
 The default $value\_sub puts the objects in the list as the hash
 values.
@@ -195,7 +227,7 @@ be to use one of the more specific group\_by-methods which do common
 things (see below). It should be capable enough to achieve what you
 need though, so here's how it works:
 
-The hash key is whatever is returned from $object->$method(@$args).
+The hash key is whatever is returned from $object->$accessor(@$args).
 
 The hash value is whatever is returned from
 
@@ -205,12 +237,12 @@ where:
 
 - $current value is the current hash value for this key (or undef if the first one).
 - $object is the current item in the list. The current $\_ is also set to this.
-- $key is the key returned by $object->$method(@$args)
+- $key is the key returned by $object->$accessor(@$args)
 
-## group\_by\_count($method, @$args = \[\]) : %key\_count | %$key\_count
+## group\_by\_count($accessor, @$args = \[\]) : %key\_count | %$key\_count
 
 Just like group\_by, but the hash values are the the number of
-instances each $method value occurs in the list.
+instances each $accessor value occurs in the list.
 
 Example:
 
@@ -223,10 +255,10 @@ Example:
 $book->genre() returns the genre string. There are three books counted
 for the "Sci-fi" key.
 
-## group\_by\_array($method, @$args = \[\]) : %key\_objects | %$key\_objects
+## group\_by\_array($accessor, @$args = \[\]) : %key\_objects | %$key\_objects
 
 Just like group\_by, but the hash values are arrayrefs containing the
-objects which has each $method value.
+objects which has each $accessor value.
 
 Example:
 
