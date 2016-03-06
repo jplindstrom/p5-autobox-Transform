@@ -10,11 +10,17 @@ our $VERSION = "1.003";
 
 autobox::Transform - Autobox methods to transform Arrays and Hashes
 
+=head1 NOTE
+
+This module supercedes autobox::Array::Transform which was
+unfortunately named. The old module is deprecated and will soon
+disappear.
+
 =head1 SYNOPSIS
 
-    # These are equivalent ways to transform arrays and arrayrefs
+    # Comparison of vanilla Perl and autobox version
 
-    ### map_by - method call
+    ### map_by - method call: $books are Book objects
     my @genres = map { $_->genre() } @$books;
     my @genres = $books->map_by("genre");
 
@@ -28,24 +34,24 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     my $book_order_total = $order->books
         ->map_by(price_with_tax => [$tax_pct])->sum;
 
-    ### map_by - hash key
-    my @genres = map { $_->{genre} } @$books; # $books are hashrefs
+    ### map_by - hash key: $books are book hashrefs
+    my @genres = map { $_->{genre} } @$books;
     my @genres = $books->map_by("genre");
 
 
-    ### grep_by - method call
+    ### grep_by - method call: $books are Book objects
     my $sold_out_books = [ grep { $_->is_sold_out } @$books ];
     my $sold_out_books = $books->grep_by("is_sold_out");
 
     my $books_in_library = [ grep { $_->is_in_library($library) } @$books ];
     my $books_in_library = $books->grep_by(is_in_library => [$library]);
 
-    ### grep_by - hash key
-    my $sold_out_books = [ grep { $_->{is_sold_out} } @$books ]; # $books are hashrefs
+    ### grep_by - hash key: $books are book hashrefs
+    my $sold_out_books = [ grep { $_->{is_sold_out} } @$books ];
     my $sold_out_books = $books->grep_by("is_sold_out");
 
 
-    ### group_by - method call
+    ### group_by - method call: $books are Book objects
 
     $books->group_by("title"),
     # {
@@ -74,20 +80,18 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     #     "Fantasy" => [ $fantasy_book_1 ],
     # },
 
-    ### group_by - hash key
+
+    ### group_by - hash key: $books are book hashrefs
     $books->group_by("title"), # $books are hashrefs
 
 
-    #### flat
-    my $prolific_author_books = [ map { @{$_->books} } @$authors ]
-    my $prolific_author_books = $authors->map_by("books")->flat
+    #### flat - $author->books returns an arrayref of Books
+    my $author_books = [ map { @{$_->books} } @$authors ]
+    my $author_books = $authors->map_by("books")->flat
 
 
 
 =head1 DESCRIPTION
-
-Note: This module supercedes autobox::Array::Transform which was
-unfortunately named.
 
 High level autobox methods you can call on arrays, arrayrefs, hashes
 and hashrefs e.g.
@@ -184,6 +188,18 @@ package # hide from PAUSE
     autobox::Transform::Array;
 
 
+=head2 Transforming lists of objects vs list of hashrefs
+
+map_by, grep_by etc are called the same way regardless of whether the
+list contains objects or hashrefs. The items in the list must all be
+either objects or hashrefs.
+
+If the array contains objects, a method is called on each object
+(possibly with the arguments provided).
+
+If the array contains hashrefs, the hash key is looked up on each
+item.
+
 
 =head2 List and Scalar Context
 
@@ -191,8 +207,10 @@ All of the methods below are context sensitive, i.e. they return a
 list in list context and an arrayref in scalar context, just like
 autobox::Core.
 
-When in doubt, assume they work like C<map> and C<grep>, and convert the
-return value to references where you might have an unobvious list
+Beware: you might be in list context when you need an arrayref.
+
+When in doubt, assume they work like C<map> and C<grep>, and convert
+the return value to references where you might have an unobvious list
 context. E.g.
 
     $self->my_method(
@@ -208,19 +226,6 @@ context. E.g.
         # Correct, ensure scalar context i.e. an array ref
         books => scalar $books->grep_by("is_published"),
     ),
-
-
-=head2 Transforming lists of objects vs list of hashrefs
-
-map_by, grep_by etc are called the same way regardless of whether the
-list contains objects or hashrefs. The items in the list must all be
-either objects or hashrefs.
-
-If an item is an object, the a method is called on it (possibly with
-the arguments provided).
-
-If it's a hashref, the hash key is looked up.
-
 
 
 =head1 AUTOBOX ARRAY METHODS
@@ -257,9 +262,9 @@ sub __invoke_by {
     return wantarray ? @$result : $result;
 }
 
-=head2 map_by($accessor, @$args?) : @array | @$array
+=head2 @array->map_by($accessor, @$args?) : @array | @$array
 
-Call the $accessor on each object in the list, or get the hash key
+Call the $accessor on each object in @array, or get the hash key
 value on each hashref in the list. Like:
 
     map { $_->$accessor() }
@@ -292,7 +297,7 @@ sub map_by {
 
 
 
-=head2 grep_by($accessor, @$args?) : @array | @$array
+=head2 @array->grep_by($accessor, @$args?) : @array | @$array
 
 Call the $accessor on each object in the list, or get the hash key
 value on each hashref in the list. Like:
@@ -323,7 +328,7 @@ sub grep_by {
 
 
 
-=head2 group_by($accessor, @$args = [], $value_sub = object) : %key_value | %$key_value
+=head2 @array->group_by($accessor, @$args = [], $value_sub = object) : %key_value | %$key_value
 
 Call ->$accessor(@$args) on each object in the array, or get the hash
 key for each hashref in the array (just like ->map_by) and group the
@@ -428,7 +433,7 @@ sub group_by {
     return __core_group_by("group_by", $array, $accessor, $args, $value_sub);
 }
 
-=head2 group_by_count($accessor, @$args = []) : %key_count | %$key_count
+=head2 @array->group_by_count($accessor, @$args = []) : %key_count | %$key_count
 
 Just like group_by, but the hash values are the the number of
 instances each $accessor value occurs in the list.
@@ -457,7 +462,7 @@ sub group_by_count {
     return __core_group_by("group_by_count", $array, $accessor, $args, $value_sub);
 }
 
-=head2 group_by_array($accessor, @$args = []) : %key_objects | %$key_objects
+=head2 @array->group_by_array($accessor, @$args = []) : %key_objects | %$key_objects
 
 Just like group_by, but the hash values are arrayrefs containing the
 objects which has each $accessor value.
@@ -489,7 +494,7 @@ sub group_by_array {
 }
 
 
-=head2 flat() : @array | @$array
+=head2 @array->flat() : @array | @$array
 
 Return a flattened array, assuming the array items themselves are
 array refs. I.e.

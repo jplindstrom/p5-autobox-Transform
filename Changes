@@ -2,6 +2,10 @@
 
 {{$NEXT}}
 
+ * Cleaner docs
+
+
+
 1.003 2016-03-05T22:02:59Z
 
  * map_by, grep_by, group_by can look up hash keys as well as make
