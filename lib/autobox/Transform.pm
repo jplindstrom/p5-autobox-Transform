@@ -171,7 +171,9 @@ use true;
 use Carp;
 
 sub import {
-    shift->SUPER::import( ARRAY => "autobox::Transform::Array" );
+    my $self = shift;
+    $self->SUPER::import( ARRAY => "autobox::Transform::Array" );
+    $self->SUPER::import( HASH  => "autobox::Transform::Hash"  );
 }
 
 sub throw {
@@ -182,10 +184,6 @@ sub throw {
     croak($error);
 }
 
-
-
-package # hide from PAUSE
-    autobox::Transform::Array;
 
 
 =head2 Transforming lists of objects vs list of hashrefs
@@ -231,6 +229,11 @@ context. E.g.
 =head1 AUTOBOX ARRAY METHODS
 
 =cut
+
+package # hide from PAUSE
+    autobox::Transform::Array;
+
+
 
 sub __invoke_by {
     my $invoke = shift;
@@ -526,6 +529,68 @@ sub flat {
     my $result = [ map { @$_ } @$array ];
     return wantarray ? @$result : $result;
 }
+
+
+
+
+
+=head1 AUTOBOX HASH METHODS
+
+=cut
+
+package # hide from PAUSE
+    autobox::Transform::Hash;
+
+
+sub key_value {
+    my $hash = shift;
+    my( $original_key, $new_key ) = @_;
+    $new_key //= $original_key;
+    my %key_value = ( $new_key => $hash->{$original_key} );
+    return wantarray ? %key_value : \%key_value;
+}
+
+sub __core_key_value_if {
+    my $hash = shift;
+    my( $comparison_sub, $original_key, $new_key ) = @_;
+    $comparison_sub->($hash, $original_key) or return wantarray ? () : {};
+    return key_value($hash, $original_key, $new_key)
+}
+
+sub key_value_if_exists {
+    my $hash = shift;
+    my( $original_key, $new_key ) = @_;
+    return __core_key_value_if(
+        $hash,
+        sub { !! exists shift->{ shift() } },
+        $original_key,
+        $new_key
+    );
+}
+
+sub key_value_if_true {
+    my $hash = shift;
+    my( $original_key, $new_key ) = @_;
+    return __core_key_value_if(
+        $hash,
+        sub { !! shift->{ shift() } },
+        $original_key,
+        $new_key
+    );
+}
+
+sub key_value_if_defined {
+    my $hash = shift;
+    my( $original_key, $new_key ) = @_;
+    return __core_key_value_if(
+        $hash,
+        sub { defined( shift->{ shift() } ) },
+        $original_key,
+        $new_key
+    );
+}
+
+
 
 
 
