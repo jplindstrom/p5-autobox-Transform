@@ -2,6 +2,10 @@
 
 {{$NEXT}}
 
+ * key_value* Hash methods (so far undocumented)
+
+
+
 1.004 2016-03-06T12:23:17Z
 
  * Cleaner docs
