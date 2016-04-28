@@ -21,5 +21,12 @@
 ** compactTrue - without false
 ** without - grep -v value
 * Hash
+** key_value($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
+*** exists
+*** exists, undef
+*** doesn't exist, undef
+** key_value_if_exists($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
+** key_value_if_true($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
+** key_value_if_defined($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
 ** map_values
 ** map_values_by() maps values from one thing to another
