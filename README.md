@@ -307,6 +307,8 @@ Note: This is different from autobox::Core's ->flatten, which reurns a
 list rather than an array and therefore can't be used in this
 way.
 
+# AUTOBOX HASH METHODS
+
 # DEVELOPMENT
 
 ## Author
