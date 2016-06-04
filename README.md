@@ -98,6 +98,8 @@ and hashrefs e.g.
 - $array->grep\_by()
 - $array->uniq\_by()
 - $array->group\_by()
+- $array->group\_by\_count()
+- $array->group\_by\_array()
 - $array->flat()
 
 ## Raison d'etre
@@ -227,7 +229,8 @@ Examples:
 
 Call the $accessor on each object in the list, or get the hash key
 value on each hashref in the list. Return list of items wich have a
-unique set of return values.
+unique set of return values. The order is preserved. On duplicates,
+keep the first occurrence.
 
 Examples:
 
@@ -313,17 +316,18 @@ are collected under the Sci-fi key.
 
 ## @array->flat() : @array | @$array
 
-Return a flattened array, assuming the array items themselves are
-array refs. I.e.
+Return a (one level) flattened array, assuming the array items
+themselves are array refs. I.e.
 
     [
         [ 1, 2, 3 ],
         [ "a", "b" ],
+        [ [ 1, 2 ], { 3 => 4 } ]
     ]->flat
 
 returns
 
-    [ 1, 2, 3, "a", "b "]
+    [ 1, 2, 3, "a", "b ", [ 1, 2 ], { 3 => 4 } ]
 
 This is useful if e.g. a map\_by("some\_method") returns arrayrefs of
 objects which you want to do further method calls on. Example:
