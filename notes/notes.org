@@ -10,9 +10,8 @@
 ** DONE map_by, grep_by, group_by hash key lookup
 *** if first item is ref HASH
 ** grep_by - value
-** group (group_count)
+** [#A] group (group_count)
 *** group_array
-*** group_element
 ** sort
 ** find(sub), like grep
 ** find_by($method, $args, $value), like grep_by but first
@@ -28,5 +27,22 @@
 ** key_value_if_exists($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
 ** key_value_if_true($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
 ** key_value_if_defined($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
-** map_values
-** map_values_by() maps values from one thing to another
+** map family
+*** [#A] map($subref)
+**** ($key, $value), $_ is value
+**** return new key, new value (or die)
+*** [#C] map_values($subref)
+**** ($key, $value), $_ is value
+**** return new value
+*** map_values_by($accessor) maps values from one thing to another
+**** (key, $value, $accessor_value), $_ is accessor_value
+**** return new value
+*** map_by ?
+** grep family
+*** [#A] grep($subref = true)
+**** ($key, $value), $) is value
+*** [#B] grep_defined
+**** value is defined
+*** grep_by($accessor, $args?, $subref = true)
+**** 
+
