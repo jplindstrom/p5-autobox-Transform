@@ -124,6 +124,14 @@ $array->group_by()
 
 =item
 
+$array->group_by_count()
+
+=item
+
+$array->group_by_array()
+
+=item
+
 $array->flat()
 
 =back
