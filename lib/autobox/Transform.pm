@@ -659,6 +659,33 @@ sub key_value_if_defined {
     );
 }
 
+sub grep {
+    my $hash = shift;
+    my ($subref) = @_;
+    $subref ||= sub { !! $_ }; # true?
+
+    my $new_hash = {
+        map { ## no critic
+            my $key = $_;
+            my $value = $hash->{$key};
+            {
+                local $_ = $value;
+                $subref->($key, $value)
+                    ? ( $key => $value )
+                    : ();
+            }
+        }
+        keys %$hash,
+    };
+
+    return wantarray ? %$new_hash : $new_hash;
+}
+
+sub grep_defined {
+    my $hash = shift;
+    return &grep($hash, sub { defined($_) });
+}
+
 
 
 

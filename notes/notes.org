@@ -40,9 +40,15 @@
 *** map_by ?
 ** grep family
 *** [#A] grep($subref = true)
-**** ($key, $value), $) is value
+**** ($key, $value), $_ is value
+**** Name: grep_each?
 *** [#B] grep_defined
 **** value is defined
+**** grep_each_defined?
 *** grep_by($accessor, $args?, $subref = true)
-**** 
+**** ($key, $value, $accessor_value), $_ is accessor value
+**** grep_each_by?
+*** grep_by_defined
+**** accessor value is defined
+**** grep_each_by_defined?
 

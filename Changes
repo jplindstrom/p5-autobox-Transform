@@ -2,6 +2,9 @@
 
 {{$NEXT}}
 
+ * grep, grep_defined Hash methods (so far undocumented)
+
+
 1.009 2016-06-05T21:24:57Z
 
  * More doc improvements, examples
