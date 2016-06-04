@@ -2,15 +2,10 @@
 
 autobox::Transform - Autobox methods to transform Arrays and Hashes
 
-# NOTE
-
-This module supercedes autobox::Array::Transform which was
-unfortunately named. The old module is deprecated and will soon
-disappear.
-
 # SYNOPSIS
 
     # Comparison of vanilla Perl and autobox version
+
 
     ### map_by - method call: $books are Book objects
     my @genres = map { $_->genre() } @$books;
@@ -31,6 +26,7 @@ disappear.
     my @genres = $books->map_by("genre");
 
 
+
     ### grep_by - method call: $books are Book objects
     my $sold_out_books = [ grep { $_->is_sold_out } @$books ];
     my $sold_out_books = $books->grep_by("is_sold_out");
@@ -41,6 +37,17 @@ disappear.
     ### grep_by - hash key: $books are book hashrefs
     my $sold_out_books = [ grep { $_->{is_sold_out} } @$books ];
     my $sold_out_books = $books->grep_by("is_sold_out");
+
+
+
+    ### uniq_by - method call: $books are Book objects
+    my %seen; my $distinct_books = [ grep { ! %seen{ $_->id // "" }++ } @$books ];
+    my $distinct_books = $books->uniq_by("id");
+
+    ### uniq_by - hash key: $books are book hashrefs
+    my %seen; my $distinct_books = [ grep { ! %seen{ $_->{id} // "" }++ } @$books ];
+    my $distinct_books = $books->uniq_by("id");
+
 
 
     ### group_by - method call: $books are Book objects
@@ -77,6 +84,7 @@ disappear.
     $books->group_by("title"), # $books are hashrefs
 
 
+
     #### flat - $author->books returns an arrayref of Books
     my $author_books = [ map { @{$_->books} } @$authors ]
     my $author_books = $authors->map_by("books")->flat
@@ -88,6 +96,7 @@ and hashrefs e.g.
 
 - $array->map\_by()
 - $array->grep\_by()
+- $array->uniq\_by()
 - $array->group\_by()
 - $array->flat()
 
@@ -123,6 +132,7 @@ autobox::Core.
         ->sum;
 
     my $order_authors = $order->books
+        ->uniq_by("isbn")
         ->map_by("author")
         ->map_by("name")->uniq->sort->join(", ");
 
@@ -213,14 +223,32 @@ Examples:
 
     my @books_to_charge_for = $books->grep_by("price_with_tax", [ $tax_pct ]);
 
+## @array->uniq\_by($accessor, @$args?) : @array | @$array
+
+Call the $accessor on each object in the list, or get the hash key
+value on each hashref in the list. Return list of items wich have a
+unique set of return values.
+
+Examples:
+
+    # You have gathered multiple Author objects with duplicate ids
+    my @authors = $authors->uniq_by("author_id");
+
+Optionally pass in @$args in the method call.
+
+Examples:
+
+    my @example_book_at_price_point = $books->uniq_by("price_with_tax", [ $tax_pct ]);
+
 ## @array->group\_by($accessor, @$args = \[\], $value\_sub = object) : %key\_value | %$key\_value
 
 Call ->$accessor(@$args) on each object in the array, or get the hash
 key for each hashref in the array (just like ->map\_by) and group the
 return values as keys in a hashref.
 
-The default $value\_sub puts the objects in the list as the hash
-values.
+The default $value\_sub puts each object in the list as the hash
+value. If the key is repeated, the value is overwritten with the last
+object.
 
 Example:
 
@@ -235,9 +263,9 @@ Example:
 ### The $value\_sub
 
 This is a bit tricky to use, so the most common thing would probably
-be to use one of the more specific group\_by-methods which do common
-things (see below). It should be capable enough to achieve what you
-need though, so here's how it works:
+be to use one of the more specific group\_by-methods (see below). It
+should be capable enough to achieve what you need though, so here's
+how it works:
 
 The hash key is whatever is returned from $object->$accessor(@$args).
 
