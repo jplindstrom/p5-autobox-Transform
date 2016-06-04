@@ -10,12 +10,6 @@ our $VERSION = "1.006";
 
 autobox::Transform - Autobox methods to transform Arrays and Hashes
 
-=head1 NOTE
-
-This module supercedes autobox::Array::Transform which was
-unfortunately named. The old module is deprecated and will soon
-disappear.
-
 =head1 SYNOPSIS
 
     # Comparison of vanilla Perl and autobox version
