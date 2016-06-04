@@ -350,7 +350,8 @@ sub grep_by {
 
 Call the $accessor on each object in the list, or get the hash key
 value on each hashref in the list. Return list of items wich have a
-unique set of return values.
+unique set of return values. The order is preserved. On duplicates,
+keep the first occurrence.
 
 Examples:
 
