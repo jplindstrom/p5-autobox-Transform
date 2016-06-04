@@ -549,17 +549,18 @@ sub group_by_array {
 
 =head2 @array->flat() : @array | @$array
 
-Return a flattened array, assuming the array items themselves are
-array refs. I.e.
+Return a (one level) flattened array, assuming the array items
+themselves are array refs. I.e.
 
     [
         [ 1, 2, 3 ],
         [ "a", "b" ],
+        [ [ 1, 2 ], { 3 => 4 } ]
     ]->flat
 
 returns
 
-    [ 1, 2, 3, "a", "b "]
+    [ 1, 2, 3, "a", "b ", [ 1, 2 ], { 3 => 4 } ]
 
 This is useful if e.g. a map_by("some_method") returns arrayrefs of
 objects which you want to do further method calls on. Example:
