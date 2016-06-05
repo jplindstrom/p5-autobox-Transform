@@ -26,6 +26,8 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     $books->uniq_by("id");
 
     $books->group_by("title");
+    $books->group_by_count("genre")
+    $books->group_by_array("genre")
 
     $authors->map_by("books")->flat;
 
