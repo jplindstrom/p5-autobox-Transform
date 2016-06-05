@@ -4,8 +4,36 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
 # SYNOPSIS
 
-    # Comparison of vanilla Perl and autobox version
+## Examples
 
+    use autobox::Core;  # uniq, sort, join, sum, etc.
+    use autobox::Transform;
+
+    $books->map_by("genre");
+    $books->map_by(price_with_tax => [$tax_pct]);
+
+    $books->grep_by("is_sold_out");
+    $books->grep_by(is_in_library => [$library]);
+
+    $books->uniq_by("id");
+
+    $books->group_by("title");
+    $books->group_by_count("genre")
+    $books->group_by_array("genre")
+
+    $authors->map_by("books")->flat;
+
+    my $order_authors = $order->books
+        ->uniq_by("isbn")
+        ->map_by("author")
+        ->map_by("name")->uniq->sort->join(", ");
+
+    my $total_order_amount = $order->books
+        ->grep_by(not_covered_by_vouchers => [ $vouchers ])
+        ->map_by(price_with_tax => [ $tax_pct ])
+        ->sum;
+
+## Comparison of vanilla Perl and autobox version
 
     ### map_by - method call: $books are Book objects
     my @genres = map { $_->genre() } @$books;
@@ -92,7 +120,7 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 # DESCRIPTION
 
 High level autobox methods you can call on arrays, arrayrefs, hashes
-and hashrefs e.g.
+and hashrefs.
 
 - $array->map\_by()
 - $array->grep\_by()
@@ -126,17 +154,6 @@ The methods of autobox::Transform are not suitable for all
 cases, but when used appropriately they will lead to much more clear,
 succinct and direct code, especially in conjunction with
 autobox::Core.
-
-## Examples
-
-    my $total_order_amount = $order->books
-        ->map_by(price_with_tax => [ $tax_pct ])
-        ->sum;
-
-    my $order_authors = $order->books
-        ->uniq_by("isbn")
-        ->map_by("author")
-        ->map_by("name")->uniq->sort->join(", ");
 
 ## Transforming lists of objects vs list of hashrefs
 
