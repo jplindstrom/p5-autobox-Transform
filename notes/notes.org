@@ -28,27 +28,36 @@
 ** key_value_if_true($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
 ** key_value_if_defined($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
 ** map family
-*** [#A] map($subref)
-**** ($key, $value), $_ is value
-**** return new key, new value (or die)
-*** [#C] map_values($subref)
-**** ($key, $value), $_ is value
-**** return new value
-*** map_values_by($accessor) maps values from one thing to another
-**** (key, $value, $accessor_value), $_ is accessor_value
-**** return new value
-*** map_by ?
+*** map -> array
+**** map_each_array($subref)
+***** ($key, $value), $_ is value
+****** return value (or die) to be list item
+***** return array with return values
+*** map -> hash
+**** [#A] map_each($subref)
+***** ($key, $value), $_ is value
+****** return new key, new value (or die)
+***** return hash with return values
+**** [#C] map_values($subref)
+***** ($key, $value), $_ is value
+****** return new value
+***** return hash with same key, return value
+**** map_values_by($accessor, $new_key = $accessor) maps values from one thing to another
+***** (key, $value, $accessor_value), $_ is accessor_value
+****** return new value
+***** return hash with same keys + $new_key = return value
+**** map_by ?
 ** grep family
-*** [#A] grep($subref = true)
-**** ($key, $value), $_ is value
-**** Name: grep_each?
-*** [#B] grep_defined
-**** value is defined
-**** grep_each_defined?
-*** grep_by($accessor, $args?, $subref = true)
-**** ($key, $value, $accessor_value), $_ is accessor value
-**** grep_each_by?
-*** grep_by_defined
-**** accessor value is defined
-**** grep_each_by_defined?
-
+*** grep -> hash
+**** [#A] grep($subref = true)
+***** ($key, $value), $_ is value
+***** Name: grep_each?
+**** [#B] grep_defined
+***** value is defined
+***** grep_each_defined?
+**** grep_by($accessor, $args?, $subref = true)
+***** ($key, $value, $accessor_value), $_ is accessor value
+***** grep_each_by?
+**** grep_by_defined
+***** accessor value is defined
+***** grep_each_by_defined?
