@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+1.011 2016-07-07T12:57:42Z
+
  * Rename Hash grep -> grep_each, grep_defined -> grep_each_defined
    - This is why they're undocumented
 
