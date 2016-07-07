@@ -684,6 +684,27 @@ sub map_each {
     return wantarray ? %$new_hash : $new_hash;
 }
 
+sub map_each_to_array {
+    my $hash = shift;
+    my ($array_item_subref) = @_;
+    $array_item_subref //= "";
+    ref($array_item_subref) eq "CODE"
+        or Carp::croak("map_each_to_array(\$array_item_subref): \$array_item_subref ($array_item_subref) is not a sub ref");
+    my $new_array = [
+        map { ## no critic
+            my $key = $_;
+            my $value = $hash->{$key};
+            {
+                local $_ = $value;
+                $array_item_subref->($key, $value);
+            }
+        }
+        sort keys %$hash,
+    ];
+
+    return wantarray ? @$new_array : $new_array;
+}
+
 
 
 sub grep_each {
