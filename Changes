@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+1.012 2016-07-07T17:10:47Z
+
  * Require perl 5.10, to avoid bogus test failures on unsupported
    versions. This resolves issue #2: Fails with perls < 5.10
 
