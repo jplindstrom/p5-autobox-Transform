@@ -659,7 +659,7 @@ sub key_value_if_defined {
     );
 }
 
-sub grep {
+sub grep_each {
     my $hash = shift;
     my ($subref) = @_;
     $subref ||= sub { !! $_ }; # true?
@@ -680,12 +680,16 @@ sub grep {
 
     return wantarray ? %$new_hash : $new_hash;
 }
+*grep = \&grep_each;
 
-sub grep_defined {
+sub grep_each_defined {
     my $hash = shift;
     return &grep($hash, sub { defined($_) });
 }
-
+{
+    no warnings "once";
+    *grep_defined = \&grep_each_defined;
+}
 
 
 

@@ -10,39 +10,39 @@ use autobox::Core;
 use lib "lib";
 use autobox::Transform;
 
-subtest grep_basic => sub {
+subtest grep_each_basic => sub {
     eq_or_diff(
-        scalar { one => 1, zero => 0, two => 2, undefined => undef }->grep(),
+        scalar { one => 1, zero => 0, two => 2, undefined => undef }->grep_each(),
         { one => 1, two => 2 },
-        "grep with default 'true'",
+        "grep_each with default 'true'",
     );
     eq_or_diff(
-        scalar { one => 1, zero => 0, two => 2, undefined => undef }->grep(sub { !! $_ }),
+        scalar { one => 1, zero => 0, two => 2, undefined => undef }->grep_each(sub { !! $_ }),
         { one => 1, two => 2 },
-        "grep with subref 'true'",
+        "grep_each with subref 'true'",
     );
     eq_or_diff(
-        scalar { one => 1, zero => 0, two => 2, undefined => undef }->grep(sub { ($_ || 0) > 1 }),
+        scalar { one => 1, zero => 0, two => 2, undefined => undef }->grep_each(sub { ($_ || 0) > 1 }),
         { two => 2 },
-        "grep with subref using _",
+        "grep_each with subref using _",
     );
     eq_or_diff(
-        scalar { one => 1, zero => 0, two => 2, undefined => undef }->grep(sub { !! $_[1] }),
+        scalar { one => 1, zero => 0, two => 2, undefined => undef }->grep_each(sub { !! $_[1] }),
         { one => 1, two => 2 },
-        "grep with value 'true'",
+        "grep_each with value 'true'",
     );
     eq_or_diff(
-        scalar { one => 1, zero => 0, two => 2, undefined => undef }->grep(sub { $_[0] eq "one" }),
+        scalar { one => 1, zero => 0, two => 2, undefined => undef }->grep_each(sub { $_[0] eq "one" }),
         { one => 1 },
-        "grep with key eq",
+        "grep_each with key eq",
     );
 };
 
-subtest grep_defined_basic => sub {
+subtest grep_each_defined_basic => sub {
     eq_or_diff(
-        scalar { one => 1, zero => 0, two => 2, undefined => undef }->grep_defined(),
+        scalar { one => 1, zero => 0, two => 2, undefined => undef }->grep_each_defined(),
         { one => 1, two => 2, zero => 0 },
-        "grep_defined",
+        "grep_each_defined",
     );
 };
 
