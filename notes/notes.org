@@ -30,36 +30,32 @@
 ** keys_value* to support multiple pairs
 *** if there are more than one arg, assume they are pairs
 ** map family
-*** map -> array
-**** map_each_array($subref)
+*** map hash -> array
+**** [#A] map_each_to_array($subref)
 ***** ($key, $value), $_ is value
 ****** return value (or die) to be list item
 ***** return array with return values
-*** map -> hash
+*** map hash -> hash
 **** [#A] map_each($subref)
 ***** ($key, $value), $_ is value
 ****** return new key, new value (or die)
 ***** return hash with return values
-**** [#C] map_values($subref)
+**** [#C] map_each_value($subref, $new_key = $key)
 ***** ($key, $value), $_ is value
 ****** return new value
 ***** return hash with same key, return value
-**** map_values_by($accessor, $new_key = $accessor) maps values from one thing to another
+**** map_each_value_by($accessor, $new_key = $accessor) maps values from one thing to another
 ***** (key, $value, $accessor_value), $_ is accessor_value
 ****** return new value
 ***** return hash with same keys + $new_key = return value
 **** map_by ?
 ** grep family
 *** grep -> hash
-**** [#A] grep($subref = true)
+**** [#A] grep_each($subref = true)
 ***** ($key, $value), $_ is value
-***** Name: grep_each?
-**** [#B] grep_defined
+**** [#B] grep_each_defined
 ***** value is defined
-***** grep_each_defined?
-**** grep_by($accessor, $args?, $subref = true)
+**** grep_each_by($accessor, $args?, $subref = true)
 ***** ($key, $value, $accessor_value), $_ is accessor value
-***** grep_each_by?
-**** grep_by_defined
+**** grep_each_by_defined
 ***** accessor value is defined
-***** grep_each_by_defined?
