@@ -659,6 +659,33 @@ sub key_value_if_defined {
     );
 }
 
+
+
+sub map_each {
+    my $hash = shift;
+    my ($key_value_subref) = @_;
+    $key_value_subref //= "";
+    ref($key_value_subref) eq "CODE"
+        or Carp::croak("map_each(\$key_value_subref): \$key_value_subref ($key_value_subref) is not a sub ref");
+    my $new_hash = {
+        map { ## no critic
+            my $key = $_;
+            my $value = $hash->{$key};
+            {
+                local $_ = $value;
+                my (@new_key_value) = $key_value_subref->($key, $value);
+                @new_key_value >= 3 and Carp::croak("map_each \$key_value_subref returned more than the new key and value");
+                ( @new_key_value[ 0..1 ]);
+            }
+        }
+        keys %$hash,
+    };
+
+    return wantarray ? %$new_hash : $new_hash;
+}
+
+
+
 sub grep_each {
     my $hash = shift;
     my ($subref) = @_;
