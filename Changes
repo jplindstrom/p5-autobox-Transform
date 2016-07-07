@@ -2,6 +2,12 @@
 
 {{$NEXT}}
 
+ * Rename Hash grep -> grep_each, grep_defined -> grep_each_defined
+   - This is why they're undocumented
+
+ * map_each Hash method (so far undocumented)
+
+
 1.010 2016-06-04T06:59:49Z
 
  * grep, grep_defined Hash methods (so far undocumented)
