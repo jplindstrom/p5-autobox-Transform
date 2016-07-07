@@ -2,6 +2,10 @@
 
 {{$NEXT}}
 
+ * Require perl 5.10, to avoid bogus test failures on unsupported
+   versions. This resolves issue #2: Fails with perls < 5.10
+
+
 1.011 2016-07-07T12:57:42Z
 
  * Rename Hash grep -> grep_each, grep_defined -> grep_each_defined

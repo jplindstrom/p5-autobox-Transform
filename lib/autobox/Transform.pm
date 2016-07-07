@@ -2,6 +2,7 @@ package autobox::Transform;
 
 use strict;
 use warnings;
+use v5.10;
 use parent qw/autobox/;
 
 our $VERSION = "1.011";

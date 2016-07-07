@@ -44,7 +44,7 @@
          "requires" : {
             "Carp" : "0",
             "autobox" : "0",
-            "perl" : "5.008001",
+            "perl" : "v5.10.0",
             "true" : "0"
          }
       },
