@@ -711,10 +711,8 @@ sub map_each {
             {
                 local $_ = $value;
                 my (@new_key_value) = $key_value_subref->($key, $value);
-                ###JPL: should check for odd number
-                @new_key_value >= 3 and Carp::croak("map_each \$key_value_subref returned more than the new key and value");
-                ###JPL: what about returning no pair?
-                ( @new_key_value[ 0..1 ]);
+                (@new_key_value % 2) and Carp::croak("map_each \$key_value_subref returned odd number of keys/values");
+                @new_key_value;
             }
         }
         keys %$hash,

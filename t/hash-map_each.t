@@ -29,11 +29,16 @@ subtest map_each_missing_subref => sub {
     );
 };
 
-subtest map_each_subref_returns_too_many_items => sub {
+subtest map_each_subref_returns_wrong_number_of_items => sub {
+    throws_ok(
+        sub { scalar { one => 1, zero => 0, two => 2, undefined => undef }->map_each(sub { return (1) }) },
+        qr|returned odd number of keys/values at|,
+        "map_each, 1 return value",
+    );
     throws_ok(
         sub { scalar { one => 1, zero => 0, two => 2, undefined => undef }->map_each(sub { return (1, 2, 3) }) },
-        qr/returned more than the new key and value at/,
-        "map_each dies without subref",
+        qr|returned odd number of keys/values at|,
+        "map_each, 3 return values",
     );
 };
 
@@ -44,6 +49,16 @@ subtest map_each_basic => sub {
         ),
         { zero0 => 0, one1 => 1, two2 => 2, undefinedundef => "UNDEF" },
         "map_each with key, value, topic variable",
+    );
+    eq_or_diff(
+        scalar { one => 1, zero => 0, two => 2, undefined => undef }->map_each(
+            sub { ($_[0] => $_, ($_ // "") => $_[0] ) },
+        ),
+        {
+            one => 1, zero => 0, two => 2, undefined => undef,
+            1 => "one", 0 => "zero", 2 => "two", "" => "undefined",
+        },
+        "map_each with multiple return pairs",
     );
 };
 
