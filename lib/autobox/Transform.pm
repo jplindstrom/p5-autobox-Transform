@@ -13,10 +13,10 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
 =head1 SYNOPSIS
 
-=head2 Examples
-
     use autobox::Core;  # uniq, sort, join, sum, etc.
     use autobox::Transform;
+
+=head2 Array Examples
 
     $books->map_by("genre");
     $books->map_by(price_with_tax => [$tax_pct]);
@@ -32,6 +32,19 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
     $authors->map_by("books")->flat;
 
+
+=head2 Hash Examples
+
+    # Upper-case the genre name, and make the count say "n books"
+    $genre_count->map_each(sub { uc( $_[0] ) => "$_ books" });
+    # {
+    #     "FANTASY" => "1 books",
+    #     "SCI-FI"  => "3 books",
+    # },
+
+
+=head2 Combined examples
+
     my $order_authors = $order->books
         ->uniq_by("isbn")
         ->map_by("author")
@@ -44,6 +57,9 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
 
 =head2 Comparison of vanilla Perl and autobox version
+
+These are only for when there's a straightforward and simple Perl
+equivalent.
 
     ### map_by - method call: $books are Book objects
     my @genres = map { $_->genre() } @$books;
@@ -662,6 +678,26 @@ sub key_value_if_defined {
 
 
 
+=head2 map_each($key_value_subref) : %new_hash | %$new_hash
+
+Map each key-value pair in the hash using the
+$key_value_subref. Similar to how to how map transform a list into
+another list, map_each transforms a hash into another hash.
+
+C<$key_value_subref->($key, $value)> is called for each pair (with $_
+set to the value).
+
+The subref should return an even-numbered list with zero or more
+key-value pairs which will make up the %new_hash. Typically two items
+are returned in the list (the key and the value).
+
+=head3 Example
+
+    { a => 1, b => 2 }->map_each(sub { "$_[0]$_[0]" => $_ * 2 });
+    # Returns { aa => 2, bb => 4 }
+
+=cut
+
 sub map_each {
     my $hash = shift;
     my ($key_value_subref) = @_;
@@ -675,7 +711,9 @@ sub map_each {
             {
                 local $_ = $value;
                 my (@new_key_value) = $key_value_subref->($key, $value);
+                ###JPL: should check for odd number
                 @new_key_value >= 3 and Carp::croak("map_each \$key_value_subref returned more than the new key and value");
+                ###JPL: what about returning no pair?
                 ( @new_key_value[ 0..1 ]);
             }
         }

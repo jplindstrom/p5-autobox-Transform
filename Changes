@@ -2,6 +2,9 @@
 
 {{$NEXT}}
 
+ * Make $hash->map_each() official by documenting it
+
+
 1.012 2016-07-07T17:10:47Z
 
  * Require perl 5.10, to avoid bogus test failures on unsupported
