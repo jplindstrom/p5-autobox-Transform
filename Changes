@@ -2,7 +2,8 @@
 
 {{$NEXT}}
 
- * Make $hash->map_each() official by documenting it
+ * Make $hash->map_each(), $hash->map_each_to_array() official by
+   documenting it
 
 
 1.012 2016-07-07T17:10:47Z

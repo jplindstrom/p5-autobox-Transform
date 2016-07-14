@@ -681,7 +681,7 @@ sub key_value_if_defined {
 =head2 map_each($key_value_subref) : %new_hash | %$new_hash
 
 Map each key-value pair in the hash using the
-$key_value_subref. Similar to how to how map transform a list into
+$key_value_subref. Similar to how to how map transforms a list into
 another list, map_each transforms a hash into another hash.
 
 C<$key_value_subref->($key, $value)> is called for each pair (with $_
@@ -720,6 +720,24 @@ sub map_each {
 
     return wantarray ? %$new_hash : $new_hash;
 }
+
+=head2 map_each_to_array($item_subref) : %new_array | %$new_array
+
+Map each key-value pair in the hash into a list using the
+$item_subref.
+
+C<$item_subref->($key, $value)> is called for each pair (with $_ set
+to the value) in key order.
+
+The subref should return zero or more list items which will make up
+the %new_array. Typically one item are returned.
+
+=head3 Example
+
+    { a => 1, b => 2 }->map_each_to_array(sub { "$_[0]-$_" });
+    # Returns [ "a-1", "b-2" ]
+
+=cut
 
 sub map_each_to_array {
     my $hash = shift;
