@@ -10,6 +10,12 @@ use autobox::Core;
 use lib "lib";
 use autobox::Transform;
 
+use lib "t/lib";
+use Literature;
+
+my $literature = Literature::literature();
+my $books      = $literature->{books};
+
 subtest map_each_to_array_missing_subref => sub {
     throws_ok(
         sub { scalar { one => 1, zero => 0, two => 2, undefined => undef }->map_each_to_array() },
@@ -41,6 +47,19 @@ subtest map_each_to_array_return_many_items => sub {
         [ "one1", "1", "two2", "2", "undefinedundef", "UNDEF", "zero0", "0" ],
         "map_each_to_array with key, value, topic variable",
     );
+};
+
+subtest examples => sub {
+    my $genre_count = $books->group_by_count("genre");
+
+    # Summarize each genre
+    eq_or_diff(
+        [ $genre_count->map_each_to_array(sub { "$_: $_[0]" }) ],
+        [ "1: Fantasy", "3: Sci-fi" ],
+        "Book count",
+    );
+
+    ok(1);
 };
 
 done_testing();
