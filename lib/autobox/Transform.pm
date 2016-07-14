@@ -42,6 +42,10 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     #     "SCI-FI"  => "3 books",
     # },
 
+    # Transform each pair to the string "n: genre"
+    $genre_count->map_each_to_array(sub { "$_: $_[0]" });
+    # [ "1: Fantasy", "3: Sci-fi" ]
+
 
 =head2 Combined examples
 
