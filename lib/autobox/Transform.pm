@@ -26,11 +26,37 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
     $books->uniq_by("id");
 
-    $books->group_by("title");
-    $books->group_by_count("genre")
-    $books->group_by_array("genre")
+    $books->group_by("title"),
+    # {
+    #     "Leviathan Wakes"       => $books->[0],
+    #     "Caliban's War"         => $books->[1],
+    #     "The Tree-Body Problem" => $books->[2],
+    #     "The Name of the Wind"  => $books->[3],
+    # },
 
+    $authors->group_by(publisher_affiliation => ["with"]),
+    # {
+    #     'James A. Corey with Orbit'     => $authors->[0],
+    #     'Cixin Liu with Head of Zeus'   => $authors->[1],
+    #     'Patrick Rothfuss with Gollanz' => $authors->[2],
+    # },
+
+    $books->group_by_count("genre"),
+    # {
+    #     "Sci-fi"  => 3,
+    #     "Fantasy" => 1,
+    # },
+
+    my $genre_books = $books->group_by_array("genre");
+    # {
+    #     "Sci-fi"  => [ $sf_book_1, $sf_book_2, $sf_book_3 ],
+    #     "Fantasy" => [ $fantasy_book_1 ],
+    # },
+
+    $authors->map_by("books") # ->books returns an arrayref
+    # [ [ $book1, $book2 ], [ $book3 ] ]
     $authors->map_by("books")->flat;
+    # [ $book1, $book2, $book3 ]
 
 
 =head2 Hash Examples
@@ -107,42 +133,6 @@ equivalent.
     my $distinct_books = $books->uniq_by("id");
 
 
-
-    ### group_by - method call: $books are Book objects
-
-    $books->group_by("title"),
-    # {
-    #     "Leviathan Wakes"       => $books->[0],
-    #     "Caliban's War"         => $books->[1],
-    #     "The Tree-Body Problem" => $books->[2],
-    #     "The Name of the Wind"  => $books->[3],
-    # },
-
-    $authors->group_by(publisher_affiliation => ["with"]),
-    # {
-    #     'James A. Corey with Orbit'     => $authors->[0],
-    #     'Cixin Liu with Head of Zeus'   => $authors->[1],
-    #     'Patrick Rothfuss with Gollanz' => $authors->[2],
-    # },
-
-    $books->group_by_count("genre"),
-    # {
-    #     "Sci-fi"  => 3,
-    #     "Fantasy" => 1,
-    # },
-
-    my $genre_books = $books->group_by_array("genre");
-    # {
-    #     "Sci-fi"  => [ $sf_book_1, $sf_book_2, $sf_book_3 ],
-    #     "Fantasy" => [ $fantasy_book_1 ],
-    # },
-
-
-    ### group_by - hash key: $books are book hashrefs
-    $books->group_by("title"), # $books are hashrefs
-
-
-
     #### flat - $author->books returns an arrayref of Books
     my $author_books = [ map { @{$_->books} } @$authors ]
     my $author_books = $authors->map_by("books")->flat
@@ -183,6 +173,19 @@ $array->group_by_array()
 =item
 
 $array->flat()
+
+=back
+
+
+=over 4
+
+=item
+
+$hash->map_each
+
+=item
+
+$hash->map_each_to_array
 
 =back
 
@@ -734,7 +737,7 @@ C<$item_subref->($key, $value)> is called for each pair (with $_ set
 to the value) in key order.
 
 The subref should return zero or more list items which will make up
-the %new_array. Typically one item are returned.
+the %new_array. Typically one item is returned.
 
 =head3 Example
 
