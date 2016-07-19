@@ -2,6 +2,9 @@
 
 {{$NEXT}}
 
+ * Change version required to 5.010, hopefully closing #3. Thanks to
+   https://github.com/findmo for reporting.
+
  * Make $hash->map_each(), $hash->map_each_to_array() official by
    documenting it
 
