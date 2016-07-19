@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+1.013 2016-07-19T12:29:41Z
+
  * Change version required to 5.010, hopefully closing #3. Thanks to
    https://github.com/findmo for reporting.
 

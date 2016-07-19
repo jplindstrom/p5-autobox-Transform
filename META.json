@@ -44,7 +44,7 @@
          "requires" : {
             "Carp" : "0",
             "autobox" : "0",
-            "perl" : "5.10",
+            "perl" : "5.010",
             "true" : "0"
          }
       },
@@ -70,7 +70,7 @@
          "web" : "https://github.com/jplindstrom/p5-autobox-Transform"
       }
    },
-   "version" : "1.012",
+   "version" : "1.013",
    "x_authority" : "cpan:JOHANL",
    "x_contributors" : [
       "Johan Lindstrom <johan.lindstrom@broadbean.com>",

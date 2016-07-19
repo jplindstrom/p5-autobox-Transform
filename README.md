@@ -4,10 +4,10 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
 # SYNOPSIS
 
-## Examples
-
     use autobox::Core;  # uniq, sort, join, sum, etc.
     use autobox::Transform;
+
+## Array Examples
 
     $books->map_by("genre");
     $books->map_by(price_with_tax => [$tax_pct]);
@@ -17,11 +17,52 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
     $books->uniq_by("id");
 
-    $books->group_by("title");
-    $books->group_by_count("genre")
-    $books->group_by_array("genre")
+    $books->group_by("title"),
+    # {
+    #     "Leviathan Wakes"       => $books->[0],
+    #     "Caliban's War"         => $books->[1],
+    #     "The Tree-Body Problem" => $books->[2],
+    #     "The Name of the Wind"  => $books->[3],
+    # },
 
+    $authors->group_by(publisher_affiliation => ["with"]),
+    # {
+    #     'James A. Corey with Orbit'     => $authors->[0],
+    #     'Cixin Liu with Head of Zeus'   => $authors->[1],
+    #     'Patrick Rothfuss with Gollanz' => $authors->[2],
+    # },
+
+    $books->group_by_count("genre"),
+    # {
+    #     "Sci-fi"  => 3,
+    #     "Fantasy" => 1,
+    # },
+
+    my $genre_books = $books->group_by_array("genre");
+    # {
+    #     "Sci-fi"  => [ $sf_book_1, $sf_book_2, $sf_book_3 ],
+    #     "Fantasy" => [ $fantasy_book_1 ],
+    # },
+
+    $authors->map_by("books") # ->books returns an arrayref
+    # [ [ $book1, $book2 ], [ $book3 ] ]
     $authors->map_by("books")->flat;
+    # [ $book1, $book2, $book3 ]
+
+## Hash Examples
+
+    # Upper-case the genre name, and make the count say "n books"
+    $genre_count->map_each(sub { uc( $_[0] ) => "$_ books" });
+    # {
+    #     "FANTASY" => "1 books",
+    #     "SCI-FI"  => "3 books",
+    # },
+
+    # Transform each pair to the string "n: genre"
+    $genre_count->map_each_to_array(sub { "$_: $_[0]" });
+    # [ "1: Fantasy", "3: Sci-fi" ]
+
+## Combined examples
 
     my $order_authors = $order->books
         ->uniq_by("isbn")
@@ -34,6 +75,9 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
         ->sum;
 
 ## Comparison of vanilla Perl and autobox version
+
+These are only for when there's a straightforward and simple Perl
+equivalent.
 
     ### map_by - method call: $books are Book objects
     my @genres = map { $_->genre() } @$books;
@@ -77,42 +121,6 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     my $distinct_books = $books->uniq_by("id");
 
 
-
-    ### group_by - method call: $books are Book objects
-
-    $books->group_by("title"),
-    # {
-    #     "Leviathan Wakes"       => $books->[0],
-    #     "Caliban's War"         => $books->[1],
-    #     "The Tree-Body Problem" => $books->[2],
-    #     "The Name of the Wind"  => $books->[3],
-    # },
-
-    $authors->group_by(publisher_affiliation => ["with"]),
-    # {
-    #     'James A. Corey with Orbit'     => $authors->[0],
-    #     'Cixin Liu with Head of Zeus'   => $authors->[1],
-    #     'Patrick Rothfuss with Gollanz' => $authors->[2],
-    # },
-
-    $books->group_by_count("genre"),
-    # {
-    #     "Sci-fi"  => 3,
-    #     "Fantasy" => 1,
-    # },
-
-    my $genre_books = $books->group_by_array("genre");
-    # {
-    #     "Sci-fi"  => [ $sf_book_1, $sf_book_2, $sf_book_3 ],
-    #     "Fantasy" => [ $fantasy_book_1 ],
-    # },
-
-
-    ### group_by - hash key: $books are book hashrefs
-    $books->group_by("title"), # $books are hashrefs
-
-
-
     #### flat - $author->books returns an arrayref of Books
     my $author_books = [ map { @{$_->books} } @$authors ]
     my $author_books = $authors->map_by("books")->flat
@@ -129,6 +137,9 @@ and hashrefs.
 - $array->group\_by\_count()
 - $array->group\_by\_array()
 - $array->flat()
+
+- $hash->map\_each
+- $hash->map\_each\_to\_array
 
 ## Raison d'etre
 
@@ -357,6 +368,40 @@ list rather than an array and therefore can't be used in this
 way.
 
 # AUTOBOX HASH METHODS
+
+## map\_each($key\_value\_subref) : %new\_hash | %$new\_hash
+
+Map each key-value pair in the hash using the
+$key\_value\_subref. Similar to how to how map transforms a list into
+another list, map\_each transforms a hash into another hash.
+
+`$key_value_subref-`($key, $value)> is called for each pair (with $\_
+set to the value).
+
+The subref should return an even-numbered list with zero or more
+key-value pairs which will make up the %new\_hash. Typically two items
+are returned in the list (the key and the value).
+
+### Example
+
+    { a => 1, b => 2 }->map_each(sub { "$_[0]$_[0]" => $_ * 2 });
+    # Returns { aa => 2, bb => 4 }
+
+## map\_each\_to\_array($item\_subref) : %new\_array | %$new\_array
+
+Map each key-value pair in the hash into a list using the
+$item\_subref.
+
+`$item_subref-`($key, $value)> is called for each pair (with $\_ set
+to the value) in key order.
+
+The subref should return zero or more list items which will make up
+the %new\_array. Typically one item is returned.
+
+### Example
+
+    { a => 1, b => 2 }->map_each_to_array(sub { "$_[0]-$_" });
+    # Returns [ "a-1", "b-2" ]
 
 # DEVELOPMENT
 
