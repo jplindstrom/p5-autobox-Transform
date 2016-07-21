@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+1.014 2016-07-21T17:02:10Z
+
  * map_each_value Hash method (so far undocumented)
 
 
