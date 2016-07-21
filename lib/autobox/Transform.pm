@@ -728,6 +728,33 @@ sub map_each {
     return wantarray ? %$new_hash : $new_hash;
 }
 
+sub map_each_value {
+    my $hash = shift;
+    my ($value_subref) = @_;
+    $value_subref //= "";
+    ref($value_subref) eq "CODE"
+        or Carp::croak("map_each_value(\$value_subref): \$value_subref ($value_subref) is not a sub ref");
+    my $new_hash = {
+        map { ## no critic
+            my $key = $_;
+            my $value = $hash->{$key};
+            {
+                local $_ = $value;
+                my @new_values = $value_subref->($key, $value);
+                @new_values > 1 and Carp::croak(
+                    "map_each_value \$value_subref returned multiple values. "
+                    . "You can not assign a list to the value of hash key ($key). "
+                    . "Did you mean to return an arrayref?",
+                );
+                $key => @new_values;
+            }
+        }
+        keys %$hash,
+    };
+
+    return wantarray ? %$new_hash : $new_hash;
+}
+
 =head2 map_each_to_array($item_subref) : %new_array | %$new_array
 
 Map each key-value pair in the hash into a list using the
