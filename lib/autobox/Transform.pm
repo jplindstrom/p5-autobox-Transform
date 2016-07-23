@@ -23,6 +23,7 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
     $books->grep_by("is_sold_out");
     $books->grep_by(is_in_library => [$library]);
+    $books->grep_by(price => undef, sub { $_ > 56.00 });
 
     $books->uniq_by("id");
 
@@ -373,13 +374,10 @@ sub map_by {
 
 
 
-=head2 @array->grep_by($accessor, @$args?) : @array | @$array
+=head2 @array->grep_by($accessor, @$args?, $grep_subref = *is_true*) : @array | @$array
 
 Call the $accessor on each object in the list, or get the hash key
-value on each hashref in the list. Like:
-
-    grep { $_->$accessor() }
-    grep { $_->{$accessor} }
+value on each hashref in the list.
 
 Examples:
 
@@ -392,6 +390,29 @@ Optionally pass in @$args in the method call. Like:
 Examples:
 
     my @books_to_charge_for = $books->grep_by("price_with_tax", [ $tax_pct ]);
+
+Optionally, with the value returned from the $accessor, call
+$grep_subref->($value) to check whether this item should remain in the
+list (default is to check for true values).
+
+The $grep_subref should return a true value to remain. $_ is set to
+the current $value.
+
+Examples:
+
+    my @authors = $authors->grep_by(
+        "publisher", undef,
+        sub { $_->name =~ /Orbit/ },
+    );
+
+    my @authors = $authors->grep_by(
+        publisher_affiliation => [ "with" ],
+        sub { /Orbit / },
+    );
+
+Note: if you do something complicated with the $grep_subref, it might
+be easier and more readable to simply use C<$array->grep()> from
+L<autobox::Core>.
 
 =cut
 
