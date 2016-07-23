@@ -73,6 +73,13 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     $genre_count->map_each_to_array(sub { "$_: $_[0]" });
     # [ "1: Fantasy", "3: Sci-fi" ]
 
+    # Make the count say "n books"
+    $genre_count->map_each_value(sub { "$_ books" });
+    # {
+    #     "Fantasy" => "1 books",
+    #     "Sci-fi"  => "3 books",
+    # },
+
 
 =head2 Combined examples
 
@@ -763,6 +770,24 @@ sub map_each {
 
     return wantarray ? %$new_hash : $new_hash;
 }
+
+=head2 map_each_value($value_subref) : %new_hash | %$new_hash
+
+Map each value in the hash using the $value_subref, but keep the keys
+the same.
+
+C<$value_subref->($key, $value)> is called for each pair (with $_
+set to the value).
+
+The subref should return a single value for each key which will make
+up the %new_hash (with the same keys but with new mapped values).
+
+=head3 Example
+
+    { a => 1, b => 2 }->map_each_value(sub { $_ * 2 });
+    # Returns { a => 2, b => 4 }
+
+=cut
 
 sub map_each_value {
     my $hash = shift;
