@@ -18,6 +18,9 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
 =head2 Array Examples
 
+    # $books and $authors below are arrayrefs with either objects (or
+    # hashrefs)
+
     $books->map_by("genre");
     $books->map_by(price_with_tax => [$tax_pct]);
 
@@ -69,16 +72,16 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     #     "SCI-FI"  => "3 books",
     # },
 
-    # Transform each pair to the string "n: genre"
-    $genre_count->map_each_to_array(sub { "$_: $_[0]" });
-    # [ "1: Fantasy", "3: Sci-fi" ]
-
     # Make the count say "n books"
     $genre_count->map_each_value(sub { "$_ books" });
     # {
     #     "Fantasy" => "1 books",
     #     "Sci-fi"  => "3 books",
     # },
+
+    # Transform each pair to the string "n: genre"
+    $genre_count->map_each_to_array(sub { "$_: $_[0]" });
+    # [ "1: Fantasy", "3: Sci-fi" ]
 
 
 =head2 Combined examples
@@ -193,6 +196,10 @@ $hash->map_each
 
 =item
 
+$hash->map_each_value
+
+=item
+
 $hash->map_each_to_array
 
 =back
@@ -220,8 +227,9 @@ operations etc.
 
 =back
 
-autobox::Transform provides a few higher level methods for mapping,
-greping and sorting common cases which are easier to read and write.
+On top of this, L<autobox::Transform> provides a few higher level
+methods for mapping, greping and sorting common cases which are easier
+to read and write.
 
 Since they are at a slightly higher semantic level, once you know them
 they also provide a more specific meaning than just "map" or "grep".
