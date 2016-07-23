@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+1.015 2016-07-23T15:27:10Z
+
  * Make $hash->map_each_value() by documenting it.
 
  * grep_by can now take a $grep_subref to check if each item should

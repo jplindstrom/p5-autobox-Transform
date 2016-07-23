@@ -14,6 +14,7 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
     $books->grep_by("is_sold_out");
     $books->grep_by(is_in_library => [$library]);
+    $books->grep_by(price => undef, sub { $_ > 56.00 });
 
     $books->uniq_by("id");
 
@@ -61,6 +62,13 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     # Transform each pair to the string "n: genre"
     $genre_count->map_each_to_array(sub { "$_: $_[0]" });
     # [ "1: Fantasy", "3: Sci-fi" ]
+
+    # Make the count say "n books"
+    $genre_count->map_each_value(sub { "$_ books" });
+    # {
+    #     "Fantasy" => "1 books",
+    #     "Sci-fi"  => "3 books",
+    # },
 
 ## Combined examples
 
@@ -233,13 +241,10 @@ Or get the hash key value. Examples:
 
     my @review_scores = $reviews->map_by("score");
 
-## @array->grep\_by($accessor, @$args?) : @array | @$array
+## @array->grep\_by($accessor, @$args?, $grep\_subref = \*is\_true\*) : @array | @$array
 
 Call the $accessor on each object in the list, or get the hash key
-value on each hashref in the list. Like:
-
-    grep { $_->$accessor() }
-    grep { $_->{$accessor} }
+value on each hashref in the list.
 
 Examples:
 
@@ -252,6 +257,29 @@ Optionally pass in @$args in the method call. Like:
 Examples:
 
     my @books_to_charge_for = $books->grep_by("price_with_tax", [ $tax_pct ]);
+
+Optionally, with the value returned from the $accessor, call
+$grep\_subref->($value) to check whether this item should remain in the
+list (default is to check for true values).
+
+The $grep\_subref should return a true value to remain. $\_ is set to
+the current $value.
+
+Examples:
+
+    my @authors = $authors->grep_by(
+        "publisher", undef,
+        sub { $_->name =~ /Orbit/ },
+    );
+
+    my @authors = $authors->grep_by(
+        publisher_affiliation => [ "with" ],
+        sub { /Orbit / },
+    );
+
+Note: if you do something complicated with the $grep\_subref, it might
+be easier and more readable to simply use `$array-`grep()> from
+[autobox::Core](https://metacpan.org/pod/autobox::Core).
 
 ## @array->uniq\_by($accessor, @$args?) : @array | @$array
 
@@ -386,6 +414,22 @@ are returned in the list (the key and the value).
 
     { a => 1, b => 2 }->map_each(sub { "$_[0]$_[0]" => $_ * 2 });
     # Returns { aa => 2, bb => 4 }
+
+## map\_each\_value($value\_subref) : %new\_hash | %$new\_hash
+
+Map each value in the hash using the $value\_subref, but keep the keys
+the same.
+
+`$value_subref-`($key, $value)> is called for each pair (with $\_
+set to the value).
+
+The subref should return a single value for each key which will make
+up the %new\_hash (with the same keys but with new mapped values).
+
+### Example
+
+    { a => 1, b => 2 }->map_each_value(sub { $_ * 2 });
+    # Returns { a => 2, b => 4 }
 
 ## map\_each\_to\_array($item\_subref) : %new\_array | %$new\_array
 
