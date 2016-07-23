@@ -2,6 +2,10 @@
 
 {{$NEXT}}
 
+ * grep_by can now take a $grep_subref to check if each item should
+   remain (default: check for true values).
+
+
 1.014 2016-07-21T17:02:10Z
 
  * map_each_value Hash method (so far undocumented)
