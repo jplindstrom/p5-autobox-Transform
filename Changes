@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+ * Make $hash->map_each_value() by documenting it.
+
  * grep_by can now take a $grep_subref to check if each item should
    remain (default: check for true values).
 
@@ -17,7 +19,7 @@
    https://github.com/findmo for reporting.
 
  * Make $hash->map_each(), $hash->map_each_to_array() official by
-   documenting it
+   documenting them.
 
 
 1.012 2016-07-07T17:10:47Z
