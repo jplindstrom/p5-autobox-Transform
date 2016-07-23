@@ -824,7 +824,7 @@ sub map_each_value {
     return wantarray ? %$new_hash : $new_hash;
 }
 
-=head2 map_each_to_array($item_subref) : %new_array | %$new_array
+=head2 map_each_to_array($item_subref) : @new_array | @$new_array
 
 Map each key-value pair in the hash into a list using the
 $item_subref.
@@ -833,7 +833,7 @@ C<$item_subref->($key, $value)> is called for each pair (with $_ set
 to the value) in key order.
 
 The subref should return zero or more list items which will make up
-the %new_array. Typically one item is returned.
+the @new_array. Typically one item is returned.
 
 =head3 Example
 
