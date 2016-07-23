@@ -2,6 +2,9 @@
 
 {{$NEXT}}
 
+ * Improved docs
+
+
 1.015 2016-07-23T15:27:10Z
 
  * Make $hash->map_each_value() official by documenting it.
