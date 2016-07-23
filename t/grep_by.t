@@ -17,7 +17,7 @@ my $literature = Literature::literature();
 my $authors    = $literature->{authors};
 
 subtest grep_by => sub {
-    note "ArrayRef call, list context result";
+    note "ArrayRef call, list context result, default predicate (true)";
     eq_or_diff(
         [ map { $_->name } $authors->grep_by("is_prolific") ],
         [
@@ -35,6 +35,29 @@ subtest grep_by => sub {
             "James A. Corey",
         ],
         "grep_by simple method call works",
+    );
+};
+
+subtest grep_by_with_predicate_sub => sub {
+    eq_or_diff(
+        [ map { $_->name } $authors->grep_by("name", undef, sub { /Corey/ }) ],
+        [
+            "James A. Corey",
+        ],
+        "grep_by without predicate argument and with predicate sub call works",
+    );
+    eq_or_diff(
+        [
+            map { $_->name } $authors->grep_by(
+                "publisher_affiliation",
+                [ "with" ],
+                sub { /Corey/ },
+            ),
+        ],
+        [
+            "James A. Corey",
+        ],
+        "grep_by with method argument and predicate sub call works",
     );
 };
 

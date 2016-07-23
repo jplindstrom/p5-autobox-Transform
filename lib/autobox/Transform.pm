@@ -301,8 +301,8 @@ package # hide from PAUSE
 sub __invoke_by {
     my $invoke = shift;
     my $array = shift;
-    my( $accessor, $args ) = @_;
-    @_ > 0 or Carp::croak("->${invoke}_by() missing argument: \$accessor");
+    my( $accessor, $args, $subref_name, $subref ) = @_;
+    defined($accessor) or Carp::croak("->${invoke}_by() missing argument: \$accessor");
     @$array or return wantarray ? () : [ ];
 
     if ( ref($array->[0] ) eq "HASH" ) {
@@ -315,12 +315,17 @@ sub __invoke_by {
     ref($args) eq "ARRAY"
         or Carp::croak("${invoke}_by('$accessor', \$args): \$args ($args) is not an array ref");
 
+    if( $subref_name ) {
+        ref($subref) eq "CODE"
+            or Carp::croak("${invoke}_by('$accessor', \$args, \$$subref_name): \$$subref_name ($subref) is not an sub ref");
+    }
+
     my %seen;
     my $invoke_sub = {
         map      => sub { [ CORE::map  { $_->$accessor( @$args ) } @$array ] },
         map_key  => sub { [ CORE::map  { $_->{$accessor}         } @$array ] },
-        grep     => sub { [ CORE::grep { $_->$accessor( @$args ) } @$array ] },
-        grep_key => sub { [ CORE::grep { $_->{$accessor}         } @$array ] },
+        grep     => sub { [ CORE::grep { $subref->( local $_ = $_->$accessor( @$args ) ) } @$array ] },
+        grep_key => sub { [ CORE::grep { $subref->( local $_ = $_->{$accessor}         ) } @$array ] },
         uniq     => sub { [ CORE::grep { ! $seen{ $_->$accessor( @$args ) // "" }++ } @$array ] },
         uniq_key => sub { [ CORE::grep { ! $seen{ $_->{$accessor}         // "" }++ } @$array ] },
     }->{$invoke};
@@ -361,7 +366,9 @@ Or get the hash key value. Examples:
 =cut
 
 sub map_by {
-    return __invoke_by("map", @_);
+    my $array = shift;
+    my ($accessor, $args) = @_;
+    return __invoke_by("map", $array, $accessor, $args);
 }
 
 
@@ -389,12 +396,18 @@ Examples:
 =cut
 
 sub grep_by {
-    return __invoke_by("grep", @_);
+    my $array = shift;
+    my ($accessor, $args, $grep_subref) = @_;
+    $grep_subref //= sub { !! $_ };
+    # grep_by $value, if passed the method value must match the value?
+    return __invoke_by(
+        "grep",
+        $array,
+        $accessor,
+        $args,
+        grep_subref => $grep_subref,
+    );
 }
-
-# grep_by $value, if passed the method value must match the value
-
-
 
 =head2 @array->uniq_by($accessor, @$args?) : @array | @$array
 
@@ -417,7 +430,9 @@ Examples:
 =cut
 
 sub uniq_by {
-    return __invoke_by("uniq", @_);
+    my $array = shift;
+    my ($accessor, $args) = @_;
+    return __invoke_by("uniq", $array, $accessor, $args);
 }
 
 
