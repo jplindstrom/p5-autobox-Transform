@@ -111,14 +111,15 @@ subtest map_by__key => sub {
 subtest map_by__key__with_args => sub {
     note "ArrayRef key, list context result";
     throws_ok(
-        sub { $reviews->map_by("score" => [ ]) },
+        sub { $reviews->map_by("score" => [ "abc" ]) },
         qr{ map_by .+? 'score' .+? \$args .+? only[ ]supported[ ]for[ ]method[ ]calls.+? t.map_by.t}x,
- 
+        "Arrayref with items, not allowed"
+    );
+    lives_ok(
+        sub { $reviews->map_by("score" => [ ]) },
+        "Empty arrayref is allowed",
     );
 };
-
-# map_by__key__with_args
-
 
 
 

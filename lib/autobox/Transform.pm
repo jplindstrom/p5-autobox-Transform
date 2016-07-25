@@ -321,13 +321,13 @@ sub __invoke_by {
     defined($accessor) or Carp::croak("->${invoke}_by() missing argument: \$accessor");
     @$array or return wantarray ? () : [ ];
 
+    $args //= [];
     if ( ref($array->[0] ) eq "HASH" ) {
-        defined($args)
+        ( defined($args) && (@$args) ) # defined and isn't empty
             and Carp::croak("${invoke}_by('$accessor'): \$args ($args) only supported for method calls, not hash key access");
         $invoke .= "_key";
     }
 
-    $args //= [];
     ref($args) eq "ARRAY"
         or Carp::croak("${invoke}_by('$accessor', \$args): \$args ($args) is not an array ref");
 

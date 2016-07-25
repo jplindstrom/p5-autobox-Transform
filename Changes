@@ -2,6 +2,9 @@
 
 {{$NEXT}}
 
+ * Allow empty $args arrayref when accessing hash keys
+
+
 1.016 2016-07-23T15:50:32Z
 
  * Improved docs
