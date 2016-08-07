@@ -36,11 +36,11 @@
 ****** return value (or die) to be list item
 ***** return array with return values
 *** map hash -> hash
-**** [#A] map_each($subref)
+**** map_each($subref)
 ***** ($key, $value), $_ is value
 ****** return new key, new value (or die)
 ***** return hash with return values
-**** [#C] map_each_value($subref, $new_key = $key)
+**** map_each_value($subref, $new_key = $key)
 ***** ($key, $value), $_ is value
 ****** return new value
 ***** return hash with same key, return value
@@ -59,3 +59,36 @@
 ***** ($key, $value, $accessor_value), $_ is accessor value
 **** grep_each_by_defined
 ***** accessor value is defined
+* DOCS
+** Operate on an array of scalars
+*** TODO grep_true
+*** TODO grep_defined
+*** flat
+*** TODO group
+*** TODO group_count
+*** TODO group_array
+** Operate on a hash
+*** map_each
+*** map_each_value
+*** map_each_to_array
+*** grep_each
+*** TODO grep_each_true
+*** grep_each_defined
+*** key_value
+*** key_value_if_true
+*** key_value_if_defined
+*** key_value_if_exists
+** Operate on an array of hashrefs/objects
+*** map_by
+*** grep_by
+*** TODO grep_by_true
+*** TODO grep_by_defined
+*** uniq_by
+*** group_by
+*** group_by_array
+*** group_by_count
+** Operate on a hash with hashref/object values
+*** TODO map_each_value_by
+*** TODO grep_each_value_by
+*** TODO grep_each_value_by_true
+*** TODO grep_each_value_by_defined
