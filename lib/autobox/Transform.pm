@@ -62,6 +62,12 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     $authors->map_by("books")->flat;
     # [ $book1, $book2, $book3 ]
 
+    # Return reference, even in list context, e.g. in a parameter list
+    report( genres => $books->map_by("genre")->to_ref );
+
+    # Return array, even in scalar context
+    @books->to_array;
+
 
 =head2 Hash Examples
 
@@ -82,6 +88,12 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     # Transform each pair to the string "n: genre"
     $genre_count->map_each_to_array(sub { "$_: $_[0]" });
     # [ "1: Fantasy", "3: Sci-fi" ]
+
+    # Return reference, even in list context, e.g. in a parameter list
+    report( genre_count => $books->group_by_count("genre")->to_ref );
+
+    # Return hash, even in scalar context
+    $author->book_count->to_hash;
 
 
 =head2 Combined examples
@@ -293,16 +305,23 @@ context. E.g.
     $self->my_method(
         # Wrong, this is list context and wouldn't return an arrayref
         books => $books->grep_by("is_published"),
-    ),
+    );
 
     $self->my_method(
         # Correct, convert the list to an arrayref
         books => [ $books->grep_by("is_published") ],
-    ),
+    );
     $self->my_method(
         # Correct, ensure scalar context i.e. an array ref
         books => scalar $books->grep_by("is_published"),
-    ),
+    );
+
+    # Probably the nicest, since it goes at the end
+    $self->my_method(
+        # Correct, use ->to_ref to ensure an array reference is returned
+        books => $books->grep_by("is_published")->to_ref,
+    );
+
 
 
 =head1 AUTOBOX ARRAY METHODS
@@ -676,7 +695,38 @@ sub flat {
     return wantarray ? @$result : $result;
 }
 
+=head2 @array->to_ref() : $arrayref
 
+Return the reference to the @array, regardless of context.
+
+Useful for ensuring the last array method return a reference while in
+scalar context. Typically:
+
+    do_stuff(
+        books => $author->map_by("books")->to_ref,
+    );
+
+map_by is called in list context, so without ->to_ref it would have
+return an array, not an arrayref.
+
+=cut
+
+sub to_ref {
+    my $array = shift;
+    return $array;
+}
+
+=head2 @array->to_array() : @array
+
+Return the @array, regardless of context. This is mostly useful if
+called on a ArrayRef at the end of a chain of method calls.
+
+=cut
+
+sub to_array {
+    my $array = shift;
+    return @$array;
+}
 
 
 
@@ -902,6 +952,36 @@ sub grep_each_defined {
     *grep_defined = \&grep_each_defined;
 }
 
+
+=head2 %hash->to_ref() : $hashref
+
+Return the reference to the %hash, regardless of context.
+
+Useful for ensuring the last hash method return a reference while in
+scalar context. Typically:
+
+    do_stuff(
+        genre_count => $books->group_by_count("genre")->to_ref,
+    );
+
+=cut
+
+sub to_ref {
+    my $hash = shift;
+    return $hash;
+}
+
+=head2 %hash->to_hash() : %hash
+
+Return the %hash, regardless of context. This is mostly useful if
+called on a HashRef at the end of a chain of method calls.
+
+=cut
+
+sub to_hash {
+    my $hash = shift;
+    return %$hash;
+}
 
 
 

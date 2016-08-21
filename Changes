@@ -2,7 +2,10 @@
 
 {{$NEXT}}
 
- * use autobox::Core inside of autobox::Transform, so that e.g. String
+ * Array->to_ref, Hash->to_ref, Array->to_array, Hash->to_hash.
+   Use these e.g. as a nicer way to enfore scalar or list context.
+
+ * Use autobox::Core inside of autobox::Transform, so that e.g. String
    autobox methods can be used in a map_by
 
 

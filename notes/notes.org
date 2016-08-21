@@ -27,7 +27,7 @@
 **** if string, do eq
 **** if regex, do =~
 ** enforce scalar / list context, to ref / array, hash
-*** Also, coerce to scalar context / reference.
+*** DONE Also, coerce to scalar context / reference.
 **** to_ref / as_ref
 **** to_list, as_list
 **** as_hash, as_array, as_ref
