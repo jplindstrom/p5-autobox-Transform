@@ -53,6 +53,12 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     $authors->map_by("books")->flat;
     # [ $book1, $book2, $book3 ]
 
+    # Return reference, even in list context, e.g. in a parameter list
+    report( genres => $books->map_by("genre")->to_ref );
+
+    # Return array, even in scalar context
+    @books->to_array;
+
 ## Hash Examples
 
     # Upper-case the genre name, and make the count say "n books"
@@ -72,6 +78,12 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     # Transform each pair to the string "n: genre"
     $genre_count->map_each_to_array(sub { "$_: $_[0]" });
     # [ "1: Fantasy", "3: Sci-fi" ]
+
+    # Return reference, even in list context, e.g. in a parameter list
+    report( genre_count => $books->group_by_count("genre")->to_ref );
+
+    # Return hash, even in scalar context
+    $author->book_count->to_hash;
 
 ## Combined examples
 
@@ -206,16 +218,22 @@ context. E.g.
     $self->my_method(
         # Wrong, this is list context and wouldn't return an arrayref
         books => $books->grep_by("is_published"),
-    ),
+    );
 
     $self->my_method(
         # Correct, convert the list to an arrayref
         books => [ $books->grep_by("is_published") ],
-    ),
+    );
     $self->my_method(
         # Correct, ensure scalar context i.e. an array ref
         books => scalar $books->grep_by("is_published"),
-    ),
+    );
+
+    # Probably the nicest, since it goes at the end
+    $self->my_method(
+        # Correct, use ->to_ref to ensure an array reference is returned
+        books => $books->grep_by("is_published")->to_ref,
+    );
 
 # AUTOBOX ARRAY METHODS
 
@@ -400,6 +418,25 @@ Note: This is different from autobox::Core's ->flatten, which reurns a
 list rather than an array and therefore can't be used in this
 way.
 
+## @array->to\_ref() : $arrayref
+
+Return the reference to the @array, regardless of context.
+
+Useful for ensuring the last array method return a reference while in
+scalar context. Typically:
+
+    do_stuff(
+        books => $author->map_by("books")->to_ref,
+    );
+
+map\_by is called in list context, so without ->to\_ref it would have
+return an array, not an arrayref.
+
+## @array->to\_array() : @array
+
+Return the @array, regardless of context. This is mostly useful if
+called on a ArrayRef at the end of a chain of method calls.
+
 # AUTOBOX HASH METHODS
 
 ## map\_each($key\_value\_subref) : %new\_hash | %$new\_hash
@@ -451,6 +488,22 @@ the @new\_array. Typically one item is returned.
 
     { a => 1, b => 2 }->map_each_to_array(sub { "$_[0]-$_" });
     # Returns [ "a-1", "b-2" ]
+
+## %hash->to\_ref() : $hashref
+
+Return the reference to the %hash, regardless of context.
+
+Useful for ensuring the last hash method return a reference while in
+scalar context. Typically:
+
+    do_stuff(
+        genre_count => $books->group_by_count("genre")->to_ref,
+    );
+
+## %hash->to\_hash() : %hash
+
+Return the %hash, regardless of context. This is mostly useful if
+called on a HashRef at the end of a chain of method calls.
 
 # DEVELOPMENT
 
