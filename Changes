@@ -2,6 +2,10 @@
 
 {{$NEXT}}
 
+ * use autobox::Core inside of autobox::Transform, so that e.g. String
+   autobox methods can be used in a map_by
+
+
 1.017 2016-07-25T11:53:06Z
 
  * Allow empty $args arrayref when accessing hash keys

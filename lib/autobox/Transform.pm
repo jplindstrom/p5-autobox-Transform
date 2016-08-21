@@ -312,6 +312,8 @@ context. E.g.
 package # hide from PAUSE
     autobox::Transform::Array;
 
+use autobox::Core;
+
 
 
 sub __invoke_by {
@@ -684,6 +686,9 @@ sub flat {
 
 package # hide from PAUSE
     autobox::Transform::Hash;
+
+use autobox::Core;
+
 
 
 sub key_value {

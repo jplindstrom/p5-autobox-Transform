@@ -143,6 +143,21 @@ subtest examples => sub {
     )
 };
 
+subtest "map_by can use autobox::Core methods" => sub {
+    my $messages = [
+        "Hello world",
+        "    Hello  space  ",
+    ];
+    eq_or_diff(
+        scalar $messages->map_by("strip"),
+        [
+            "Hello world",
+            "Hello  space",
+        ],
+        "Called autobox::Core String->strip",
+    )
+};
+
 
 
 
