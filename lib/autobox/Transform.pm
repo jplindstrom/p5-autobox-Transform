@@ -197,6 +197,14 @@ $array->group_by_array()
 
 $array->flat()
 
+=item
+
+$array->as_ref()
+
+=item
+
+$array->as_array()
+
 =back
 
 
@@ -213,6 +221,14 @@ $hash->map_each_value
 =item
 
 $hash->map_each_to_array
+
+=item
+
+$array->as_ref()
+
+=item
+
+$array->as_hash()
 
 =back
 
@@ -791,7 +807,7 @@ sub key_value_if_defined {
 
 
 
-=head2 map_each($key_value_subref) : %new_hash | %$new_hash
+=head2 %hash->map_each($key_value_subref) : %new_hash | %$new_hash
 
 Map each key-value pair in the hash using the
 $key_value_subref. Similar to how to how map transforms a list into
@@ -834,7 +850,7 @@ sub map_each {
     return wantarray ? %$new_hash : $new_hash;
 }
 
-=head2 map_each_value($value_subref) : %new_hash | %$new_hash
+=head2 %hash->map_each_value($value_subref) : %new_hash | %$new_hash
 
 Map each value in the hash using the $value_subref, but keep the keys
 the same.
@@ -879,7 +895,7 @@ sub map_each_value {
     return wantarray ? %$new_hash : $new_hash;
 }
 
-=head2 map_each_to_array($item_subref) : @new_array | @$new_array
+=head2 %hash->map_each_to_array($item_subref) : @new_array | @$new_array
 
 Map each key-value pair in the hash into a list using the
 $item_subref.
