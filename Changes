@@ -2,6 +2,9 @@
 
 {{$NEXT}}
 
+ * Minor POD fixes
+
+
 1.018 2016-08-21T18:55:54Z
 
  * Array->to_ref, Hash->to_ref, Array->to_array, Hash->to_hash.
