@@ -160,10 +160,14 @@ and hashrefs.
 - $array->group\_by\_count()
 - $array->group\_by\_array()
 - $array->flat()
+- $array->as\_ref()
+- $array->as\_array()
 
 - $hash->map\_each
 - $hash->map\_each\_value
 - $hash->map\_each\_to\_array
+- $array->as\_ref()
+- $array->as\_hash()
 
 ## Raison d'etre
 
@@ -439,7 +443,7 @@ called on a ArrayRef at the end of a chain of method calls.
 
 # AUTOBOX HASH METHODS
 
-## map\_each($key\_value\_subref) : %new\_hash | %$new\_hash
+## %hash->map\_each($key\_value\_subref) : %new\_hash | %$new\_hash
 
 Map each key-value pair in the hash using the
 $key\_value\_subref. Similar to how to how map transforms a list into
@@ -457,7 +461,7 @@ are returned in the list (the key and the value).
     { a => 1, b => 2 }->map_each(sub { "$_[0]$_[0]" => $_ * 2 });
     # Returns { aa => 2, bb => 4 }
 
-## map\_each\_value($value\_subref) : %new\_hash | %$new\_hash
+## %hash->map\_each\_value($value\_subref) : %new\_hash | %$new\_hash
 
 Map each value in the hash using the $value\_subref, but keep the keys
 the same.
@@ -473,7 +477,7 @@ up the %new\_hash (with the same keys but with new mapped values).
     { a => 1, b => 2 }->map_each_value(sub { $_ * 2 });
     # Returns { a => 2, b => 4 }
 
-## map\_each\_to\_array($item\_subref) : @new\_array | @$new\_array
+## %hash->map\_each\_to\_array($item\_subref) : @new\_array | @$new\_array
 
 Map each key-value pair in the hash into a list using the
 $item\_subref.
