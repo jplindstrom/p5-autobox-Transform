@@ -18,8 +18,8 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
 
 =head2 Array Examples
 
-    # $books and $authors below are arrayrefs with either objects (or
-    # hashrefs)
+    # $books and $authors below are arrayrefs with either objects or
+    # hashrefs (the call syntax is the same)
 
     $books->map_by("genre");
     $books->map_by(price_with_tax => [$tax_pct]);
