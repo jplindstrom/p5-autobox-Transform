@@ -22,20 +22,30 @@
 ** grep --> filter
 *** so I can write "grep" instead of autobox::Core
 *** deprecate grep, but keep the alias
+*** get going with the grep --> filter, so we can use nothing (true), string eq, regex or subref.
+*** Leave the old implementation behind, but deprecate it and only briefly mention it in the docs.
 ** grep, grep_by third arg more dwim
 *** third arg sub (defaults to true)
 **** if string, do eq
 **** if regex, do =~
 ** enforce scalar / list context, to ref / array, hash
-*** DONE Also, coerce to scalar context / reference.
-**** to_ref / as_ref
-**** to_list, as_list
-**** as_hash, as_array, as_ref
-*** DONE use autobox::Core inside Transform
-**** use autobox::Core, so we can use e.g. split
-**** Provide this as a parameter with core as the default?
-*** sub uplevel or whatnot
-**** so warnings and dies are reported from the caller.
+** DONE Also, coerce to scalar context / reference.
+*** to_ref / as_ref
+*** to_list, as_list
+*** as_hash, as_array, as_ref
+** map_each_value_by - replace the hashref/object value with the result of map_by
+** group
+** group_count
+** group_array
+** new format
+While doing the rename to filter, can we introduce the ["accessor",
+@args] format too? Just special case it, so if the first is an
+arrayref, use that format.
+** DONE use autobox::Core inside Transform
+*** use autobox::Core, so we can use e.g. split
+*** Provide this as a parameter with core as the default?
+** TODO sub uplevel or whatnot
+*** so warnings and dies are reported from the caller.
 
 * Hash
 ** DONE key_value($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
