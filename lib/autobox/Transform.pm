@@ -11,12 +11,26 @@ our $VERSION = "1.019";
 
 autobox::Transform - Autobox methods to transform Arrays and Hashes
 
+=head1 CONTEXT
+
+L<autobox> provides the ability to call methods on native types,
+e.g. strings, arrays, and hashes as if they were objects.
+
+L<autobox::Core> provides the basic methods for Perl core functions
+like C<uc>, C<map>, and C<grep>.
+
+This module, C<autobox::Transform>, provides higher level and more
+specific methods to transform and manipulate arrays and hashes and, in
+particular when the values are hashrefs or objects.
+
+
+
 =head1 SYNOPSIS
 
     use autobox::Core;  # uniq, sort, join, sum, etc.
     use autobox::Transform;
 
-=head2 Array Examples
+=head2 Arrays with hashrefs/objects
 
     # $books and $authors below are arrayrefs with either objects or
     # hashrefs (the call syntax is the same)
@@ -57,6 +71,10 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     #     "Fantasy" => [ $fantasy_book_1 ],
     # },
 
+
+=head2 Arrays
+
+    # Flatten arrayrefs-of-arrayrefs
     $authors->map_by("books") # ->books returns an arrayref
     # [ [ $book1, $book2 ], [ $book3 ] ]
     $authors->map_by("books")->flat;
@@ -69,7 +87,7 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     @books->to_array;
 
 
-=head2 Hash Examples
+=head2 Hashes
 
     # Upper-case the genre name, and make the count say "n books"
     $genre_count->map_each(sub { uc( $_[0] ) => "$_ books" });
@@ -295,9 +313,12 @@ sub throw {
 
 =head2 Transforming lists of objects vs list of hashrefs
 
-map_by, grep_by etc are called the same way regardless of whether the
-list contains objects or hashrefs. The items in the list must all be
-either objects or hashrefs.
+C<map_by>, C<grep_by> etc. (all methods named *_by) work with arrays
+that contain hashrefs or objects.
+
+These methods are called the same way regardless of whether the array
+contains objects or hashrefs. The items in the list must all be either
+objects or hashrefs.
 
 If the array contains objects, a method is called on each object
 (possibly with the arguments provided).
@@ -324,11 +345,11 @@ context. E.g.
     );
 
     $self->my_method(
-        # Correct, convert the list to an arrayref
+        # Correct, convert the returned list to an arrayref
         books => [ $books->grep_by("is_published") ],
     );
     $self->my_method(
-        # Correct, ensure scalar context i.e. an array ref
+        # Correct, ensure scalar context to get an array ref
         books => scalar $books->grep_by("is_published"),
     );
 
