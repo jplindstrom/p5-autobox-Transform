@@ -20,7 +20,7 @@ L<autobox::Core> provides the basic methods for Perl core functions
 like C<uc>, C<map>, and C<grep>.
 
 This module, C<autobox::Transform>, provides higher level and more
-specific methods to transform and manipulate arrays and hashes and, in
+specific methods to transform and manipulate arrays and hashes, in
 particular when the values are hashrefs or objects.
 
 
@@ -109,7 +109,7 @@ particular when the values are hashrefs or objects.
     # [ "1: Fantasy", "3: Sci-fi" ]
 
     # Return reference, even in list context, e.g. in a parameter list
-    report( genre_count => $books->group_by_count("genre")->to_ref );
+    %genre_count->to_ref );
 
     # Return hash, even in scalar context
     $author->book_count->to_hash;
@@ -123,61 +123,9 @@ particular when the values are hashrefs or objects.
         ->map_by("name")->uniq->sort->join(", ");
 
     my $total_order_amount = $order->books
-        ->grep_by(not_covered_by_vouchers => [ $vouchers ])
-        ->map_by(price_with_tax => [ $tax_pct ])
+        ->grep_by([ not_covered_by_vouchers => $vouchers ])
+        ->map_by([ price_with_tax => $tax_pct ])
         ->sum;
-
-
-=head2 Comparison of vanilla Perl and autobox version
-
-These are only for when there's a straightforward and simple Perl
-equivalent.
-
-    ### map_by - method call: $books are Book objects
-    my @genres = map { $_->genre() } @$books;
-    my @genres = $books->map_by("genre");
-
-    my $genres = [ map { $_->genre() } @$books ];
-    my $genres = $books->map_by("genre");
-
-    # With sum from autobox::Core / List::AllUtils
-    my $book_order_total = sum(
-        map { $_->price_with_tax($tax_pct) } @{$order->books}
-    );
-    my $book_order_total = $order->books
-        ->map_by([ price_with_tax => $tax_pct ])->sum;
-
-    ### map_by - hash key: $books are book hashrefs
-    my @genres = map { $_->{genre} } @$books;
-    my @genres = $books->map_by("genre");
-
-
-
-    ### grep_by - method call: $books are Book objects
-    my $sold_out_books = [ grep { $_->is_sold_out } @$books ];
-    my $sold_out_books = $books->grep_by("is_sold_out");
-
-    my $books_in_library = [ grep { $_->is_in_library($library) } @$books ];
-    my $books_in_library = $books->grep_by([ is_in_library => $library ]);
-
-    ### grep_by - hash key: $books are book hashrefs
-    my $sold_out_books = [ grep { $_->{is_sold_out} } @$books ];
-    my $sold_out_books = $books->grep_by("is_sold_out");
-
-
-
-    ### uniq_by - method call: $books are Book objects
-    my %seen; my $distinct_books = [ grep { ! %seen{ $_->id // "" }++ } @$books ];
-    my $distinct_books = $books->uniq_by("id");
-
-    ### uniq_by - hash key: $books are book hashrefs
-    my %seen; my $distinct_books = [ grep { ! %seen{ $_->{id} // "" }++ } @$books ];
-    my $distinct_books = $books->uniq_by("id");
-
-
-    #### flat - $author->books returns an arrayref of Books
-    my $author_books = [ map { @{$_->books} } @$authors ]
-    my $author_books = $authors->map_by("books")->flat
 
 
 
@@ -252,46 +200,6 @@ $array->as_hash()
 =back
 
 
-=head2 Raison d'etre
-
-L<autobox::Core> is awesome, for a variety of reasons.
-
-=over 4
-
-=item
-
-It cuts down on dereferencing punctuation clutter, both by using
-methods on references and by using ->elements to deref arrayrefs.
-
-=item
-
-It makes map and grep transforms read in the same direction it's
-executed.
-
-=item
-
-It makes it easier to write those things in a natural order. No need
-to move the cursor around a lot just to fix dereferencing, order of
-operations etc.
-
-=back
-
-On top of this, L<autobox::Transform> provides a few higher level
-methods for mapping, filtering and sorting common cases which are easier
-to read and write.
-
-Since they are at a slightly higher semantic level, once you know them
-they also provide a more specific meaning than just "map" or "grep".
-
-(Compare the difference between seeing a "map" and seeing a "foreach"
-loop. Just seeing the word "map" hints at what type of thing is going
-on here: transforming a list into another list).
-
-The methods of autobox::Transform are not suitable for all
-cases, but when used appropriately they will lead to much more clear,
-succinct and direct code, especially in conjunction with
-autobox::Core.
-
 =cut
 
 
@@ -343,8 +251,8 @@ sub _normalized_accessor_args_subref {
 
 =head2 Transforming lists of objects vs list of hashrefs
 
-C<map_by>, C<grep_by> etc. (all methods named *_by) work with arrays
-that contain hashrefs or objects.
+C<map_by>, C<grep_by> etc. (all methods named C<*_by>) work with
+arrays that contain hashrefs or objects.
 
 These methods are called the same way regardless of whether the array
 contains objects or hashrefs. The items in the list must all be either
@@ -358,28 +266,28 @@ item.
 
 =head3 Calling accessor methods with arguments
 
-    $array->grep_by($accessor_and_args, $subref)
+Consider C<grep_by>:
 
-If the $accessor_and_args is specified as a string, it's a simple
-lookup/method call.
+    $array->grep_by($accessor, $subref)
+
+If the $accessor is a string, it's a simple lookup/method call.
 
     # method call without args
     $books->grep_by("price", sub { $_ < 15.0 })
-    # $_->price()
+    # becomes $_->price() or $_->{price}
 
-If the $accessor_and_args is specified as an arrayref, the first item
-is the method name, and the rest are the arguments to the method.
+If the $accessor is an arrayref, the first item is the method name,
+and the rest of the items are the arguments to the method.
 
     # method call with args
     $books->grep_by([ price_with_discount => 5.0 ], sub { $_ < 15.0 })
-    # $_->price_with_discount(5.0)
+    # becomes $_->price_with_discount(5.0)
 
 =head3 Deprecated syntax
 
 There is an older syntax for calling methods with arguments. It was
 abandoned to open up more powerful ways to use grep/filter type
-methods. Here it is for reference, in case you bump into existing
-code.
+methods. Here it is for reference, in case you run into existing code.
 
     $array->grep_by($accessor, $args, $subref)
     $books->grep_by("price_with_discount", [ 5.0 ], sub { $_ < 15.0 })
@@ -401,8 +309,8 @@ change is trivial and the code easily found by grep/ack.
 
 =item
 
-Pin your version to < 2.000 in your cpanfile, dist.ini or whatever you
-use to avoid upgrading to an incompatible version.
+If need be, pin your version to < 2.000 in your cpanfile, dist.ini or
+whatever you use to avoid upgrading to an incompatible version.
 
 =back
 
@@ -410,7 +318,7 @@ use to avoid upgrading to an incompatible version.
 
 =head2 List and Scalar Context
 
-All of the methods below are context sensitive, i.e. they return a
+Almost all of the methods are context sensitive, i.e. they return a
 list in list context and an arrayref in scalar context, just like
 autobox::Core.
 
@@ -509,7 +417,7 @@ Examples:
     my @ahthor_names = $authors->map_by("name");
     my $author_names = @publishers->map_by("authors")->map_by("name");
 
-Or get the hash key value. Examples:
+Or get the hash key value. Example:
 
     my @review_scores = $reviews->map_by("score");
 
@@ -538,7 +446,8 @@ $accessor is either a string, or an arrayref where the first item is a
 string.
 
 Call the $accessor on each object in the list, or get the hash key
-value on each hashref in the list.
+value on each hashref in the list. The default $grep_subref includes
+true values in the result @array.
 
 Examples:
 
@@ -552,9 +461,12 @@ Examples:
 
     my @books_to_charge_for = $books->grep_by([ price_with_tax => $tax_pct ]);
 
-Optionally, with the value returned from the $accessor, call
-$grep_subref->($value) to check whether this item should remain in the
-list (default is to check for true values).
+
+=head3 The $grep_subref
+
+The $grep_subref is called with the value returned from the $accessor
+to check whether this item should remain in the list (default is to
+check for true values).
 
 The $grep_subref should return a true value to remain. $_ is set to
 the current $value.
@@ -626,16 +538,16 @@ sub uniq_by {
 
 
 
-=head2 @array->group_by($accessor, $value_sub = object) : %key_value | %$key_value
+=head2 @array->group_by($accessor, $value_subref = object) : %key_value | %$key_value
 
 $accessor is either a string, or an arrayref where the first item is a
 string.
 
-Call ->$accessor on each object in the array, or get the hash key for
-each hashref in the array (just like C<-E<gt>map_by>) and group the
-values as keys in a hashref.
+Call C<-E<gt>$accessor> on each object in the array, or get the hash
+key for each hashref in the array (just like C<-E<gt>map_by>) and
+group the values as keys in a hashref.
 
-The default $value_sub puts each object in the list as the hash
+The default $value_subref puts each object in the list as the hash
 value. If the key is repeated, the value is overwritten with the last
 object.
 
@@ -649,14 +561,14 @@ Example:
     #     "The Name of the Wind"  => $books->[3],
     # },
 
-=head3 The $value_sub
+=head3 The $value_subref
 
 This is a bit tricky to use, so the most common thing would probably
 be to use one of the more specific group_by-methods (see below). It
 should be capable enough to achieve what you need though, so here's
 how it works:
 
-The hash key is whatever is returned from $object->$accessor.
+The hash key is whatever is returned from C<$object-E<gt>$accessor>.
 
 The hash value is whatever is returned from
 
@@ -668,15 +580,15 @@ where:
 
 =item
 
-$current value is the current hash value for this key (or undef if the first one).
+C<$current> value is the current hash value for this key (or undef if the first one).
 
 =item
 
-$object is the current item in the list. The current $_ is also set to this.
+C<$object> is the current item in the list. The current $_ is also set to this.
 
 =item
 
-$key is the key returned by $object->$accessor(@$args)
+C<$key> is the key returned by $object->$accessor(@$args)
 
 =back
 
@@ -751,8 +663,8 @@ Example:
     #     "Fantasy" => 1,
     # },
 
-$book->genre() returns the genre string. There are three books counted
-for the "Sci-fi" key.
+C<$book-E<gt>genre()> returns the genre string. There are three books
+counted for the "Sci-fi" key.
 
 =cut
 
@@ -817,8 +729,9 @@ returns
 
     [ 1, 2, 3, "a", "b ", [ 1, 2 ], { 3 => 4 } ]
 
-This is useful if e.g. a map_by("some_method") returns arrayrefs of
-objects which you want to do further method calls on. Example:
+This is useful if e.g. a C<-E<gt>map_by("some_method")> returns
+arrayrefs of objects which you want to do further method calls
+on. Example:
 
     # ->books returns an arrayref of Book objects with a ->title
     $authors->map_by("books")->flat->map_by("title")
@@ -941,8 +854,8 @@ Map each key-value pair in the hash using the
 $key_value_subref. Similar to how to how map transforms a list into
 another list, map_each transforms a hash into another hash.
 
-C<$key_value_subref->($key, $value)> is called for each pair (with $_
-set to the value).
+C<$key_value_subref-E<gt>($key, $value)> is called for each pair (with
+$_ set to the value).
 
 The subref should return an even-numbered list with zero or more
 key-value pairs which will make up the %new_hash. Typically two items
@@ -983,7 +896,7 @@ sub map_each {
 Map each value in the hash using the $value_subref, but keep the keys
 the same.
 
-C<$value_subref->($key, $value)> is called for each pair (with $_
+C<$value_subref-E<gt>($key, $value)> is called for each pair (with $_
 set to the value).
 
 The subref should return a single value for each key which will make
@@ -1028,8 +941,8 @@ sub map_each_value {
 Map each key-value pair in the hash into a list using the
 $item_subref.
 
-C<$item_subref->($key, $value)> is called for each pair (with $_ set
-to the value) in key order.
+C<$item_subref-E<gt>($key, $value)> is called for each pair (with $_
+set to the value) in key order.
 
 The subref should return zero or more list items which will make up
 the @new_array. Typically one item is returned.
@@ -1126,6 +1039,103 @@ sub to_hash {
     my $hash = shift;
     return %$hash;
 }
+
+
+
+=head1 AUTOBOX AND VANILLA PERL
+
+
+=head2 Raison d'etre
+
+L<autobox::Core> is awesome, for a variety of reasons.
+
+=over 4
+
+=item
+
+It cuts down on dereferencing punctuation clutter, both by using
+methods on references and by using ->elements to deref arrayrefs.
+
+=item
+
+It makes map and grep transforms read in the same direction it's
+executed.
+
+=item
+
+It makes it easier to write those things in a natural order. No need
+to move the cursor around a lot just to fix dereferencing, order of
+operations etc.
+
+=back
+
+On top of this, L<autobox::Transform> provides a few higher level
+methods for mapping, filtering and sorting common cases which are easier
+to read and write.
+
+Since they are at a slightly higher semantic level, once you know them
+they also provide a more specific meaning than just "map" or "grep".
+
+(Compare the difference between seeing a "map" and seeing a "foreach"
+loop. Just seeing the word "map" hints at what type of thing is going
+on here: transforming a list into another list).
+
+The methods of autobox::Transform are not suitable for all
+cases, but when used appropriately they will lead to much more clear,
+succinct and direct code, especially in conjunction with
+autobox::Core.
+
+
+=head2 Code Comparison
+
+These examples are only for when there's a straightforward and simple
+Perl equivalent.
+
+    ### map_by - method call: $books are Book objects
+    my @genres = map { $_->genre() } @$books;
+    my @genres = $books->map_by("genre");
+
+    my $genres = [ map { $_->genre() } @$books ];
+    my $genres = $books->map_by("genre");
+
+    # With sum from autobox::Core / List::AllUtils
+    my $book_order_total = sum(
+        map { $_->price_with_tax($tax_pct) } @{$order->books}
+    );
+    my $book_order_total = $order->books
+        ->map_by([ price_with_tax => $tax_pct ])->sum;
+
+    ### map_by - hash key: $books are book hashrefs
+    my @genres = map { $_->{genre} } @$books;
+    my @genres = $books->map_by("genre");
+
+
+
+    ### grep_by - method call: $books are Book objects
+    my $sold_out_books = [ grep { $_->is_sold_out } @$books ];
+    my $sold_out_books = $books->grep_by("is_sold_out");
+
+    my $books_in_library = [ grep { $_->is_in_library($library) } @$books ];
+    my $books_in_library = $books->grep_by([ is_in_library => $library ]);
+
+    ### grep_by - hash key: $books are book hashrefs
+    my $sold_out_books = [ grep { $_->{is_sold_out} } @$books ];
+    my $sold_out_books = $books->grep_by("is_sold_out");
+
+
+
+    ### uniq_by - method call: $books are Book objects
+    my %seen; my $distinct_books = [ grep { ! %seen{ $_->id // "" }++ } @$books ];
+    my $distinct_books = $books->uniq_by("id");
+
+    ### uniq_by - hash key: $books are book hashrefs
+    my %seen; my $distinct_books = [ grep { ! %seen{ $_->{id} // "" }++ } @$books ];
+    my $distinct_books = $books->uniq_by("id");
+
+
+    #### flat - $author->books returns an arrayref of Books
+    my $author_books = [ map { @{$_->books} } @$authors ]
+    my $author_books = $authors->map_by("books")->flat
 
 
 
