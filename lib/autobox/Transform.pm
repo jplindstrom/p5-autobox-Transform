@@ -27,8 +27,29 @@ particular when the values are hashrefs or objects.
 
 =head1 SYNOPSIS
 
-    use autobox::Core;  # uniq, sort, join, sum, etc.
+    use autobox::Core;  # map, uniq, sort, join, sum, etc.
     use autobox::Transform;
+
+=head2 Arrays
+
+    # use autobox::Core for ->map etc.
+
+    # filter (grep)
+    $book_locations->filter(); # true values
+    $books->filter(sub { $_->is_in_library($library) });
+
+    # Flatten arrayrefs-of-arrayrefs
+    $authors->map_by("books") # ->books returns an arrayref
+    # [ [ $book1, $book2 ], [ $book3 ] ]
+    $authors->map_by("books")->flat;
+    # [ $book1, $book2, $book3 ]
+
+    # Return reference, even in list context, e.g. in a parameter list
+    $book_locations->filter()->to_ref;
+
+    # Return array, even in scalar context
+    @books->to_array;
+
 
 =head2 Arrays with hashrefs/objects
 
@@ -74,21 +95,6 @@ particular when the values are hashrefs or objects.
     #     "Sci-fi"  => [ $sf_book_1, $sf_book_2, $sf_book_3 ],
     #     "Fantasy" => [ $fantasy_book_1 ],
     # },
-
-
-=head2 Arrays
-
-    # Flatten arrayrefs-of-arrayrefs
-    $authors->map_by("books") # ->books returns an arrayref
-    # [ [ $book1, $book2 ], [ $book3 ] ]
-    $authors->map_by("books")->flat;
-    # [ $book1, $book2, $book3 ]
-
-    # Return reference, even in list context, e.g. in a parameter list
-    report( genres => $books->map_by("genre")->to_ref );
-
-    # Return array, even in scalar context
-    @books->to_array;
 
 
 =head2 Hashes
@@ -141,6 +147,22 @@ and hashrefs.
 
 =item
 
+$array->filter()
+
+=item
+
+$array->flat()
+
+=item
+
+$array->as_ref()
+
+=item
+
+$array->as_array()
+
+=item
+
 $array->map_by()
 
 =item
@@ -162,18 +184,6 @@ $array->group_by_count()
 =item
 
 $array->group_by_array()
-
-=item
-
-$array->flat()
-
-=item
-
-$array->as_ref()
-
-=item
-
-$array->as_array()
 
 =back
 
@@ -353,7 +363,7 @@ context. E.g.
 
 
 
-=head1 AUTOBOX ARRAY METHODS
+=head1 METHODS ON ARRAY
 
 =cut
 
@@ -401,7 +411,79 @@ sub filter {
     return wantarray ? @$result : $result;
 }
 
+=head2 @array->flat() : @array | @$array
 
+Return a (one level) flattened array, assuming the array items
+themselves are array refs. I.e.
+
+    [
+        [ 1, 2, 3 ],
+        [ "a", "b" ],
+        [ [ 1, 2 ], { 3 => 4 } ]
+    ]->flat
+
+returns
+
+    [ 1, 2, 3, "a", "b ", [ 1, 2 ], { 3 => 4 } ]
+
+This is useful if e.g. a C<-E<gt>map_by("some_method")> returns
+arrayrefs of objects which you want to do further method calls
+on. Example:
+
+    # ->books returns an arrayref of Book objects with a ->title
+    $authors->map_by("books")->flat->map_by("title")
+
+Note: This is different from autobox::Core's ->flatten, which reurns a
+list rather than an array and therefore can't be used in this
+way.
+
+=cut
+
+sub flat {
+    my $array = shift;
+    ###JPL: eval and report error from correct place
+    my $result = [ map { @$_ } @$array ];
+    return wantarray ? @$result : $result;
+}
+
+=head2 @array->to_ref() : $arrayref
+
+Return the reference to the @array, regardless of context.
+
+Useful for ensuring the last array method return a reference while in
+scalar context. Typically:
+
+    do_stuff(
+        books => $author->map_by("books")->to_ref,
+    );
+
+map_by is called in list context, so without ->to_ref it would have
+return an array, not an arrayref.
+
+=cut
+
+sub to_ref {
+    my $array = shift;
+    return $array;
+}
+
+=head2 @array->to_array() : @array
+
+Return the @array, regardless of context. This is mostly useful if
+called on a ArrayRef at the end of a chain of method calls.
+
+=cut
+
+sub to_array {
+    my $array = shift;
+    return @$array;
+}
+
+
+
+=head1 METHODS ON ARRAY-OF-OBJECTS/HASHES
+
+=cut
 
 *_normalized_accessor_args_subref
     = \&autobox::Transform::_normalized_accessor_args_subref;
@@ -768,77 +850,8 @@ sub group_by_array {
 }
 
 
-=head2 @array->flat() : @array | @$array
 
-Return a (one level) flattened array, assuming the array items
-themselves are array refs. I.e.
-
-    [
-        [ 1, 2, 3 ],
-        [ "a", "b" ],
-        [ [ 1, 2 ], { 3 => 4 } ]
-    ]->flat
-
-returns
-
-    [ 1, 2, 3, "a", "b ", [ 1, 2 ], { 3 => 4 } ]
-
-This is useful if e.g. a C<-E<gt>map_by("some_method")> returns
-arrayrefs of objects which you want to do further method calls
-on. Example:
-
-    # ->books returns an arrayref of Book objects with a ->title
-    $authors->map_by("books")->flat->map_by("title")
-
-Note: This is different from autobox::Core's ->flatten, which reurns a
-list rather than an array and therefore can't be used in this
-way.
-
-=cut
-
-sub flat {
-    my $array = shift;
-    ###JPL: eval and report error from correct place
-    my $result = [ map { @$_ } @$array ];
-    return wantarray ? @$result : $result;
-}
-
-=head2 @array->to_ref() : $arrayref
-
-Return the reference to the @array, regardless of context.
-
-Useful for ensuring the last array method return a reference while in
-scalar context. Typically:
-
-    do_stuff(
-        books => $author->map_by("books")->to_ref,
-    );
-
-map_by is called in list context, so without ->to_ref it would have
-return an array, not an arrayref.
-
-=cut
-
-sub to_ref {
-    my $array = shift;
-    return $array;
-}
-
-=head2 @array->to_array() : @array
-
-Return the @array, regardless of context. This is mostly useful if
-called on a ArrayRef at the end of a chain of method calls.
-
-=cut
-
-sub to_array {
-    my $array = shift;
-    return @$array;
-}
-
-
-
-=head1 AUTOBOX HASH METHODS
+=head1 METHODS ON HASH
 
 =cut
 
