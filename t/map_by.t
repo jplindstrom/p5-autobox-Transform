@@ -166,6 +166,9 @@ subtest examples => sub {
     my $total_order_amount = $books
         ->map_by(price_with_tax => [ $tax_pct ])
         ->sum;
+    my $total_order_amount2 = $books
+        ->map_by([ price_with_tax => $tax_pct ])
+        ->sum;
     is($total_order_amount, 28.75, "total_order_amount");
 
 
