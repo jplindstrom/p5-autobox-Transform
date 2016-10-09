@@ -265,7 +265,7 @@ sub _normalized_accessor_args_subref {
 =head2 Transforming lists of objects vs list of hashrefs
 
 C<map_by>, C<filter_by> etc. (all methods named C<*_by>) work with
-arrays that contain hashrefs or objects.
+sets of hashrefs or objects.
 
 These methods are called the same way regardless of whether the array
 contains objects or hashrefs. The items in the list must all be either
