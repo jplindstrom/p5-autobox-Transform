@@ -496,6 +496,17 @@ L<autobox::Core>.
 sub grep_by {
     my $array = shift;
     my ($accessor, $args, $grep_subref) = @_;
+
+    # Or: $acessor_and_args, $grep_subref
+    if(ref($args) eq "CODE") {
+        $grep_subref = $args; # Move one down
+        $args = undef;
+    }
+    if(ref($accessor) eq "ARRAY") {
+        ($accessor, my @args) = @$accessor;
+        $args = \@args;
+    }
+
     $grep_subref //= sub { !! $_ };
     # grep_by $value, if passed the method value must match the value?
     return __invoke_by(
