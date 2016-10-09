@@ -362,6 +362,47 @@ package # hide from PAUSE
 
 use autobox::Core;
 
+
+=head2 @array->filter($filter_subref = *is_true*) : @array | @$array
+
+Similar to Perl's C<grep>, return an @array with values for which
+$filter_subref returns a true value.
+
+The $filter_subref is called for each value to check whether this item
+should remain in the list (default is to check for true values).
+
+The $filter_subref should return a true value to remain. $_ is set to
+the current $value.
+
+Examples:
+
+    my @authors = $authors->filter(
+        sub { $_->name->publisher =~ /Orbit/ },
+    );
+
+
+=head3 filter and grep
+
+L<autobox::Core>'s C<grep> method takes a subref, just like this
+method.
+
+
+=cut
+
+sub filter {
+    my $array = shift;
+    my ($filter_subref) = @_;
+    $filter_subref //= sub { !! $_ };
+
+    my $result = eval {
+        [ CORE::grep { $filter_subref->( $_ ) } @$array ]
+    } or autobox::Transform::throw($@);
+
+    return wantarray ? @$result : $result;
+}
+
+
+
 *_normalized_accessor_args_subref
     = \&autobox::Transform::_normalized_accessor_args_subref;
 
