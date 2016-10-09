@@ -38,10 +38,13 @@ particular when the values are hashrefs or objects.
     $books->map_by("genre");
     $books->map_by([ price_with_tax => $tax_pct ]);
 
+    $books->filter_by("is_sold_out");
+    $books->filter_by([ is_in_library => $library ]);
+    $books->filter_by([ price_with_tax => $rate ], sub { $_ > 56.00 });
+    $books->filter_by("price", sub { $_ > 56.00 });
+
+    # grep_by is an alias for filter_by
     $books->grep_by("is_sold_out");
-    $books->grep_by([ is_in_library => $library ]);
-    $books->grep_by([ price_with_tax => $rate ], sub { $_ > 56.00 });
-    $books->grep_by("price", sub { $_ > 56.00 });
 
     $books->uniq_by("id");
 
@@ -123,7 +126,7 @@ particular when the values are hashrefs or objects.
         ->map_by("name")->uniq->sort->join(", ");
 
     my $total_order_amount = $order->books
-        ->grep_by([ not_covered_by_vouchers => $vouchers ])
+        ->filter_by([ not_covered_by_vouchers => $vouchers ])
         ->map_by([ price_with_tax => $tax_pct ])
         ->sum;
 
@@ -142,7 +145,7 @@ $array->map_by()
 
 =item
 
-$array->grep_by()
+$array->filter_by()
 
 =item
 
@@ -251,7 +254,7 @@ sub _normalized_accessor_args_subref {
 
 =head2 Transforming lists of objects vs list of hashrefs
 
-C<map_by>, C<grep_by> etc. (all methods named C<*_by>) work with
+C<map_by>, C<filter_by> etc. (all methods named C<*_by>) work with
 arrays that contain hashrefs or objects.
 
 These methods are called the same way regardless of whether the array
@@ -266,21 +269,21 @@ item.
 
 =head3 Calling accessor methods with arguments
 
-Consider C<grep_by>:
+Consider C<filter_by>:
 
-    $array->grep_by($accessor, $subref)
+    $array->filter_by($accessor, $subref)
 
 If the $accessor is a string, it's a simple lookup/method call.
 
     # method call without args
-    $books->grep_by("price", sub { $_ < 15.0 })
+    $books->filter_by("price", sub { $_ < 15.0 })
     # becomes $_->price() or $_->{price}
 
 If the $accessor is an arrayref, the first item is the method name,
 and the rest of the items are the arguments to the method.
 
     # method call with args
-    $books->grep_by([ price_with_discount => 5.0 ], sub { $_ < 15.0 })
+    $books->filter_by([ price_with_discount => 5.0 ], sub { $_ < 15.0 })
     # becomes $_->price_with_discount(5.0)
 
 =head3 Deprecated syntax
@@ -289,8 +292,8 @@ There is an older syntax for calling methods with arguments. It was
 abandoned to open up more powerful ways to use grep/filter type
 methods. Here it is for reference, in case you run into existing code.
 
-    $array->grep_by($accessor, $args, $subref)
-    $books->grep_by("price_with_discount", [ 5.0 ], sub { $_ < 15.0 })
+    $array->filter_by($accessor, $args, $subref)
+    $books->filter_by("price_with_discount", [ 5.0 ], sub { $_ < 15.0 })
 
 Call the method $accessor on each object using the arguments in the
 $args arrayref like so:
@@ -330,22 +333,22 @@ context. E.g.
 
     $self->my_method(
         # Wrong, this is list context and wouldn't return an arrayref
-        books => $books->grep_by("is_published"),
+        books => $books->filter_by("is_published"),
     );
 
     $self->my_method(
         # Correct, convert the returned list to an arrayref
-        books => [ $books->grep_by("is_published") ],
+        books => [ $books->filter_by("is_published") ],
     );
     $self->my_method(
         # Correct, ensure scalar context to get an array ref
-        books => scalar $books->grep_by("is_published"),
+        books => scalar $books->filter_by("is_published"),
     );
 
     # Probably the nicest, since it goes at the end
     $self->my_method(
         # Correct, use ->to_ref to ensure an array reference is returned
-        books => $books->grep_by("is_published")->to_ref,
+        books => $books->filter_by("is_published")->to_ref,
     );
 
 
@@ -386,12 +389,12 @@ sub __invoke_by {
 
     my %seen;
     my $invoke_sub = {
-        map      => sub { [ CORE::map  { $_->$accessor( @$args ) } @$array ] },
-        map_key  => sub { [ CORE::map  { $_->{$accessor}         } @$array ] },
-        grep     => sub { [ CORE::grep { $subref->( local $_ = $_->$accessor( @$args ) ) } @$array ] },
-        grep_key => sub { [ CORE::grep { $subref->( local $_ = $_->{$accessor}         ) } @$array ] },
-        uniq     => sub { [ CORE::grep { ! $seen{ $_->$accessor( @$args ) // "" }++ } @$array ] },
-        uniq_key => sub { [ CORE::grep { ! $seen{ $_->{$accessor}         // "" }++ } @$array ] },
+        map        => sub { [ CORE::map  { $_->$accessor( @$args ) } @$array ] },
+        map_key    => sub { [ CORE::map  { $_->{$accessor}         } @$array ] },
+        filter     => sub { [ CORE::grep { $subref->( local $_ = $_->$accessor( @$args ) ) } @$array ] },
+        filter_key => sub { [ CORE::grep { $subref->( local $_ = $_->{$accessor}         ) } @$array ] },
+        uniq       => sub { [ CORE::grep { ! $seen{ $_->$accessor( @$args ) // "" }++ } @$array ] },
+        uniq_key   => sub { [ CORE::grep { ! $seen{ $_->{$accessor}         // "" }++ } @$array ] },
     }->{$invoke};
 
     my $result = eval { $invoke_sub->() }
@@ -440,18 +443,18 @@ sub map_by {
 
 
 
-=head2 @array->grep_by($accessor, $grep_subref = *is_true*) : @array | @$array
+=head2 @array->filter_by($accessor, $filter_subref = *is_true*) : @array | @$array
 
 $accessor is either a string, or an arrayref where the first item is a
 string.
 
 Call the $accessor on each object in the list, or get the hash key
-value on each hashref in the list. The default $grep_subref includes
+value on each hashref in the list. The default $filter_subref includes
 true values in the result @array.
 
 Examples:
 
-    my @prolific_authors = $authors->grep_by("is_prolific");
+    my @prolific_authors = $authors->filter_by("is_prolific");
 
 Alternatively the $accessor is an arrayref. The first item is the
 accessor name, and the rest of the items are passed as args the method
@@ -459,49 +462,59 @@ call. This only works when working with objects, not with hashrefs.
 
 Examples:
 
-    my @books_to_charge_for = $books->grep_by([ price_with_tax => $tax_pct ]);
+    my @books_to_charge_for = $books->filter_by([ price_with_tax => $tax_pct ]);
 
 
-=head3 The $grep_subref
+=head3 The $filter_subref
 
-The $grep_subref is called with the value returned from the $accessor
+The $filter_subref is called with the value returned from the $accessor
 to check whether this item should remain in the list (default is to
 check for true values).
 
-The $grep_subref should return a true value to remain. $_ is set to
+The $filter_subref should return a true value to remain. $_ is set to
 the current $value.
 
 Examples:
 
-    my @authors = $authors->grep_by(
+    my @authors = $authors->filter_by(
         "publisher",
         sub { $_->name =~ /Orbit/ },
     );
 
-    my @authors = $authors->grep_by(
+    my @authors = $authors->filter_by(
         [ publisher_affiliation => "with" ],
         sub { /Orbit/ },
     );
 
-Note: if you do something complicated with the $grep_subref, it might
+Note: if you do something complicated with the $filter_subref, it might
 be easier and more readable to simply use C<$array-$<gt>grep()> from
 L<autobox::Core>.
 
+
+=head3 Alias
+
+C<grep_by> is an alias for C<filter_by>. Unlike C<grep> vs C<filter>
+it works exaclty the same way.
+
 =cut
 
-sub grep_by {
+sub filter_by {
     my $array = shift;
-    my ($accessor, $args, $grep_subref) = _normalized_accessor_args_subref(@_);
-    $grep_subref //= sub { !! $_ };
-    # grep_by $value, if passed the method value must match the value?
+    my ($accessor, $args, $filter_subref) = _normalized_accessor_args_subref(@_);
+    $filter_subref //= sub { !! $_ };
+    # filter_by $value, if passed the method value must match the value?
     return __invoke_by(
-        "grep",
+        "filter",
         $array,
         $accessor,
         $args,
-        grep_subref => $grep_subref,
+        filter_subref => $filter_subref,
     );
 }
+
+*grep_by = \&filter_by;
+
+
 
 =head2 @array->uniq_by($accessor) : @array | @$array
 
@@ -977,7 +990,7 @@ sub map_each_to_array {
 
 
 
-sub grep_each {
+sub filter_each {
     my $hash = shift;
     my ($subref) = @_;
     $subref ||= sub { !! $_ }; # true?
@@ -998,16 +1011,20 @@ sub grep_each {
 
     return wantarray ? %$new_hash : $new_hash;
 }
-*grep = \&grep_each;
+{
+    no warnings "once";
+    *grep_each = \&filter_each;
+}
 
-sub grep_each_defined {
+sub filter_each_defined {
     my $hash = shift;
-    return &grep($hash, sub { defined($_) });
+    return &filter_each($hash, sub { defined($_) });
 }
 {
     no warnings "once";
-    *grep_defined = \&grep_each_defined;
+    *grep_each_defined = \&filter_each_defined;
 }
+
 
 
 =head2 %hash->to_ref() : $hashref
@@ -1111,16 +1128,17 @@ Perl equivalent.
 
 
 
-    ### grep_by - method call: $books are Book objects
+    ### filter_by - method call: $books are Book objects
     my $sold_out_books = [ grep { $_->is_sold_out } @$books ];
+    my $sold_out_books = $books->filter_by("is_sold_out");
     my $sold_out_books = $books->grep_by("is_sold_out");
 
     my $books_in_library = [ grep { $_->is_in_library($library) } @$books ];
-    my $books_in_library = $books->grep_by([ is_in_library => $library ]);
+    my $books_in_library = $books->filter_by([ is_in_library => $library ]);
 
-    ### grep_by - hash key: $books are book hashrefs
+    ### filter_by - hash key: $books are book hashrefs
     my $sold_out_books = [ grep { $_->{is_sold_out} } @$books ];
-    my $sold_out_books = $books->grep_by("is_sold_out");
+    my $sold_out_books = $books->filter_by("is_sold_out");
 
 
 
