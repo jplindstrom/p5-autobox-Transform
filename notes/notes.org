@@ -47,13 +47,21 @@ arrayref, use that format.
 ** TODO sub uplevel or whatnot
 *** so warnings and dies are reported from the caller.
 ** Fix method with args syntax
-*** methods
+*** DONE methods
 **** DONE map_by
 **** DONE grep_by
-**** uniq_by
-**** group_by
-**** group_by_count
-**** group_by_array
+**** DONE uniq_by
+**** DONE group_by
+**** DONE group_by_count
+**** DONE group_by_array
+*** tasks
+**** fix
+**** document new style
+**** releaes
+**** change docs to new style
+***** document old style
+***** deprecate old style
+****** document plan for 2.0.0
 * Hash
 ** DONE key_value($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
 *** exists

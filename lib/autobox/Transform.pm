@@ -655,7 +655,7 @@ sub __core_group_by {
 
 sub group_by {
     my $array = shift;
-    my( $accessor, $args, $value_sub ) = @_;
+    my ($accessor, $args, $value_sub) = _normalized_accessor_args_subref(@_);
 
     $value_sub //= sub { $_ };
     ref($value_sub) eq "CODE"
@@ -684,7 +684,7 @@ for the "Sci-fi" key.
 
 sub group_by_count {
     my $array = shift;
-    my( $accessor, $args ) = @_;
+    my ($accessor, $args) = _normalized_accessor_args_subref(@_);
 
     my $value_sub = sub {
         my $count = shift // 0; return ++$count;
@@ -713,7 +713,7 @@ are collected under the Sci-fi key.
 
 sub group_by_array {
     my $array = shift;
-    my( $accessor, $args ) = @_;
+    my ($accessor, $args) = _normalized_accessor_args_subref(@_);
 
     my $value_sub = sub {
         my $array = shift // [];
