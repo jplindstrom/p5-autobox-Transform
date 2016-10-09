@@ -309,6 +309,32 @@ sub throw {
     croak($error);
 }
 
+# Normalize the two method calling styles for accessor + args:
+#   $acessor, $args_arrayref, $modifier
+# or
+#   $acessor_and_args_arrayref, $modifier
+sub _normalized_accessor_args_subref {
+    my ($accessor, $args, $subref) = @_;
+
+    # Note: unfortunately, this won't allow the $subref (modifier) to
+    # become an arrayref later on when we do many types of modifiers
+    # (string eq, qr regex match, sub call, arrayref in) for
+    # filtering.
+    #
+    # That has to happen after the deprecation has expired and the old
+    # syntax is removed.
+    if(ref($args) eq "CODE") {
+        $subref = $args; # Move down one step
+        $args = undef;
+    }
+    if(ref($accessor) eq "ARRAY") {
+        ($accessor, my @args) = @$accessor;
+        $args = \@args;
+    }
+
+    return ($accessor, $args, $subref);
+}
+
 
 
 =head2 Transforming lists of objects vs list of hashrefs
@@ -325,6 +351,36 @@ If the array contains objects, a method is called on each object
 
 If the array contains hashrefs, the hash key is looked up on each
 item.
+
+=head3 Calling accessor methods with arguments
+
+    $array->grep_by($accessor, $args, $subref)
+    $books->grep_by("price_with_discount", [ 5.0 ], sub { $_ < 15.0 })
+
+Call the method $accessor on each object using the arguments in the
+$args arrayref like so:
+
+    $object->$accessor(@$args)
+
+=head3 Alternate syntax
+
+    $array->grep_by($accessor_and_args, $subref)
+
+If the $accessor_and_args is specified as a string, it's a simple
+lookup/method call.
+
+    # method call without args
+    $books->grep_by("price", sub { $_ < 15.0 })
+    # $_->price()
+
+If the $accessor_and_args is specified as an arrayref, the first item
+is the method name, and the rest are the arguments to the method.
+
+    # method call with args
+    $books->grep_by([ price_with_discount => 5.0 ], sub { $_ < 15.0 })
+    # $_->price_with_discount(5.0)
+
+This syntax is the future proof, preferred one.
 
 
 =head2 List and Scalar Context
@@ -370,7 +426,8 @@ package # hide from PAUSE
 
 use autobox::Core;
 
-
+*_normalized_accessor_args_subref
+    = \&autobox::Transform::_normalized_accessor_args_subref;
 
 sub __invoke_by {
     my $invoke = shift;
@@ -441,7 +498,7 @@ Or get the hash key value. Examples:
 
 sub map_by {
     my $array = shift;
-    my ($accessor, $args) = @_;
+    my ($accessor, $args) = _normalized_accessor_args_subref(@_);
     return __invoke_by("map", $array, $accessor, $args);
 }
 
@@ -491,7 +548,7 @@ L<autobox::Core>.
 
 sub grep_by {
     my $array = shift;
-    my ($accessor, $args, $grep_subref) = @_;
+    my ($accessor, $args, $grep_subref) = _normalized_accessor_args_subref(@_);
     $grep_subref //= sub { !! $_ };
     # grep_by $value, if passed the method value must match the value?
     return __invoke_by(
@@ -525,7 +582,7 @@ Examples:
 
 sub uniq_by {
     my $array = shift;
-    my ($accessor, $args) = @_;
+    my ($accessor, $args) = _normalized_accessor_args_subref(@_);
     return __invoke_by("uniq", $array, $accessor, $args);
 }
 
@@ -628,7 +685,7 @@ sub __core_group_by {
 
 sub group_by {
     my $array = shift;
-    my( $accessor, $args, $value_sub ) = @_;
+    my ($accessor, $args, $value_sub) = _normalized_accessor_args_subref(@_);
 
     $value_sub //= sub { $_ };
     ref($value_sub) eq "CODE"
@@ -657,7 +714,7 @@ for the "Sci-fi" key.
 
 sub group_by_count {
     my $array = shift;
-    my( $accessor, $args ) = @_;
+    my ($accessor, $args) = _normalized_accessor_args_subref(@_);
 
     my $value_sub = sub {
         my $count = shift // 0; return ++$count;
@@ -686,7 +743,7 @@ are collected under the Sci-fi key.
 
 sub group_by_array {
     my $array = shift;
-    my( $accessor, $args ) = @_;
+    my ($accessor, $args) = _normalized_accessor_args_subref(@_);
 
     my $value_sub = sub {
         my $array = shift // [];
@@ -775,6 +832,9 @@ package # hide from PAUSE
     autobox::Transform::Hash;
 
 use autobox::Core;
+
+*_normalized_accessor_args_subref
+    = \&autobox::Transform::_normalized_accessor_args_subref;
 
 
 

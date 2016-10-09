@@ -27,6 +27,12 @@ subtest map_by__empty => sub {
         ],
         "Empty list gives empty list",
     );
+    eq_or_diff(
+        [ []->map_by([ genre => 34 ]) ],
+        [
+        ],
+        "Empty list gives empty list",
+    );
 };
 
 ### method
@@ -57,6 +63,18 @@ subtest map_by__method => sub {
         ],
         "Map by simple method call works",
     );
+
+    note "ArrayRef call, arrayref accessor";
+    eq_or_diff(
+        [ $books->map_by([ "genre" ]) ],
+        [
+            "Sci-fi",
+            "Sci-fi",
+            "Sci-fi",
+            "Fantasy",
+        ],
+        "Map by simple method call works",
+    );
 };
 
 subtest map_by__missing_method => sub {
@@ -79,6 +97,15 @@ subtest map_by__method__not_a_method => sub {
 subtest map_by__method__args => sub {
     eq_or_diff(
         [ $authors->map_by(publisher_affiliation => ["with"]) ],
+        [
+            'James A. Corey with Orbit',
+            'Cixin Liu with Head of Zeus',
+            'Patrick Rothfuss with Gollanz',
+        ],
+        "map_by with argument list",
+    );
+    eq_or_diff(
+        [ $authors->map_by([ publisher_affiliation => "with" ]) ],
         [
             'James A. Corey with Orbit',
             'Cixin Liu with Head of Zeus',
@@ -119,6 +146,16 @@ subtest map_by__key__with_args => sub {
         sub { $reviews->map_by("score" => [ ]) },
         "Empty arrayref is allowed",
     );
+
+    throws_ok(
+        sub { $reviews->map_by([ "score" => "abc" ]) },
+        qr{ map_by .+? 'score' .+? \$args .+? only[ ]supported[ ]for[ ]method[ ]calls.+? t.map_by.t}x,
+        "Arrayref with items, not allowed"
+    );
+    lives_ok(
+        sub { $reviews->map_by([ "score" ]) },
+        "No args is allowed",
+    );
 };
 
 
@@ -128,6 +165,9 @@ subtest examples => sub {
     my $tax_pct = 0.15;
     my $total_order_amount = $books
         ->map_by(price_with_tax => [ $tax_pct ])
+        ->sum;
+    my $total_order_amount2 = $books
+        ->map_by([ price_with_tax => $tax_pct ])
         ->sum;
     is($total_order_amount, 28.75, "total_order_amount");
 

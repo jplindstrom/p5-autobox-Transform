@@ -41,6 +41,13 @@ subtest group_by__method => sub {
         $book_object,
         "Group by simple method call works",
     );
+
+    note "Call with arrayref accessor";
+    eq_or_diff(
+        { $books->group_by([ "title" ]) },
+        $book_object,
+        "Group by simple method call works",
+    );
 };
 
 subtest group_by__key => sub {
@@ -96,7 +103,7 @@ subtest group_by__missing_method => sub {
         sub { $books->group_by() },
         qr{^->group_by\(\)[ ]missing[ ]argument:[ ]\$accessor \s at .+? t.group_by.t }x,
         "Missing arg croaks from the caller, not from the lib"
-    )
+    );
 };
 
 subtest group_by__not_a_method => sub {
@@ -105,12 +112,21 @@ subtest group_by__not_a_method => sub {
         sub { $books->group_by("not_a_method") },
         qr{ not_a_method .+? Book .+? t.group_by.t }x,
         "Missing method croaks from the caller, not from the lib",
-    )
+    );
 };
 
 subtest group_by__method__args => sub {
     eq_or_diff(
         { $authors->group_by_count(publisher_affiliation => ["with"]) },
+        {
+            'James A. Corey with Orbit'     => 1,
+            'Cixin Liu with Head of Zeus'   => 1,
+            'Patrick Rothfuss with Gollanz' => 1,
+        },
+        "group_by with argument list",
+    );
+    eq_or_diff(
+        { $authors->group_by_count([publisher_affiliation => "with"]) },
         {
             'James A. Corey with Orbit'     => 1,
             'Cixin Liu with Head of Zeus'   => 1,
@@ -145,10 +161,21 @@ subtest group_by__sub_ref => sub {
         },
         "group_by with sub_ref works",
     );
+    eq_or_diff(
+        { $books->group_by([ "genre" ], sub { 1 }) },
+        {
+            "Sci-fi"  => 1,
+            "Fantasy" => 1,
+        },
+        "group_by with sub_ref works",
+    );
 };
 
 subtest group_by__method__array => sub {
     my $genre_books = $books->group_by_array("genre");
+    my $genre_books2 = $books->group_by_array([ "genre" ]);
+    eq_or_diff($genre_books, $genre_books2, "Same output");
+
     my $genre_book_titles = {
         map {
             $_ => $genre_books->{$_}->map_by("title")->sort->join(", ");

@@ -26,6 +26,15 @@ subtest uniq_by => sub {
         ],
         "uniq_by simple method call works",
     );
+
+    eq_or_diff(
+        [ map { $_->name } $authors->uniq_by([ "is_prolific" ]) ],
+        [
+            "James A. Corey", # true
+            "Cixin Liu",      # false
+        ],
+        "uniq_by simple method call works",
+    );
 };
 
 

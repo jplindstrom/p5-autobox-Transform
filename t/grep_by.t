@@ -38,6 +38,17 @@ subtest grep_by => sub {
     );
 };
 
+subtest grep_by_with_arrayref_accessor => sub {
+    note "Call with arrayref accessor without args";
+    eq_or_diff(
+        [ map { $_->name } $authors->grep_by([ "is_prolific" ]) ],
+        [
+            "James A. Corey",
+        ],
+        "grep_by simple method call works",
+    );
+};
+
 subtest grep_by_with_predicate_sub => sub {
     eq_or_diff(
         [ map { $_->name } $authors->grep_by("name", undef, sub { /Corey/ }) ],
@@ -59,6 +70,28 @@ subtest grep_by_with_predicate_sub => sub {
         ],
         "grep_by with method argument and predicate sub call works",
     );
+
+    note "Arrayref accessor";
+    eq_or_diff(
+        [ map { $_->name } $authors->grep_by("name", sub { /Corey/ }) ],
+        [
+            "James A. Corey",
+        ],
+        "grep_by without predicate argument and with predicate sub call works",
+    );
+    eq_or_diff(
+        [
+            map { $_->name } $authors->grep_by(
+                [ publisher_affiliation => "with" ],
+                sub { /Corey/ },
+            ),
+        ],
+        [
+            "James A. Corey",
+        ],
+        "grep_by with method argument and predicate sub call works",
+    );
+
 };
 
 subtest examples => sub {
