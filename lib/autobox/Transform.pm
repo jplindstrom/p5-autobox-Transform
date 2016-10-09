@@ -352,6 +352,36 @@ If the array contains objects, a method is called on each object
 If the array contains hashrefs, the hash key is looked up on each
 item.
 
+=head3 Calling accessor methods with arguments
+
+    $array->grep_by($accessor, $args, $subref)
+    $books->grep_by("price_with_discount", [ 5.0 ], sub { $_ < 15.0 })
+
+Call the method $accessor on each object using the arguments in the
+$args arrayref like so:
+
+    $object->$accessor(@$args)
+
+=head3 Alternate syntax
+
+    $array->grep_by($accessor_and_args, $subref)
+
+If the $accessor_and_args is specified as a string, it's a simple
+lookup/method call.
+
+    # method call without args
+    $books->grep_by("price", sub { $_ < 15.0 })
+    # $_->price()
+
+If the $accessor_and_args is specified as an arrayref, the first item
+is the method name, and the rest are the arguments to the method.
+
+    # method call with args
+    $books->grep_by([ price_with_discount => 5.0 ], sub { $_ < 15.0 })
+    # $_->price_with_discount(5.0)
+
+This syntax is the future proof, preferred one.
+
 
 =head2 List and Scalar Context
 
