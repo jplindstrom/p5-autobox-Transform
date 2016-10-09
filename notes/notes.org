@@ -55,8 +55,9 @@ arrayref, use that format.
 **** DONE group_by_count
 **** DONE group_by_array
 *** tasks
-**** fix
-**** document new style
+**** DONE fix
+**** DONE document new style
+**** DONE changes
 **** release
 **** change docs to new style
 ***** document old style
