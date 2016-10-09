@@ -551,7 +551,7 @@ Examples:
 
 sub uniq_by {
     my $array = shift;
-    my ($accessor, $args) = @_;
+    my ($accessor, $args) = _normalized_accessor_args_subref(@_);
     return __invoke_by("uniq", $array, $accessor, $args);
 }
 
