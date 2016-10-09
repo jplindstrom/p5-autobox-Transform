@@ -372,6 +372,32 @@ use autobox::Core;
 
 
 
+# Normalize the two method calling styles for accessor + args:
+#   $acessor, $args_arrayref, $modifier
+# or
+#   $acessor_and_args_arrayref, $modifier
+sub _normalized_accessor_args_subref {
+    my ($accessor, $args, $subref) = @_;
+
+    # Note: unfortunately, this won't allow the $subref (modifier) to
+    # become an arrayref later on when we do many types of modifiers
+    # (string eq, qr regex match, sub call, arrayref in) for
+    # filtering.
+    #
+    # That has to happen after the deprecation has expired and the old
+    # syntax is removed.
+    if(ref($args) eq "CODE") {
+        $subref = $args; # Move down one step
+        $args = undef;
+    }
+    if(ref($accessor) eq "ARRAY") {
+        ($accessor, my @args) = @$accessor;
+        $args = \@args;
+    }
+
+    return ($accessor, $args, $subref);
+}
+
 sub __invoke_by {
     my $invoke = shift;
     my $array = shift;
@@ -441,11 +467,7 @@ Or get the hash key value. Examples:
 
 sub map_by {
     my $array = shift;
-    my ($accessor, $args) = @_;
-    if(ref($accessor) eq "ARRAY") {
-        ($accessor, my @args) = @$accessor;
-        $args = \@args;
-    }
+    my ($accessor, $args) = _normalized_accessor_args_subref(@_);
     return __invoke_by("map", $array, $accessor, $args);
 }
 
@@ -495,18 +517,7 @@ L<autobox::Core>.
 
 sub grep_by {
     my $array = shift;
-    my ($accessor, $args, $grep_subref) = @_;
-
-    # Or: $acessor_and_args, $grep_subref
-    if(ref($args) eq "CODE") {
-        $grep_subref = $args; # Move one down
-        $args = undef;
-    }
-    if(ref($accessor) eq "ARRAY") {
-        ($accessor, my @args) = @$accessor;
-        $args = \@args;
-    }
-
+    my ($accessor, $args, $grep_subref) = _normalized_accessor_args_subref(@_);
     $grep_subref //= sub { !! $_ };
     # grep_by $value, if passed the method value must match the value?
     return __invoke_by(

@@ -48,8 +48,8 @@ arrayref, use that format.
 *** so warnings and dies are reported from the caller.
 ** Fix method with args syntax
 *** methods
-**** map_by
-**** grep_by
+**** DONE map_by
+**** DONE grep_by
 **** uniq_by
 **** group_by
 **** group_by_count
