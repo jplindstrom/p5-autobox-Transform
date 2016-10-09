@@ -58,11 +58,18 @@ arrayref, use that format.
 **** DONE fix
 **** DONE document new style
 **** DONE changes
+**** DONE release
+**** DONE change docs to new style
+***** DONE document old style
+***** DONE deprecate old style
+****** DONE document plan for 2.0.0
 **** release
-**** change docs to new style
-***** document old style
-***** deprecate old style
-****** document plan for 2.0.0
+** Document the gems form core
+*** elements
+**** avoid ugly deref punctuation
+*** length
+*** strip
+**** better chomp
 * Hash
 ** DONE key_value($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
 *** exists

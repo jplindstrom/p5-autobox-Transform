@@ -36,11 +36,12 @@ particular when the values are hashrefs or objects.
     # hashrefs (the call syntax is the same)
 
     $books->map_by("genre");
-    $books->map_by(price_with_tax => [$tax_pct]);
+    $books->map_by([ price_with_tax => $tax_pct ]);
 
     $books->grep_by("is_sold_out");
-    $books->grep_by(is_in_library => [$library]);
-    $books->grep_by(price => undef, sub { $_ > 56.00 });
+    $books->grep_by([ is_in_library => $library ]);
+    $books->grep_by([ price_with_tax => $rate ], sub { $_ > 56.00 });
+    $books->grep_by("price", sub { $_ > 56.00 });
 
     $books->uniq_by("id");
 
@@ -52,7 +53,7 @@ particular when the values are hashrefs or objects.
     #     "The Name of the Wind"  => $books->[3],
     # },
 
-    $authors->group_by(publisher_affiliation => ["with"]),
+    $authors->group_by([ publisher_affiliation => "with" ]),
     # {
     #     'James A. Corey with Orbit'     => $authors->[0],
     #     'Cixin Liu with Head of Zeus'   => $authors->[1],
@@ -144,7 +145,7 @@ equivalent.
         map { $_->price_with_tax($tax_pct) } @{$order->books}
     );
     my $book_order_total = $order->books
-        ->map_by(price_with_tax => [$tax_pct])->sum;
+        ->map_by([ price_with_tax => $tax_pct ])->sum;
 
     ### map_by - hash key: $books are book hashrefs
     my @genres = map { $_->{genre} } @$books;
@@ -157,7 +158,7 @@ equivalent.
     my $sold_out_books = $books->grep_by("is_sold_out");
 
     my $books_in_library = [ grep { $_->is_in_library($library) } @$books ];
-    my $books_in_library = $books->grep_by(is_in_library => [$library]);
+    my $books_in_library = $books->grep_by([ is_in_library => $library ]);
 
     ### grep_by - hash key: $books are book hashrefs
     my $sold_out_books = [ grep { $_->{is_sold_out} } @$books ];
@@ -259,11 +260,13 @@ L<autobox::Core> is awesome, for a variety of reasons.
 
 =item
 
-It cuts down on dereferencing punctuation clutter.
+It cuts down on dereferencing punctuation clutter, both by using
+methods on references and by using ->elements to deref arrayrefs.
 
 =item
 
-It makes map and grep transforms read in the same direction it's executed.
+It makes map and grep transforms read in the same direction it's
+executed.
 
 =item
 
@@ -274,7 +277,7 @@ operations etc.
 =back
 
 On top of this, L<autobox::Transform> provides a few higher level
-methods for mapping, greping and sorting common cases which are easier
+methods for mapping, filtering and sorting common cases which are easier
 to read and write.
 
 Since they are at a slightly higher semantic level, once you know them
@@ -289,8 +292,9 @@ cases, but when used appropriately they will lead to much more clear,
 succinct and direct code, especially in conjunction with
 autobox::Core.
 
-
 =cut
+
+
 
 use true;
 use Carp;
@@ -354,16 +358,6 @@ item.
 
 =head3 Calling accessor methods with arguments
 
-    $array->grep_by($accessor, $args, $subref)
-    $books->grep_by("price_with_discount", [ 5.0 ], sub { $_ < 15.0 })
-
-Call the method $accessor on each object using the arguments in the
-$args arrayref like so:
-
-    $object->$accessor(@$args)
-
-=head3 Alternate syntax
-
     $array->grep_by($accessor_and_args, $subref)
 
 If the $accessor_and_args is specified as a string, it's a simple
@@ -380,7 +374,38 @@ is the method name, and the rest are the arguments to the method.
     $books->grep_by([ price_with_discount => 5.0 ], sub { $_ < 15.0 })
     # $_->price_with_discount(5.0)
 
-This syntax is the future proof, preferred one.
+=head3 Deprecated syntax
+
+There is an older syntax for calling methods with arguments. It was
+abandoned to open up more powerful ways to use grep/filter type
+methods. Here it is for reference, in case you bump into existing
+code.
+
+    $array->grep_by($accessor, $args, $subref)
+    $books->grep_by("price_with_discount", [ 5.0 ], sub { $_ < 15.0 })
+
+Call the method $accessor on each object using the arguments in the
+$args arrayref like so:
+
+    $object->$accessor(@$args)
+
+This style is deprecated, and planned for removal in version 2.000, so if
+you have code with the old call style, please:
+
+=over 4
+
+=item
+
+Replace your existing code with the new style as soon as possible. The
+change is trivial and the code easily found by grep/ack.
+
+=item
+
+Pin your version to < 2.000 in your cpanfile, dist.ini or whatever you
+use to avoid upgrading to an incompatible version.
+
+=back
+
 
 
 =head2 List and Scalar Context
@@ -467,10 +492,13 @@ sub __invoke_by {
     return wantarray ? @$result : $result;
 }
 
-=head2 @array->map_by($accessor, @$args?) : @array | @$array
+=head2 @array->map_by($accessor) : @array | @$array
 
-Call the $accessor on each object in @array, or get the hash key
-value on each hashref in the list. Like:
+$accessor is either a string, or an arrayref where the first item is a
+string.
+
+Call the $accessor on each object in @array, or get the hash key value
+on each hashref in @array. Like:
 
     map { $_->$accessor() }
     # or
@@ -481,18 +509,18 @@ Examples:
     my @ahthor_names = $authors->map_by("name");
     my $author_names = @publishers->map_by("authors")->map_by("name");
 
-Optionally pass in @$args in the method call. Like:
-
-    map { $_->$accessor(@$args) }
-
-Examples:
-
-    my @prices_including_tax = $books->map_by("price_with_tax", [ $tax_pct ]);
-    my $prices_including_tax = $books->map_by(price_with_tax => [ $tax_pct ]);
-
 Or get the hash key value. Examples:
 
     my @review_scores = $reviews->map_by("score");
+
+Alternatively the $accessor is an arrayref. The first item is the
+accessor name, and the rest of the items are passed as args the method
+call. This only works when working with objects, not with hashrefs.
+
+Examples:
+
+    my @prices_including_tax = $books->map_by([ "price_with_tax", $tax_pct ]);
+    my $prices_including_tax = $books->map_by([ price_with_tax => $tax_pct ]);
 
 =cut
 
@@ -504,7 +532,10 @@ sub map_by {
 
 
 
-=head2 @array->grep_by($accessor, @$args?, $grep_subref = *is_true*) : @array | @$array
+=head2 @array->grep_by($accessor, $grep_subref = *is_true*) : @array | @$array
+
+$accessor is either a string, or an arrayref where the first item is a
+string.
 
 Call the $accessor on each object in the list, or get the hash key
 value on each hashref in the list.
@@ -513,13 +544,13 @@ Examples:
 
     my @prolific_authors = $authors->grep_by("is_prolific");
 
-Optionally pass in @$args in the method call. Like:
-
-    grep { $_->$accessor(@$args) }
+Alternatively the $accessor is an arrayref. The first item is the
+accessor name, and the rest of the items are passed as args the method
+call. This only works when working with objects, not with hashrefs.
 
 Examples:
 
-    my @books_to_charge_for = $books->grep_by("price_with_tax", [ $tax_pct ]);
+    my @books_to_charge_for = $books->grep_by([ price_with_tax => $tax_pct ]);
 
 Optionally, with the value returned from the $accessor, call
 $grep_subref->($value) to check whether this item should remain in the
@@ -531,17 +562,17 @@ the current $value.
 Examples:
 
     my @authors = $authors->grep_by(
-        "publisher", undef,
+        "publisher",
         sub { $_->name =~ /Orbit/ },
     );
 
     my @authors = $authors->grep_by(
-        publisher_affiliation => [ "with" ],
-        sub { /Orbit / },
+        [ publisher_affiliation => "with" ],
+        sub { /Orbit/ },
     );
 
 Note: if you do something complicated with the $grep_subref, it might
-be easier and more readable to simply use C<$array->grep()> from
+be easier and more readable to simply use C<$array-$<gt>grep()> from
 L<autobox::Core>.
 
 =cut
@@ -560,7 +591,10 @@ sub grep_by {
     );
 }
 
-=head2 @array->uniq_by($accessor, @$args?) : @array | @$array
+=head2 @array->uniq_by($accessor) : @array | @$array
+
+$accessor is either a string, or an arrayref where the first item is a
+string.
 
 Call the $accessor on each object in the list, or get the hash key
 value on each hashref in the list. Return list of items wich have a
@@ -572,11 +606,15 @@ Examples:
     # You have gathered multiple Author objects with duplicate ids
     my @authors = $authors->uniq_by("author_id");
 
-Optionally pass in @$args in the method call.
+Alternatively the $accessor is an arrayref. The first item is the
+accessor name, and the rest of the items are passed as args the method
+call. This only works when working with objects, not with hashrefs.
 
 Examples:
 
-    my @example_book_at_price_point = $books->uniq_by("price_with_tax", [ $tax_pct ]);
+    my @example_book_at_price_point = $books->uniq_by(
+        [ price_with_tax => $tax_pct ],
+    );
 
 =cut
 
@@ -588,11 +626,14 @@ sub uniq_by {
 
 
 
-=head2 @array->group_by($accessor, @$args = [], $value_sub = object) : %key_value | %$key_value
+=head2 @array->group_by($accessor, $value_sub = object) : %key_value | %$key_value
 
-Call ->$accessor(@$args) on each object in the array, or get the hash
-key for each hashref in the array (just like ->map_by) and group the
-return values as keys in a hashref.
+$accessor is either a string, or an arrayref where the first item is a
+string.
+
+Call ->$accessor on each object in the array, or get the hash key for
+each hashref in the array (just like C<-E<gt>map_by>) and group the
+values as keys in a hashref.
 
 The default $value_sub puts each object in the list as the hash
 value. If the key is repeated, the value is overwritten with the last
@@ -615,7 +656,7 @@ be to use one of the more specific group_by-methods (see below). It
 should be capable enough to achieve what you need though, so here's
 how it works:
 
-The hash key is whatever is returned from $object->$accessor(@$args).
+The hash key is whatever is returned from $object->$accessor.
 
 The hash value is whatever is returned from
 
@@ -694,9 +735,12 @@ sub group_by {
     return __core_group_by("group_by", $array, $accessor, $args, $value_sub);
 }
 
-=head2 @array->group_by_count($accessor, @$args = []) : %key_count | %$key_count
+=head2 @array->group_by_count($accessor) : %key_count | %$key_count
 
-Just like group_by, but the hash values are the the number of
+$accessor is either a string, or an arrayref where the first item is a
+string.
+
+Just like C<group_by>, but the hash values are the the number of
 instances each $accessor value occurs in the list.
 
 Example:
@@ -723,10 +767,13 @@ sub group_by_count {
     return __core_group_by("group_by_count", $array, $accessor, $args, $value_sub);
 }
 
-=head2 @array->group_by_array($accessor, @$args = []) : %key_objects | %$key_objects
+=head2 @array->group_by_array($accessor) : %key_objects | %$key_objects
 
-Just like group_by, but the hash values are arrayrefs containing the
-objects which has each $accessor value.
+$accessor is either a string, or an arrayref where the first item is a
+string.
+
+Just like C<group_by>, but the hash values are arrayrefs containing
+the objects which has each $accessor value.
 
 Example:
 

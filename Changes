@@ -2,6 +2,13 @@
 
 {{$NEXT}}
 
+ * The new call style for accessors is now the preferred one, the old
+   one deprecated but still supported until 2.000 .
+
+   If you have code with the old call style, please pin your version 
+   to < 2.000 in your cpanfile, dist.ini or whatever you use.
+
+
 1.020 2016-10-09T15:15:22Z
 
  * Support for new call style for accessor method calls with arguments
