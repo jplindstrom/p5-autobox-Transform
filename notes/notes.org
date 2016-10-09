@@ -57,7 +57,7 @@ arrayref, use that format.
 *** tasks
 **** fix
 **** document new style
-**** releaes
+**** release
 **** change docs to new style
 ***** document old style
 ***** deprecate old style
