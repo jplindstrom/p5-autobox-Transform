@@ -46,7 +46,14 @@ arrayref, use that format.
 *** Provide this as a parameter with core as the default?
 ** TODO sub uplevel or whatnot
 *** so warnings and dies are reported from the caller.
-
+** Fix method with args syntax
+*** methods
+**** map_by
+**** grep_by
+**** uniq_by
+**** group_by
+**** group_by_count
+**** group_by_array
 * Hash
 ** DONE key_value($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
 *** exists
