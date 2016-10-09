@@ -27,6 +27,12 @@ subtest map_by__empty => sub {
         ],
         "Empty list gives empty list",
     );
+    eq_or_diff(
+        [ []->map_by([ genre => 34 ]) ],
+        [
+        ],
+        "Empty list gives empty list",
+    );
 };
 
 ### method
