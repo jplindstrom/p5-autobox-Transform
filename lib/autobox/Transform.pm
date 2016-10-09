@@ -309,6 +309,32 @@ sub throw {
     croak($error);
 }
 
+# Normalize the two method calling styles for accessor + args:
+#   $acessor, $args_arrayref, $modifier
+# or
+#   $acessor_and_args_arrayref, $modifier
+sub _normalized_accessor_args_subref {
+    my ($accessor, $args, $subref) = @_;
+
+    # Note: unfortunately, this won't allow the $subref (modifier) to
+    # become an arrayref later on when we do many types of modifiers
+    # (string eq, qr regex match, sub call, arrayref in) for
+    # filtering.
+    #
+    # That has to happen after the deprecation has expired and the old
+    # syntax is removed.
+    if(ref($args) eq "CODE") {
+        $subref = $args; # Move down one step
+        $args = undef;
+    }
+    if(ref($accessor) eq "ARRAY") {
+        ($accessor, my @args) = @$accessor;
+        $args = \@args;
+    }
+
+    return ($accessor, $args, $subref);
+}
+
 
 
 =head2 Transforming lists of objects vs list of hashrefs
@@ -370,33 +396,8 @@ package # hide from PAUSE
 
 use autobox::Core;
 
-
-
-# Normalize the two method calling styles for accessor + args:
-#   $acessor, $args_arrayref, $modifier
-# or
-#   $acessor_and_args_arrayref, $modifier
-sub _normalized_accessor_args_subref {
-    my ($accessor, $args, $subref) = @_;
-
-    # Note: unfortunately, this won't allow the $subref (modifier) to
-    # become an arrayref later on when we do many types of modifiers
-    # (string eq, qr regex match, sub call, arrayref in) for
-    # filtering.
-    #
-    # That has to happen after the deprecation has expired and the old
-    # syntax is removed.
-    if(ref($args) eq "CODE") {
-        $subref = $args; # Move down one step
-        $args = undef;
-    }
-    if(ref($accessor) eq "ARRAY") {
-        ($accessor, my @args) = @$accessor;
-        $args = \@args;
-    }
-
-    return ($accessor, $args, $subref);
-}
+*_normalized_accessor_args_subref
+    = \&autobox::Transform::_normalized_accessor_args_subref;
 
 sub __invoke_by {
     my $invoke = shift;
@@ -801,6 +802,9 @@ package # hide from PAUSE
     autobox::Transform::Hash;
 
 use autobox::Core;
+
+*_normalized_accessor_args_subref
+    = \&autobox::Transform::_normalized_accessor_args_subref;
 
 
 
