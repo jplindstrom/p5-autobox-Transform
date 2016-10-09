@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+1.020 2016-10-09T15:15:22Z
+
  * Support for new call style for accessor method calls with arguments
    e.g. ->map_by([ price_with_discount_code => $code ])
 

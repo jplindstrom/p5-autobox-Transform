@@ -2,15 +2,27 @@
 
 autobox::Transform - Autobox methods to transform Arrays and Hashes
 
+# CONTEXT
+
+[autobox](https://metacpan.org/pod/autobox) provides the ability to call methods on native types,
+e.g. strings, arrays, and hashes as if they were objects.
+
+[autobox::Core](https://metacpan.org/pod/autobox::Core) provides the basic methods for Perl core functions
+like `uc`, `map`, and `grep`.
+
+This module, `autobox::Transform`, provides higher level and more
+specific methods to transform and manipulate arrays and hashes and, in
+particular when the values are hashrefs or objects.
+
 # SYNOPSIS
 
     use autobox::Core;  # uniq, sort, join, sum, etc.
     use autobox::Transform;
 
-## Array Examples
+## Arrays with hashrefs/objects
 
-    # $books and $authors below are arrayrefs with either objects (or
-    # hashrefs)
+    # $books and $authors below are arrayrefs with either objects or
+    # hashrefs (the call syntax is the same)
 
     $books->map_by("genre");
     $books->map_by(price_with_tax => [$tax_pct]);
@@ -48,6 +60,9 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     #     "Fantasy" => [ $fantasy_book_1 ],
     # },
 
+## Arrays
+
+    # Flatten arrayrefs-of-arrayrefs
     $authors->map_by("books") # ->books returns an arrayref
     # [ [ $book1, $book2 ], [ $book3 ] ]
     $authors->map_by("books")->flat;
@@ -59,7 +74,7 @@ autobox::Transform - Autobox methods to transform Arrays and Hashes
     # Return array, even in scalar context
     @books->to_array;
 
-## Hash Examples
+## Hashes
 
     # Upper-case the genre name, and make the count say "n books"
     $genre_count->map_each(sub { uc( $_[0] ) => "$_ books" });
@@ -197,15 +212,48 @@ autobox::Core.
 
 ## Transforming lists of objects vs list of hashrefs
 
-map\_by, grep\_by etc are called the same way regardless of whether the
-list contains objects or hashrefs. The items in the list must all be
-either objects or hashrefs.
+`map_by`, `grep_by` etc. (all methods named \*\_by) work with arrays
+that contain hashrefs or objects.
+
+These methods are called the same way regardless of whether the array
+contains objects or hashrefs. The items in the list must all be either
+objects or hashrefs.
 
 If the array contains objects, a method is called on each object
 (possibly with the arguments provided).
 
 If the array contains hashrefs, the hash key is looked up on each
 item.
+
+### Calling accessor methods with arguments
+
+    $array->grep_by($accessor, $args, $subref)
+    $books->grep_by("price_with_discount", [ 5.0 ], sub { $_ < 15.0 })
+
+Call the method $accessor on each object using the arguments in the
+$args arrayref like so:
+
+    $object->$accessor(@$args)
+
+### Alternate syntax
+
+    $array->grep_by($accessor_and_args, $subref)
+
+If the $accessor\_and\_args is specified as a string, it's a simple
+lookup/method call.
+
+    # method call without args
+    $books->grep_by("price", sub { $_ < 15.0 })
+    # $_->price()
+
+If the $accessor\_and\_args is specified as an arrayref, the first item
+is the method name, and the rest are the arguments to the method.
+
+    # method call with args
+    $books->grep_by([ price_with_discount => 5.0 ], sub { $_ < 15.0 })
+    # $_->price_with_discount(5.0)
+
+This syntax is the future proof, preferred one.
 
 ## List and Scalar Context
 
@@ -225,11 +273,11 @@ context. E.g.
     );
 
     $self->my_method(
-        # Correct, convert the list to an arrayref
+        # Correct, convert the returned list to an arrayref
         books => [ $books->grep_by("is_published") ],
     );
     $self->my_method(
-        # Correct, ensure scalar context i.e. an array ref
+        # Correct, ensure scalar context to get an array ref
         books => scalar $books->grep_by("is_published"),
     );
 
