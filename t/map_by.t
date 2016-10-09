@@ -63,6 +63,18 @@ subtest map_by__method => sub {
         ],
         "Map by simple method call works",
     );
+
+    note "ArrayRef call, arrayref accessor";
+    eq_or_diff(
+        [ $books->map_by([ "genre" ]) ],
+        [
+            "Sci-fi",
+            "Sci-fi",
+            "Sci-fi",
+            "Fantasy",
+        ],
+        "Map by simple method call works",
+    );
 };
 
 subtest map_by__missing_method => sub {
@@ -85,6 +97,15 @@ subtest map_by__method__not_a_method => sub {
 subtest map_by__method__args => sub {
     eq_or_diff(
         [ $authors->map_by(publisher_affiliation => ["with"]) ],
+        [
+            'James A. Corey with Orbit',
+            'Cixin Liu with Head of Zeus',
+            'Patrick Rothfuss with Gollanz',
+        ],
+        "map_by with argument list",
+    );
+    eq_or_diff(
+        [ $authors->map_by([ publisher_affiliation => "with" ]) ],
         [
             'James A. Corey with Orbit',
             'Cixin Liu with Head of Zeus',
@@ -124,6 +145,16 @@ subtest map_by__key__with_args => sub {
     lives_ok(
         sub { $reviews->map_by("score" => [ ]) },
         "Empty arrayref is allowed",
+    );
+
+    throws_ok(
+        sub { $reviews->map_by([ "score" => "abc" ]) },
+        qr{ map_by .+? 'score' .+? \$args .+? only[ ]supported[ ]for[ ]method[ ]calls.+? t.map_by.t}x,
+        "Arrayref with items, not allowed"
+    );
+    lives_ok(
+        sub { $reviews->map_by([ "score" ]) },
+        "No args is allowed",
     );
 };
 

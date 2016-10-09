@@ -442,6 +442,10 @@ Or get the hash key value. Examples:
 sub map_by {
     my $array = shift;
     my ($accessor, $args) = @_;
+    if(ref($accessor) eq "ARRAY") {
+        ($accessor, my @args) = @$accessor;
+        $args = \@args;
+    }
     return __invoke_by("map", $array, $accessor, $args);
 }
 
