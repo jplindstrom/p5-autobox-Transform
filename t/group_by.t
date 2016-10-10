@@ -67,7 +67,7 @@ subtest group_by__key__with_args => sub {
     note "ArrayRef key lookup";
     throws_ok(
         sub { $reviews->group_by("id" => 32) },
-        qr{ group_by .+? 'id' .+? \$args .+? \(32\) .+? only[ ]supported[ ]for .+? t.group_by.t}x,
+        qr{ group_by .+? 'id' .+? \@args .+? \(32\) .+? only[ ]supported[ ]for .+? t.group_by.t}x,
         "Group by simple hash key lookup with args dies as expected",
     );
 };
@@ -139,7 +139,7 @@ subtest group_by__method__args => sub {
 subtest group_by__method__args__invalid_type => sub {
     throws_ok(
         sub { $authors->group_by(publisher_affiliation => 342) },
-        qr{ group_by .+? 'publisher_affiliation' .+? \$args .+? \(342\) .+? array[ ]ref .+? t.group_by.t}x,
+        qr{ group_by .+? 'publisher_affiliation' .+? \@args .+? \(342\) .+? list .+? t.group_by.t}x,
         "group_by with argument which isn't an array ref",
     );
 };
@@ -147,7 +147,7 @@ subtest group_by__method__args__invalid_type => sub {
 subtest group_by_count__method__args__invalid_type => sub {
     throws_ok(
         sub { $authors->group_by_count(publisher_affiliation => 342) },
-        qr{ group_by .+? 'publisher_affiliation' .+? \$args .+? \(342\) .+? array[ ]ref .+? t.group_by.t}x,
+        qr{ group_by .+? 'publisher_affiliation' .+? \@args .+? \(342\) .+? list .+? t.group_by.t}x,
         "group_by with argument which isn't an array ref",
     );
 };

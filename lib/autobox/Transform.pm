@@ -498,16 +498,17 @@ sub __invoke_by {
     $args //= [];
     if ( ref($array->[0] ) eq "HASH" ) {
         ( defined($args) && (@$args) ) # defined and isn't empty
-            and Carp::croak("${invoke}_by('$accessor'): \$args ($args) only supported for method calls, not hash key access");
+            and Carp::croak("${invoke}_by([ '$accessor', \@args ]): \@args ($args) only supported for method calls, not hash key access");
         $invoke .= "_key";
     }
 
+    ###JPL: move up
     ref($args) eq "ARRAY"
-        or Carp::croak("${invoke}_by('$accessor', \$args): \$args ($args) is not an array ref");
+        or Carp::croak("${invoke}_by([ '$accessor', \@args ]): \@args ($args) is not a list");
 
     if( $subref_name ) {
         ref($subref) eq "CODE"
-            or Carp::croak("${invoke}_by('$accessor', \$args, \$$subref_name): \$$subref_name ($subref) is not an sub ref");
+            or Carp::croak("${invoke}_by([ '$accessor', \@args ], \$$subref_name): \$$subref_name ($subref) is not an sub ref");
     }
 
     my %seen;
@@ -739,14 +740,14 @@ sub __core_group_by {
         # Hash key
         if ( ref($array->[0] ) eq "HASH" ) {
             defined($args)
-                and Carp::croak("$name('$accessor'): \$args ($args) only supported for method calls, not hash key access. Please specify an undef if needed.");
+                and Carp::croak("$name([ '$accessor', \@args ]): \@args ($args) only supported for method calls, not hash key access.");
             "key";
         }
         # Method
         else {
             $args //= [];
             ref($args) eq "ARRAY"
-                or Carp::croak("$name('$accessor', \$args, \$value_sub): \$args ($args) is not an array ref");
+                or Carp::croak("$name([ '$accessor', \@args ], \$value_sub): \@args ($args) is not a list");
             "method";
         }
     };
@@ -778,7 +779,7 @@ sub group_by {
 
     $value_sub //= sub { $_ };
     ref($value_sub) eq "CODE"
-        or Carp::croak("group_by('$accessor', [], \$value_sub): \$value_sub ($value_sub) is not a sub ref");
+        or Carp::croak("group_by([ '$accessor', \@args ], \$value_sub): \$value_sub ($value_sub) is not a sub ref");
 
     return __core_group_by("group_by", $array, $accessor, $args, $value_sub);
 }
