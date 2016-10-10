@@ -261,7 +261,7 @@ sub _normalized_accessor_args_subref {
 }
 
 sub _predicate {
-    my ($name, $predicate, $default_predicate, $is_predicate_passed) = @_;
+    my ($name, $predicate, $is_predicate_passed, $default_predicate) = @_;
 
     # No predicate, use default is_true
     $is_predicate_passed or return $default_predicate;
@@ -438,8 +438,8 @@ sub filter {
     my $subref = autobox::Transform::_predicate(
         "filter",
         $predicate,
+        ( scalar(@_) == 1 ), # is there a predicate passed at all?
         sub { !! $_ },
-        ( scalar(@_) == 1 ),
     );
 
     my $result = eval {
