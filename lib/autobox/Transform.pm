@@ -37,6 +37,9 @@ particular when the values are hashrefs or objects.
     # filter (grep)
     $book_locations->filter(); # true values
     $books->filter(sub { $_->is_in_library($library) });
+    $book_names->filter( qr/lord/i );
+    $book_types->filter("scifi");
+    $book_types->filter({ fantasy => 1, scifi => 1 }); # hash key exists
 
     # Flatten arrayrefs-of-arrayrefs
     $authors->map_by("books") # ->books returns an arrayref
