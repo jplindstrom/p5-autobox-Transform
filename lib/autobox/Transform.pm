@@ -301,7 +301,7 @@ item.
 
 Consider C<filter_by>:
 
-    $array->filter_by($accessor, $subref)
+    $array->filter_by($accessor, $predicate)
 
 If the $accessor is a string, it's a simple lookup/method call.
 
@@ -347,6 +347,40 @@ whatever you use to avoid upgrading to an incompatible version.
 
 =back
 
+
+=head2 Filter predicates
+
+There are several methods that filter items, e.g. C<filter> (duh), and
+C<filter_by>. These methods take a $predicate argument, to determine
+which items to retain or filter out.
+
+If $predicate is an unblessed scalar, it is compared to each value
+with string eq.
+
+    $books->filter_by("author", "James A. Corey");
+
+If $predicate is a regex, it is compared to each value with =~.
+
+    $books->filter_by("author", qr/Corey/);
+
+If $predicate is a hashref, values in @array are retained if the
+$predicate hash key exists (the hash values are irrelevant).
+
+    $books->filter_by(
+        "author", {
+            "James A. Corey"   => undef,
+            "Cixin Liu"        => 0,
+            "Patrick Rothfuss" => 1,
+        },
+    );
+
+If $predicate is a subref, the subref is called for each value to
+check whether this item should remain in the list.
+
+The $filter_subref should return a true value to remain. $_ is set to
+the current $value.
+
+    $authors->filter_by(publisher => sub { $_->name =~ /Orbit/ });
 
 
 =head2 List and Scalar Context
@@ -397,32 +431,18 @@ use autobox::Core;
 =head2 @array->filter($predicate = *is_true_subref*) : @array | @$array
 
 Similar to Perl's C<grep>, return an @array with values for which
-$predicate yields a true value.
+$predicate yields a true value. 
 
-If $predicate is an unblessed scalar, it is compared to each value
-with string eq.
-
-If $predicate is a regex, it is compared to each value with =~.
-
-If $predicate is a hashref, values in @array are retained if the
-$predicate hash key exists.
-
-If $predicate is a subref, the subref is called for each value to
-check whether this item should remain in the list (default is to check
-for true values).
-
-The $filter_subref should return a true value to remain. $_ is set to
-the current $value.
+$predicate can be a subref, string, undef, regex, or hashref. See
+L</Filter predicates>.
 
 The default (no $predicate) is a subref which retains true values in
 the @array.
 
 Examples:
 
-    my @apples = $fruit->filter("apple");
-
-    my @any_apple = $fruit->filter( qr/apple/i );
-
+    my @apples     = $fruit->filter("apple");
+    my @any_apple  = $fruit->filter( qr/apple/i );
     my @publishers = $authors->filter(
         sub { $_->publisher->name =~ /Orbit/ },
     );
@@ -431,7 +451,8 @@ Examples:
 =head3 filter and grep
 
 L<autobox::Core>'s C<grep> method takes a subref, just like this
-method.
+method. C<filter> also supports the other predicate types, like
+string, regex, etc.
 
 
 =cut
