@@ -260,6 +260,19 @@ sub _normalized_accessor_args_subref {
     return ($accessor, $args, $subref);
 }
 
+sub _predicate {
+    my ($name, $predicate, $default_predicate) = @_;
+    defined($predicate) or return $default_predicate;
+
+    # scalar, do string eq
+    my $type = ref($predicate) or return sub { $predicate eq $_ };
+
+    $type eq "CODE" and return $predicate;
+
+    # Invalid predicate
+    Carp::croak("->$name() \$predicate: ($predicate) is not a subref, or a scalar");
+}
+
 
 
 =head2 Transforming lists of objects vs list of hashrefs
@@ -373,21 +386,31 @@ package # hide from PAUSE
 use autobox::Core;
 
 
-=head2 @array->filter($filter_subref = *is_true*) : @array | @$array
+
+=head2 @array->filter($predicate = *is_true_subref*) : @array | @$array
 
 Similar to Perl's C<grep>, return an @array with values for which
-$filter_subref returns a true value.
+$predicate yields a true value.
 
-The $filter_subref is called for each value to check whether this item
-should remain in the list (default is to check for true values).
+If $predicate is an unblessed scalar, it is compared to each value
+with string eq.
+
+If $predicate is a subref, the subref is called for each value to
+check whether this item should remain in the list (default is to check
+for true values).
 
 The $filter_subref should return a true value to remain. $_ is set to
 the current $value.
 
+The default (no $predicate) is a subref which retains true values in
+the @array.
+
 Examples:
 
-    my @authors = $authors->filter(
-        sub { $_->name->publisher =~ /Orbit/ },
+    my @apples = $fruit->filter("apple");
+
+    my @publishers = $authors->filter(
+        sub { $_->publisher->name =~ /Orbit/ },
     );
 
 
@@ -401,11 +424,15 @@ method.
 
 sub filter {
     my $array = shift;
-    my ($filter_subref) = @_;
-    $filter_subref //= sub { !! $_ };
+    my ($predicate) = @_;
+    my $subref = autobox::Transform::_predicate(
+        "filter",
+        $predicate,
+        sub { !! $_ },
+    );
 
     my $result = eval {
-        [ CORE::grep { $filter_subref->( $_ ) } @$array ]
+        [ CORE::grep { $subref->( $_ ) } @$array ]
     } or autobox::Transform::throw($@);
 
     return wantarray ? @$result : $result;

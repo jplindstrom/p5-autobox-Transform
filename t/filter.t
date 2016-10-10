@@ -26,7 +26,7 @@ subtest filter_default_true => sub {
     );
 };
 
-subtest filter => sub {
+subtest filter_subref => sub {
     note "ArrayRef call, list context result, subref predicate";
     eq_or_diff(
         [ map { $_->name } $authors->filter(sub { $_->is_prolific }) ],
@@ -45,6 +45,15 @@ subtest filter => sub {
             "James A. Corey",
         ],
         "filter simple method call works",
+    );
+};
+
+subtest filter_string => sub {
+    my $strings = [ "abc", "def", "abc" ];
+    eq_or_diff(
+        $strings->filter("abc")->to_ref,
+        [ "abc", "abc" ],
+        "filter scalar string",
     );
 };
 
