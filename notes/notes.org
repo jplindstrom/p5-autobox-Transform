@@ -9,7 +9,7 @@
 ** DONE Deprecate Array::Transform, point to new
 ** DONE map_by, grep_by, group_by hash key lookup
 *** if first item is ref HASH
-** grep_by - value
+** DONE grep_by - value
 ** [#A] group (group_count)
 *** group_array
 ** sort
@@ -19,16 +19,16 @@
 ** compact - without undefined
 ** compactTrue - without false
 ** without - grep -v value
-** grep --> filter
-*** so I can write "grep" instead of autobox::Core
-*** deprecate grep, but keep the alias
+** TODO grep --> filter
+*** DONE so I can write "grep" instead of autobox::Core
+*** DONE deprecate grep, but keep the alias
 *** get going with the grep --> filter, so we can use nothing (true), string eq, regex or subref.
-*** Leave the old implementation behind, but deprecate it and only briefly mention it in the docs.
-** grep, grep_by third arg more dwim
+*** DONE Leave the old implementation behind, but deprecate it and only briefly mention it in the docs.
+** TODO grep, grep_by third arg more dwim
 *** third arg sub (defaults to true)
 **** if string, do eq
 **** if regex, do =~
-** enforce scalar / list context, to ref / array, hash
+** DONE enforce scalar / list context, to ref / array, hash
 ** DONE Also, coerce to scalar context / reference.
 *** to_ref / as_ref
 *** to_list, as_list
@@ -37,7 +37,7 @@
 ** group
 ** group_count
 ** group_array
-** new format
+** DONE new format
 While doing the rename to filter, can we introduce the ["accessor",
 @args] format too? Just special case it, so if the first is an
 arrayref, use that format.
@@ -46,7 +46,7 @@ arrayref, use that format.
 *** Provide this as a parameter with core as the default?
 ** TODO sub uplevel or whatnot
 *** so warnings and dies are reported from the caller.
-** Fix method with args syntax
+** DONE Fix method with args syntax
 *** DONE methods
 **** DONE map_by
 **** DONE grep_by
@@ -63,12 +63,8 @@ arrayref, use that format.
 ***** DONE document old style
 ***** DONE deprecate old style
 ****** DONE document plan for 2.0.0
-**** DONE release
-** TODO filter, filter_by
-*** scalar eq
-*** regex
-** filter_defined
-*** filter_by_defined
+**** release
+** filter
 ** Document the gems form core
 *** elements
 **** avoid ugly deref punctuation
