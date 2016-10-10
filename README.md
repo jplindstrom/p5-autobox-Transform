@@ -16,8 +16,28 @@ particular when the values are hashrefs or objects.
 
 # SYNOPSIS
 
-    use autobox::Core;  # uniq, sort, join, sum, etc.
+    use autobox::Core;  # map, uniq, sort, join, sum, etc.
     use autobox::Transform;
+
+## Arrays
+
+    # use autobox::Core for ->map etc.
+
+    # filter (grep)
+    $book_locations->filter(); # true values
+    $books->filter(sub { $_->is_in_library($library) });
+
+    # Flatten arrayrefs-of-arrayrefs
+    $authors->map_by("books") # ->books returns an arrayref
+    # [ [ $book1, $book2 ], [ $book3 ] ]
+    $authors->map_by("books")->flat;
+    # [ $book1, $book2, $book3 ]
+
+    # Return reference, even in list context, e.g. in a parameter list
+    $book_locations->filter()->to_ref;
+
+    # Return array, even in scalar context
+    @books->to_array;
 
 ## Arrays with hashrefs/objects
 
@@ -27,10 +47,13 @@ particular when the values are hashrefs or objects.
     $books->map_by("genre");
     $books->map_by([ price_with_tax => $tax_pct ]);
 
+    $books->filter_by("is_sold_out");
+    $books->filter_by([ is_in_library => $library ]);
+    $books->filter_by([ price_with_tax => $rate ], sub { $_ > 56.00 });
+    $books->filter_by("price", sub { $_ > 56.00 });
+
+    # grep_by is an alias for filter_by
     $books->grep_by("is_sold_out");
-    $books->grep_by([ is_in_library => $library ]);
-    $books->grep_by([ price_with_tax => $rate ], sub { $_ > 56.00 });
-    $books->grep_by("price", sub { $_ > 56.00 });
 
     $books->uniq_by("id");
 
@@ -60,20 +83,6 @@ particular when the values are hashrefs or objects.
     #     "Sci-fi"  => [ $sf_book_1, $sf_book_2, $sf_book_3 ],
     #     "Fantasy" => [ $fantasy_book_1 ],
     # },
-
-## Arrays
-
-    # Flatten arrayrefs-of-arrayrefs
-    $authors->map_by("books") # ->books returns an arrayref
-    # [ [ $book1, $book2 ], [ $book3 ] ]
-    $authors->map_by("books")->flat;
-    # [ $book1, $book2, $book3 ]
-
-    # Return reference, even in list context, e.g. in a parameter list
-    report( genres => $books->map_by("genre")->to_ref );
-
-    # Return array, even in scalar context
-    @books->to_array;
 
 ## Hashes
 
@@ -109,7 +118,7 @@ particular when the values are hashrefs or objects.
         ->map_by("name")->uniq->sort->join(", ");
 
     my $total_order_amount = $order->books
-        ->grep_by([ not_covered_by_vouchers => $vouchers ])
+        ->filter_by([ not_covered_by_vouchers => $vouchers ])
         ->map_by([ price_with_tax => $tax_pct ])
         ->sum;
 
@@ -118,15 +127,16 @@ particular when the values are hashrefs or objects.
 High level autobox methods you can call on arrays, arrayrefs, hashes
 and hashrefs.
 
+- $array->filter()
+- $array->flat()
+- $array->as\_ref()
+- $array->as\_array()
 - $array->map\_by()
-- $array->grep\_by()
+- $array->filter\_by()
 - $array->uniq\_by()
 - $array->group\_by()
 - $array->group\_by\_count()
 - $array->group\_by\_array()
-- $array->flat()
-- $array->as\_ref()
-- $array->as\_array()
 
 - $hash->map\_each
 - $hash->map\_each\_value
@@ -136,8 +146,8 @@ and hashrefs.
 
 ## Transforming lists of objects vs list of hashrefs
 
-`map_by`, `grep_by` etc. (all methods named `*_by`) work with
-arrays that contain hashrefs or objects.
+`map_by`, `filter_by` etc. (all methods named `*_by`) work with
+sets of hashrefs or objects.
 
 These methods are called the same way regardless of whether the array
 contains objects or hashrefs. The items in the list must all be either
@@ -151,21 +161,21 @@ item.
 
 ### Calling accessor methods with arguments
 
-Consider `grep_by`:
+Consider `filter_by`:
 
-    $array->grep_by($accessor, $subref)
+    $array->filter_by($accessor, $subref)
 
 If the $accessor is a string, it's a simple lookup/method call.
 
     # method call without args
-    $books->grep_by("price", sub { $_ < 15.0 })
+    $books->filter_by("price", sub { $_ < 15.0 })
     # becomes $_->price() or $_->{price}
 
 If the $accessor is an arrayref, the first item is the method name,
 and the rest of the items are the arguments to the method.
 
     # method call with args
-    $books->grep_by([ price_with_discount => 5.0 ], sub { $_ < 15.0 })
+    $books->filter_by([ price_with_discount => 5.0 ], sub { $_ < 15.0 })
     # becomes $_->price_with_discount(5.0)
 
 ### Deprecated syntax
@@ -174,8 +184,8 @@ There is an older syntax for calling methods with arguments. It was
 abandoned to open up more powerful ways to use grep/filter type
 methods. Here it is for reference, in case you run into existing code.
 
-    $array->grep_by($accessor, $args, $subref)
-    $books->grep_by("price_with_discount", [ 5.0 ], sub { $_ < 15.0 })
+    $array->filter_by($accessor, $args, $subref)
+    $books->filter_by("price_with_discount", [ 5.0 ], sub { $_ < 15.0 })
 
 Call the method $accessor on each object using the arguments in the
 $args arrayref like so:
@@ -204,25 +214,94 @@ context. E.g.
 
     $self->my_method(
         # Wrong, this is list context and wouldn't return an arrayref
-        books => $books->grep_by("is_published"),
+        books => $books->filter_by("is_published"),
     );
 
     $self->my_method(
         # Correct, convert the returned list to an arrayref
-        books => [ $books->grep_by("is_published") ],
+        books => [ $books->filter_by("is_published") ],
     );
     $self->my_method(
         # Correct, ensure scalar context to get an array ref
-        books => scalar $books->grep_by("is_published"),
+        books => scalar $books->filter_by("is_published"),
     );
 
     # Probably the nicest, since it goes at the end
     $self->my_method(
         # Correct, use ->to_ref to ensure an array reference is returned
-        books => $books->grep_by("is_published")->to_ref,
+        books => $books->filter_by("is_published")->to_ref,
     );
 
-# AUTOBOX ARRAY METHODS
+# METHODS ON ARRAY
+
+## @array->filter($filter\_subref = \*is\_true\*) : @array | @$array
+
+Similar to Perl's `grep`, return an @array with values for which
+$filter\_subref returns a true value.
+
+The $filter\_subref is called for each value to check whether this item
+should remain in the list (default is to check for true values).
+
+The $filter\_subref should return a true value to remain. $\_ is set to
+the current $value.
+
+Examples:
+
+    my @authors = $authors->filter(
+        sub { $_->name->publisher =~ /Orbit/ },
+    );
+
+### filter and grep
+
+[autobox::Core](https://metacpan.org/pod/autobox::Core)'s `grep` method takes a subref, just like this
+method.
+
+## @array->flat() : @array | @$array
+
+Return a (one level) flattened array, assuming the array items
+themselves are array refs. I.e.
+
+    [
+        [ 1, 2, 3 ],
+        [ "a", "b" ],
+        [ [ 1, 2 ], { 3 => 4 } ]
+    ]->flat
+
+returns
+
+    [ 1, 2, 3, "a", "b ", [ 1, 2 ], { 3 => 4 } ]
+
+This is useful if e.g. a `->map_by("some_method")` returns
+arrayrefs of objects which you want to do further method calls
+on. Example:
+
+    # ->books returns an arrayref of Book objects with a ->title
+    $authors->map_by("books")->flat->map_by("title")
+
+Note: This is different from autobox::Core's ->flatten, which reurns a
+list rather than an array and therefore can't be used in this
+way.
+
+## @array->to\_ref() : $arrayref
+
+Return the reference to the @array, regardless of context.
+
+Useful for ensuring the last array method return a reference while in
+scalar context. Typically:
+
+    do_stuff(
+        books => $author->map_by("books")->to_ref,
+    );
+
+map\_by is called in list context, so without ->to\_ref it would have
+return an array, not an arrayref.
+
+## @array->to\_array() : @array
+
+Return the @array, regardless of context. This is mostly useful if
+called on a ArrayRef at the end of a chain of method calls.
+
+# METHODS ON ARRAY-OF-OBJECTS/HASHES
 
 ## @array->map\_by($accessor) : @array | @$array
 
@@ -254,18 +333,18 @@ Examples:
     my @prices_including_tax = $books->map_by([ "price_with_tax", $tax_pct ]);
     my $prices_including_tax = $books->map_by([ price_with_tax => $tax_pct ]);
 
-## @array->grep\_by($accessor, $grep\_subref = \*is\_true\*) : @array | @$array
+## @array->filter\_by($accessor, $filter\_subref = \*is\_true\*) : @array | @$array
 
 $accessor is either a string, or an arrayref where the first item is a
 string.
 
 Call the $accessor on each object in the list, or get the hash key
-value on each hashref in the list. The default $grep\_subref includes
+value on each hashref in the list. The default $filter\_subref includes
 true values in the result @array.
 
 Examples:
 
-    my @prolific_authors = $authors->grep_by("is_prolific");
+    my @prolific_authors = $authors->filter_by("is_prolific");
 
 Alternatively the $accessor is an arrayref. The first item is the
 accessor name, and the rest of the items are passed as args the method
@@ -273,32 +352,37 @@ call. This only works when working with objects, not with hashrefs.
 
 Examples:
 
-    my @books_to_charge_for = $books->grep_by([ price_with_tax => $tax_pct ]);
+    my @books_to_charge_for = $books->filter_by([ price_with_tax => $tax_pct ]);
 
-### The $grep\_subref
+### The $filter\_subref
 
-The $grep\_subref is called with the value returned from the $accessor
+The $filter\_subref is called with the value returned from the $accessor
 to check whether this item should remain in the list (default is to
 check for true values).
 
-The $grep\_subref should return a true value to remain. $\_ is set to
+The $filter\_subref should return a true value to remain. $\_ is set to
 the current $value.
 
 Examples:
 
-    my @authors = $authors->grep_by(
+    my @authors = $authors->filter_by(
         "publisher",
         sub { $_->name =~ /Orbit/ },
     );
 
-    my @authors = $authors->grep_by(
+    my @authors = $authors->filter_by(
         [ publisher_affiliation => "with" ],
         sub { /Orbit/ },
     );
 
-Note: if you do something complicated with the $grep\_subref, it might
+Note: if you do something complicated with the $filter\_subref, it might
 be easier and more readable to simply use `$array-$<gt`grep()> from
 [autobox::Core](https://metacpan.org/pod/autobox::Core).
+
+### Alias
+
+`grep_by` is an alias for `filter_by`. Unlike `grep` vs `filter`
+it works exaclty the same way.
 
 ## @array->uniq\_by($accessor) : @array | @$array
 
@@ -405,52 +489,7 @@ Example:
 $book->genre() returns the genre string. The three Sci-fi book objects
 are collected under the Sci-fi key.
 
-## @array->flat() : @array | @$array
-
-Return a (one level) flattened array, assuming the array items
-themselves are array refs. I.e.
-
-    [
-        [ 1, 2, 3 ],
-        [ "a", "b" ],
-        [ [ 1, 2 ], { 3 => 4 } ]
-    ]->flat
-
-returns
-
-    [ 1, 2, 3, "a", "b ", [ 1, 2 ], { 3 => 4 } ]
-
-This is useful if e.g. a `->map_by("some_method")` returns
-arrayrefs of objects which you want to do further method calls
-on. Example:
-
-    # ->books returns an arrayref of Book objects with a ->title
-    $authors->map_by("books")->flat->map_by("title")
-
-Note: This is different from autobox::Core's ->flatten, which reurns a
-list rather than an array and therefore can't be used in this
-way.
-
-## @array->to\_ref() : $arrayref
-
-Return the reference to the @array, regardless of context.
-
-Useful for ensuring the last array method return a reference while in
-scalar context. Typically:
-
-    do_stuff(
-        books => $author->map_by("books")->to_ref,
-    );
-
-map\_by is called in list context, so without ->to\_ref it would have
-return an array, not an arrayref.
-
-## @array->to\_array() : @array
-
-Return the @array, regardless of context. This is mostly useful if
-called on a ArrayRef at the end of a chain of method calls.
-
-# AUTOBOX HASH METHODS
+# METHODS ON HASH
 
 ## %hash->map\_each($key\_value\_subref) : %new\_hash | %$new\_hash
 
@@ -573,16 +612,17 @@ Perl equivalent.
 
 
 
-    ### grep_by - method call: $books are Book objects
+    ### filter_by - method call: $books are Book objects
     my $sold_out_books = [ grep { $_->is_sold_out } @$books ];
+    my $sold_out_books = $books->filter_by("is_sold_out");
     my $sold_out_books = $books->grep_by("is_sold_out");
 
     my $books_in_library = [ grep { $_->is_in_library($library) } @$books ];
-    my $books_in_library = $books->grep_by([ is_in_library => $library ]);
+    my $books_in_library = $books->filter_by([ is_in_library => $library ]);
 
-    ### grep_by - hash key: $books are book hashrefs
+    ### filter_by - hash key: $books are book hashrefs
     my $sold_out_books = [ grep { $_->{is_sold_out} } @$books ];
-    my $sold_out_books = $books->grep_by("is_sold_out");
+    my $sold_out_books = $books->filter_by("is_sold_out");
 
 
 
