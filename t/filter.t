@@ -30,7 +30,7 @@ subtest filter_invalid_predicate => sub {
     my $strings = [ "abc", "def", "abc" ];
     throws_ok(
         sub { $strings->filter(\"abc")->to_ref },
-        qr/->filter .+? \$predicate: .+?\Q is not any of: subref, scalar/x,
+        qr/->filter .+? \$predicate: .+?\Q is not one of: subref, string, regex/x,
         "Invalid predicate type",
     );
 };
@@ -65,6 +65,15 @@ subtest filter_string => sub {
         "filter scalar string",
     );
     # TODO: deal with undef comparisons
+};
+
+subtest filter_undef => sub {
+    my $strings = [ "abc", undef, "abc" ];
+    eq_or_diff(
+        $strings->filter(undef)->to_ref,
+        [ undef ],
+        "filter undef",
+    );
 };
 
 subtest filter_regex => sub {

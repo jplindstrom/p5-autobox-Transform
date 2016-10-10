@@ -261,8 +261,13 @@ sub _normalized_accessor_args_subref {
 }
 
 sub _predicate {
-    my ($name, $predicate, $default_predicate) = @_;
-    defined($predicate) or return $default_predicate;
+    my ($name, $predicate, $default_predicate, $is_predicate_passed) = @_;
+
+    # No predicate, use default is_true
+    $is_predicate_passed or return $default_predicate;
+
+    # undef passed, keep only undefs
+    defined($predicate) or return sub { ! defined($_) };
 
     # scalar, do string eq
     my $type = ref($predicate) or return sub { $predicate eq $_ };
@@ -271,7 +276,7 @@ sub _predicate {
     $type eq "Regexp" and return sub { $_ =~ $predicate };
 
     # Invalid predicate
-    Carp::croak("->$name() \$predicate: ($predicate) is not any of: subref, scalar");
+    Carp::croak("->$name() \$predicate: ($predicate) is not one of: subref, string, regex");
 }
 
 
@@ -434,6 +439,7 @@ sub filter {
         "filter",
         $predicate,
         sub { !! $_ },
+        ( scalar(@_) == 1 ),
     );
 
     my $result = eval {
