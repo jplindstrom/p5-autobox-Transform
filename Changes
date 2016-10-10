@@ -2,6 +2,17 @@
 
 {{$NEXT}}
 
+ * Officially rename all "grep"-related methods to "filter" something,
+   to open up for a new $array->filter() method which is more capable
+   than autobox::Core's $array->grep(). There are aliases for all
+   existing grep-methods.
+
+   All grep-related methods will continue to work: they are not
+   deprecated and will probably never go away.
+
+ * Simple $array->filter($subref) method.
+
+
 1.022 2016-10-09T20:11:29Z
 
  * POD fixes and documentation improvements

@@ -118,7 +118,7 @@ subtest map_by__method__args => sub {
 subtest map_by__method__args__invalid_type => sub {
     throws_ok(
         sub { $authors->map_by(publisher_affiliation => 342) },
-        qr{ map_by .+? 'publisher_affiliation' .+? \$args .+? \(342\) .+? array[ ]ref .+? t.map_by.t}x,
+        qr{ map_by .+? 'publisher_affiliation' .+? \@args .+? \(342\) .+? list .+? t.map_by.t}x,
         "map_by with argument which isn't an array ref",
     );
 };
@@ -138,8 +138,8 @@ subtest map_by__key => sub {
 subtest map_by__key__with_args => sub {
     note "ArrayRef key, list context result";
     throws_ok(
-        sub { $reviews->map_by("score" => [ "abc" ]) },
-        qr{ map_by .+? 'score' .+? \$args .+? only[ ]supported[ ]for[ ]method[ ]calls.+? t.map_by.t}x,
+        sub { $reviews->map_by([ "score" => "abc" ]) },
+        qr{ map_by .+? 'score' .+? \@args .+? only[ ]supported[ ]for[ ]method[ ]calls.+? t.map_by.t}x,
         "Arrayref with items, not allowed"
     );
     lives_ok(
@@ -149,7 +149,7 @@ subtest map_by__key__with_args => sub {
 
     throws_ok(
         sub { $reviews->map_by([ "score" => "abc" ]) },
-        qr{ map_by .+? 'score' .+? \$args .+? only[ ]supported[ ]for[ ]method[ ]calls.+? t.map_by.t}x,
+        qr{ map_by .+? 'score' .+? \@args .+? only[ ]supported[ ]for[ ]method[ ]calls.+? t.map_by.t}x,
         "Arrayref with items, not allowed"
     );
     lives_ok(
