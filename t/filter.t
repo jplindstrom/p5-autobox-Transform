@@ -16,6 +16,16 @@ use Literature;
 my $literature = Literature::literature();
 my $authors    = $literature->{authors};
 
+subtest filter_default_true => sub {
+    note "Default is checking for true";
+    my $array = [ 0, 1, 2, 3, "", 4, undef, 5 ];
+    eq_or_diff(
+        $array->filter->to_ref,
+        [ 1, 2, 3, 4, 5 ],
+        "Only true values remain",
+    );
+};
+
 subtest filter => sub {
     note "ArrayRef call, list context result, subref predicate";
     eq_or_diff(
