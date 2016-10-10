@@ -57,4 +57,13 @@ subtest filter_string => sub {
     );
 };
 
+subtest filter_invalid_predicate => sub {
+    my $strings = [ "abc", "def", "abc" ];
+    throws_ok(
+        sub { $strings->filter(\"abc")->to_ref },
+        qr/->filter .+? \$predicate: .+?\Q is not any of: subref, scalar/x,
+        "Invalid predicate type",
+    );
+};
+
 done_testing();

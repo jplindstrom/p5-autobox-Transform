@@ -270,7 +270,7 @@ sub _predicate {
     $type eq "CODE" and return $predicate;
 
     # Invalid predicate
-    Carp::croak("->$name() \$predicate: ($predicate) is not a subref, or a scalar");
+    Carp::croak("->$name() \$predicate: ($predicate) is not any of: subref, scalar");
 }
 
 
