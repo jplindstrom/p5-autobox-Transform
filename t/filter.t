@@ -96,4 +96,15 @@ subtest filter_regex => sub {
     # TODO: deal with undef comparisons
 };
 
+subtest filter_hashref_keys => sub {
+    my $strings = [ "abc", "def", "ghi" ];
+    eq_or_diff(
+        $strings->filter({ abc => undef, def => 1 })->to_ref,
+        [ "abc", "def" ],
+        "filter hashref keys (exists, not true hash value)",
+    );
+    # TODO: deal with undef comparisons
+};
+
+
 done_testing();

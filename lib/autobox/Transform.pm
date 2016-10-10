@@ -272,8 +272,9 @@ sub _predicate {
     # scalar, do string eq
     my $type = ref($predicate) or return sub { $predicate eq $_ };
 
-    $type eq "CODE"  and return $predicate;
+    $type eq "CODE"   and return $predicate;
     $type eq "Regexp" and return sub { $_ =~ $predicate };
+    $type eq "HASH"   and return sub { exists $predicate->{ $_ } };
 
     # Invalid predicate
     Carp::croak("->$name() \$predicate: ($predicate) is not one of: subref, string, regex");
@@ -402,6 +403,9 @@ If $predicate is an unblessed scalar, it is compared to each value
 with string eq.
 
 If $predicate is a regex, it is compared to each value with =~.
+
+If $predicate is a hashref, values in @array are retained if the
+$predicate hash key exists.
 
 If $predicate is a subref, the subref is called for each value to
 check whether this item should remain in the list (default is to check
