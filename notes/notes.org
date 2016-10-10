@@ -67,6 +67,8 @@ arrayref, use that format.
 ** TODO filter, filter_by
 *** scalar eq
 *** regex
+** filter_defined
+*** filter_by_defined
 ** Document the gems form core
 *** elements
 **** avoid ugly deref punctuation
