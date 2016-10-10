@@ -64,6 +64,7 @@ subtest filter_string => sub {
         [ "abc", "abc" ],
         "filter scalar string",
     );
+    # TODO: deal with undef comparisons
 };
 
 subtest filter_regex => sub {
@@ -80,9 +81,10 @@ subtest filter_regex => sub {
     );
     eq_or_diff(
         $strings->filter(qr/A/i)->to_ref,
-        [ "abc", "abc", ],
+        [ "abc", "abc" ],
         "filter regex with flags",
     );
+    # TODO: deal with undef comparisons
 };
 
 done_testing();
