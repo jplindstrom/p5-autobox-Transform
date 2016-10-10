@@ -26,6 +26,15 @@ subtest filter_default_true => sub {
     );
 };
 
+subtest filter_invalid_predicate => sub {
+    my $strings = [ "abc", "def", "abc" ];
+    throws_ok(
+        sub { $strings->filter(\"abc")->to_ref },
+        qr/->filter .+? \$predicate: .+?\Q is not any of: subref, scalar/x,
+        "Invalid predicate type",
+    );
+};
+
 subtest filter_subref => sub {
     note "ArrayRef call, list context result, subref predicate";
     eq_or_diff(
@@ -57,12 +66,22 @@ subtest filter_string => sub {
     );
 };
 
-subtest filter_invalid_predicate => sub {
+subtest filter_regex => sub {
     my $strings = [ "abc", "def", "abc" ];
-    throws_ok(
-        sub { $strings->filter(\"abc")->to_ref },
-        qr/->filter .+? \$predicate: .+?\Q is not any of: subref, scalar/x,
-        "Invalid predicate type",
+    eq_or_diff(
+        $strings->filter(qr/a/)->to_ref,
+        [ "abc", "abc" ],
+        "filter regex",
+    );
+    eq_or_diff(
+        $strings->filter(qr/A/)->to_ref,
+        [ ],
+        "filter regex miss",
+    );
+    eq_or_diff(
+        $strings->filter(qr/A/i)->to_ref,
+        [ "abc", "abc", ],
+        "filter regex with flags",
     );
 };
 
