@@ -64,7 +64,10 @@ arrayref, use that format.
 ***** DONE deprecate old style
 ****** DONE document plan for 2.0.0
 **** release
-** filter
+** filter dwim
+*** filter
+*** filter_by
+*** filter_each
 ** Document the gems form core
 *** elements
 **** avoid ugly deref punctuation
