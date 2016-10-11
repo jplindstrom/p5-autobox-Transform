@@ -66,6 +66,8 @@ particular when the values are hashrefs or objects.
     $books->filter_by([ is_in_library => $library ]);
     $books->filter_by([ price_with_tax => $rate ], sub { $_ > 56.00 });
     $books->filter_by("price", sub { $_ > 56.00 });
+    $books->filter_by("author", "James A. Corey");
+    $books->filter_by("author", qr/corey/i);
 
     # grep_by is an alias for filter_by
     $books->grep_by("is_sold_out");
@@ -251,7 +253,7 @@ sub _normalized_accessor_args_subref {
     #
     # That has to happen after the deprecation has expired and the old
     # syntax is removed.
-    if(ref($args) eq "CODE") {
+    if(defined($args) && ref($args) ne "ARRAY") {
         $subref = $args; # Move down one step
         $args = undef;
     }
@@ -264,13 +266,10 @@ sub _normalized_accessor_args_subref {
 }
 
 sub _predicate {
-    my ($name, $predicate, $is_predicate_passed, $default_predicate) = @_;
+    my ($name, $predicate, $default_predicate) = @_;
 
     # No predicate, use default is_true
-    $is_predicate_passed or return $default_predicate;
-
-    # undef passed, keep only undefs
-    defined($predicate) or return sub { ! defined($_) };
+    defined($predicate) or return $default_predicate;
 
     # scalar, do string eq
     my $type = ref($predicate) or return sub { $predicate eq $_ };
@@ -466,7 +465,6 @@ sub filter {
     my $subref = autobox::Transform::_predicate(
         "filter",
         $predicate,
-        ( scalar(@_) == 1 ), # is there a predicate passed at all?
         sub { !! $_ },
     );
 
@@ -633,16 +631,15 @@ sub map_by {
 
 
 
-=head2 @array->filter_by($accessor, $filter_subref = *is_true*) : @array | @$array
+=head2 @array->filter_by($accessor, $predicate = *is_true_subref*) : @array | @$array
 
 $accessor is either a string, or an arrayref where the first item is a
 string.
 
 Call the $accessor on each object in the list, or get the hash key
-value on each hashref in the list. The default $filter_subref includes
-true values in the result @array.
+value on each hashref in the list.
 
-Examples:
+Example:
 
     my @prolific_authors = $authors->filter_by("is_prolific");
 
@@ -650,55 +647,58 @@ Alternatively the $accessor is an arrayref. The first item is the
 accessor name, and the rest of the items are passed as args the method
 call. This only works when working with objects, not with hashrefs.
 
-Examples:
+Example:
 
     my @books_to_charge_for = $books->filter_by([ price_with_tax => $tax_pct ]);
 
+Use the $predicate to determine whether the value should remain.
+$predicate can be a subref, string, undef, regex, or hashref. See
+L</Filter predicates>.
 
-=head3 The $filter_subref
-
-The $filter_subref is called with the value returned from the $accessor
-to check whether this item should remain in the list (default is to
-check for true values).
-
-The $filter_subref should return a true value to remain. $_ is set to
-the current $value.
+The default (no $predicate) is a subref which retains true values in
+the result @array.
 
 Examples:
 
+    # Custom predicate subref
     my @authors = $authors->filter_by(
         "publisher",
         sub { $_->name =~ /Orbit/ },
     );
 
+    # Call method with args and match a regex
     my @authors = $authors->filter_by(
         [ publisher_affiliation => "with" ],
-        sub { /Orbit/ },
+        qr/Orbit/ },
     );
 
-Note: if you do something complicated with the $filter_subref, it might
-be easier and more readable to simply use C<$array-$<gt>grep()> from
-L<autobox::Core>.
+Note: if you do something complicated with a $predicate subref, it
+might be easier and more readable to simply use
+C<$array-$<gt>filter()>.
 
 
 =head3 Alias
 
-C<grep_by> is an alias for C<filter_by>. Unlike C<grep> vs C<filter>
-it works exaclty the same way.
+C<grep_by> is an alias for C<filter_by>. Unlike C<grep> vs C<filter>,
+this one works exaclty the same way.
 
 =cut
 
 sub filter_by {
     my $array = shift;
-    my ($accessor, $args, $filter_subref) = _normalized_accessor_args_subref(@_);
-    $filter_subref //= sub { !! $_ };
+    my ($accessor, $args, $predicate) = _normalized_accessor_args_subref(@_);
+    my $subref = autobox::Transform::_predicate(
+        "filter_by",
+        $predicate,
+        sub { !! $_ },
+    );
     # filter_by $value, if passed the method value must match the value?
     return __invoke_by(
         "filter",
         $array,
         $accessor,
         $args,
-        filter_subref => $filter_subref,
+        filter_subref => $subref,
     );
 }
 
