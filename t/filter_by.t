@@ -59,7 +59,7 @@ subtest filter_by_with_arrayref_accessor => sub {
     );
 };
 
-subtest filter_by_with_predicate_sub => sub {
+subtest filter_by_with_predicate_subref => sub {
     eq_or_diff(
         [ map { $_->name } $authors->filter_by("name", undef, sub { /Corey/ }) ],
         [
@@ -101,8 +101,40 @@ subtest filter_by_with_predicate_sub => sub {
         ],
         "filter_by with method argument and predicate sub call works",
     );
-
 };
+
+subtest filter_by_with_predicate_string => sub {
+    eq_or_diff(
+        [ map { $_->name } $authors->filter_by("name", "James A. Corey") ],
+        [ "James A. Corey" ],
+        "filter_by predicate string works",
+    );
+    eq_or_diff(
+        [ map { $_->name } $authors->filter_by("name", undef, "James A. Corey") ],
+        [ "James A. Corey" ],
+        "filter_by predicate string works, with old call style",
+    );
+};
+
+# TODO: undef can't work until old call style is removed
+
+subtest filter_by_with_predicate_regex => sub {
+    eq_or_diff(
+        [ map { $_->name } $authors->filter_by("name", qr/corey/i) ],
+        [ "James A. Corey" ],
+        "filter_by predicate regex works",
+    );
+};
+
+subtest filter_by_with_predicate_hashref => sub {
+    eq_or_diff(
+        [ map { $_->name } $authors->filter_by("name", { "James A. Corey" => 1 }) ],
+        [ "James A. Corey" ],
+        "filter_by predicate hashref works",
+    );
+};
+
+
 
 subtest examples => sub {
     my $prolific_author_book_titles = $authors->filter_by("is_prolific")

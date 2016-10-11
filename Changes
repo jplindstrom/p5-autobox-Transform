@@ -2,6 +2,14 @@
 
 {{$NEXT}}
 
+ * ->filter, ->filter_by, ->filter_each now takes a dwim predicate
+   which can be one of: subref (returns true), string (eq), regex
+   (=~), hashref (key exists).
+
+   Arrayref (in) and undef (is) will annoyingly have to wait until the
+   old call style is removed in 2.000 .
+
+
 1.023 2016-10-10T21:46:35Z
 
  * Officially rename all "grep"-related methods to "filter" something,

@@ -66,7 +66,7 @@ arrayref, use that format.
 **** release
 ** TODO filter dwim
 *** DONE filter
-*** filter_by
+*** DONE filter_by
 *** filter_each
 ** Document the gems form core
 *** elements
