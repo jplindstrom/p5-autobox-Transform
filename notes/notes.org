@@ -67,7 +67,8 @@ arrayref, use that format.
 ** TODO filter dwim
 *** DONE filter
 *** DONE filter_by
-*** filter_each
+*** DONE filter_each
+** Document filter_each, etc
 ** Document the gems form core
 *** elements
 **** avoid ugly deref punctuation
