@@ -2,7 +2,7 @@
 
 {{$NEXT}}
 
- * ->filter, ->filter_by, ->filter_each now takes a dwim predicate
+ * ->filter and ->filter_by now takes a dwim predicate
    which can be one of: subref (returns true), string (eq), regex
    (=~), hashref (key exists).
 
