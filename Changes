@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+1.024 2016-10-12T21:00:44Z
+
  * ->filter and ->filter_by now takes a dwim predicate
    which can be one of: subref (returns true), string (eq), regex
    (=~), hashref (key exists).

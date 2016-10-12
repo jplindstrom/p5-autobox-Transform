@@ -26,6 +26,9 @@ particular when the values are hashrefs or objects.
     # filter (grep)
     $book_locations->filter(); # true values
     $books->filter(sub { $_->is_in_library($library) });
+    $book_names->filter( qr/lord/i );
+    $book_types->filter("scifi");
+    $book_types->filter({ fantasy => 1, scifi => 1 }); # hash key exists
 
     # Flatten arrayrefs-of-arrayrefs
     $authors->map_by("books") # ->books returns an arrayref
@@ -51,6 +54,8 @@ particular when the values are hashrefs or objects.
     $books->filter_by([ is_in_library => $library ]);
     $books->filter_by([ price_with_tax => $rate ], sub { $_ > 56.00 });
     $books->filter_by("price", sub { $_ > 56.00 });
+    $books->filter_by("author", "James A. Corey");
+    $books->filter_by("author", qr/corey/i);
 
     # grep_by is an alias for filter_by
     $books->grep_by("is_sold_out");
@@ -163,7 +168,7 @@ item.
 
 Consider `filter_by`:
 
-    $array->filter_by($accessor, $subref)
+    $array->filter_by($accessor, $predicate)
 
 If the $accessor is a string, it's a simple lookup/method call.
 
@@ -200,6 +205,40 @@ change is trivial and the code easily found by grep/ack.
 - If need be, pin your version to < 2.000 in your cpanfile, dist.ini or
 whatever you use to avoid upgrading to an incompatible version.
 
+## Filter predicates
+
+There are several methods that filter items, e.g. `filter` (duh), and
+`filter_by`. These methods take a $predicate argument, to determine
+which items to retain or filter out.
+
+If $predicate is an unblessed scalar, it is compared to each value
+with string eq.
+
+    $books->filter_by("author", "James A. Corey");
+
+If $predicate is a regex, it is compared to each value with =~.
+
+    $books->filter_by("author", qr/Corey/);
+
+If $predicate is a hashref, values in @array are retained if the
+$predicate hash key exists (the hash values are irrelevant).
+
+    $books->filter_by(
+        "author", {
+            "James A. Corey"   => undef,
+            "Cixin Liu"        => 0,
+            "Patrick Rothfuss" => 1,
+        },
+    );
+
+If $predicate is a subref, the subref is called for each value to
+check whether this item should remain in the list.
+
+The $filter\_subref should return a true value to remain. $\_ is set to
+the current $value.
+
+    $authors->filter_by(publisher => sub { $_->name =~ /Orbit/ });
+
 ## List and Scalar Context
 
 Almost all of the methods are context sensitive, i.e. they return a
@@ -234,27 +273,30 @@ context. E.g.
 
 # METHODS ON ARRAY
 
-## @array->filter($filter\_subref = \*is\_true\*) : @array | @$array
+## @array->filter($predicate = \*is\_true\_subref\*) : @array | @$array
 
 Similar to Perl's `grep`, return an @array with values for which
-$filter\_subref returns a true value.
+$predicate yields a true value. 
 
-The $filter\_subref is called for each value to check whether this item
-should remain in the list (default is to check for true values).
+$predicate can be a subref, string, undef, regex, or hashref. See
+["Filter predicates"](#filter-predicates).
 
-The $filter\_subref should return a true value to remain. $\_ is set to
-the current $value.
+The default (no $predicate) is a subref which retains true values in
+the @array.
 
 Examples:
 
-    my @authors = $authors->filter(
-        sub { $_->name->publisher =~ /Orbit/ },
+    my @apples     = $fruit->filter("apple");
+    my @any_apple  = $fruit->filter( qr/apple/i );
+    my @publishers = $authors->filter(
+        sub { $_->publisher->name =~ /Orbit/ },
     );
 
 ### filter and grep
 
 [autobox::Core](https://metacpan.org/pod/autobox::Core)'s `grep` method takes a subref, just like this
-method.
+method. `filter` also supports the other predicate types, like
+string, regex, etc.
 
 ## @array->flat() : @array | @$array
 
@@ -333,16 +375,15 @@ Examples:
     my @prices_including_tax = $books->map_by([ "price_with_tax", $tax_pct ]);
     my $prices_including_tax = $books->map_by([ price_with_tax => $tax_pct ]);
 
-## @array->filter\_by($accessor, $filter\_subref = \*is\_true\*) : @array | @$array
+## @array->filter\_by($accessor, $predicate = \*is\_true\_subref\*) : @array | @$array
 
 $accessor is either a string, or an arrayref where the first item is a
 string.
 
 Call the $accessor on each object in the list, or get the hash key
-value on each hashref in the list. The default $filter\_subref includes
-true values in the result @array.
+value on each hashref in the list.
 
-Examples:
+Example:
 
     my @prolific_authors = $authors->filter_by("is_prolific");
 
@@ -350,39 +391,39 @@ Alternatively the $accessor is an arrayref. The first item is the
 accessor name, and the rest of the items are passed as args the method
 call. This only works when working with objects, not with hashrefs.
 
-Examples:
+Example:
 
     my @books_to_charge_for = $books->filter_by([ price_with_tax => $tax_pct ]);
 
-### The $filter\_subref
+Use the $predicate to determine whether the value should remain.
+$predicate can be a subref, string, undef, regex, or hashref. See
+["Filter predicates"](#filter-predicates).
 
-The $filter\_subref is called with the value returned from the $accessor
-to check whether this item should remain in the list (default is to
-check for true values).
-
-The $filter\_subref should return a true value to remain. $\_ is set to
-the current $value.
+The default (no $predicate) is a subref which retains true values in
+the result @array.
 
 Examples:
 
+    # Custom predicate subref
     my @authors = $authors->filter_by(
         "publisher",
         sub { $_->name =~ /Orbit/ },
     );
 
+    # Call method with args and match a regex
     my @authors = $authors->filter_by(
         [ publisher_affiliation => "with" ],
-        sub { /Orbit/ },
+        qr/Orbit/ },
     );
 
-Note: if you do something complicated with the $filter\_subref, it might
-be easier and more readable to simply use `$array-$<gt`grep()> from
-[autobox::Core](https://metacpan.org/pod/autobox::Core).
+Note: if you do something complicated with a $predicate subref, it
+might be easier and more readable to simply use
+`$array-$<gt`filter()>.
 
 ### Alias
 
-`grep_by` is an alias for `filter_by`. Unlike `grep` vs `filter`
-it works exaclty the same way.
+`grep_by` is an alias for `filter_by`. Unlike `grep` vs `filter`,
+this one works exaclty the same way.
 
 ## @array->uniq\_by($accessor) : @array | @$array
 
