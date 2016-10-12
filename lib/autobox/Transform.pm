@@ -300,11 +300,11 @@ sub _predicate {
     defined($predicate) or return $default_predicate;
 
     # scalar, do string eq
-    my $type = ref($predicate) or return sub { $predicate eq $_ };
+    my $type = ref($predicate) or return sub { $predicate eq ( $_ // "" ) };
 
     $type eq "CODE"   and return $predicate;
-    $type eq "Regexp" and return sub { $_ =~ $predicate };
-    $type eq "HASH"   and return sub { exists $predicate->{ $_ } };
+    $type eq "Regexp" and return sub { ( $_ // "" ) =~ $predicate };
+    $type eq "HASH"   and return sub { exists $predicate->{ $_ // "" } };
 
     # Invalid predicate
     Carp::croak("->$name() \$predicate: ($predicate) is not one of: subref, string, regex");
@@ -1140,8 +1140,12 @@ sub map_each_to_array {
 
 sub filter_each {
     my $hash = shift;
-    my ($subref) = @_;
-    $subref ||= sub { !! $_ }; # true?
+    my ($predicate) = @_;
+    my $subref = autobox::Transform::_predicate(
+        "filter_each",
+        $predicate,
+        sub { !! $_ }, # true?
+    );
 
     my $new_hash = {
         map { ## no critic
