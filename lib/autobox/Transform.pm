@@ -125,6 +125,9 @@ particular when the values are hashrefs or objects.
     $genre_count->map_each_to_array(sub { "$_: $_[0]" });
     # [ "1: Fantasy", "3: Sci-fi" ]
 
+    # Genres with more than five books
+    $genre_count->filter_each(sub { $_ > 5 });
+
     # Return reference, even in list context, e.g. in a parameter list
     %genre_count->to_ref );
 
@@ -209,6 +212,10 @@ $hash->map_each_value
 =item
 
 $hash->map_each_to_array
+
+=item
+
+$hash->filter_each
 
 =item
 
@@ -1142,6 +1149,35 @@ sub map_each_to_array {
 }
 
 
+=head2 %hash->filter_each($predicate = *is_true_subref*) : @hash | @$hash
+
+Return a %hash with values for which $predicate yields a true value.
+
+$predicate can be a subref, string, undef, regex, or hashref. See
+L</Filter predicates>.
+
+The default (no $predicate) is a subref which retains true values in
+the @array.
+
+Examples:
+
+    my @apples     = $fruit->filter("apple");
+    my @any_apple  = $fruit->filter( qr/apple/i );
+    my @publishers = $authors->filter(
+        sub { $_->publisher->name =~ /Orbit/ },
+    );
+
+If the $predicate is a subref, C<$predicate-E<gt>($key,
+$value)> is called for each pair (with $_ set to the value).
+
+The subref should return a true value to retain the key-value pair in
+the result %hash.
+
+=head3 Example
+
+    $book_author->filter_each(sub { $_->name =~ /Corey/ });
+
+=cut
 
 sub filter_each {
     my $hash = shift;
