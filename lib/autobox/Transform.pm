@@ -392,9 +392,10 @@ whatever you use to avoid upgrading modules to incompatible versions.
 
 =head2 Filter predicates
 
-There are several methods that filter items, e.g. C<filter> (duh), and
-C<filter_by>. These methods take a $predicate argument to determine
-which items to retain or filter out.
+There are several methods that filter items, e.g. C<@array->filter>
+(duh), C<@array->filter_by>, and C<%hash->filter_each>. These methods
+take a $predicate argument to determine which items to retain or
+filter out.
 
 If $predicate is an I<unblessed scalar>, it is compared to each value
 with C<string eq>.
