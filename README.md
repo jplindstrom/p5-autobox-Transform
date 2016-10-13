@@ -23,7 +23,7 @@ particular when the values are hashrefs or objects.
 
     # use autobox::Core for ->map etc.
 
-    # filter (grep)
+    # filter (like a more versatile grep)
     $book_locations->filter(); # true values
     $books->filter(sub { $_->is_in_library($library) });
     $book_names->filter( qr/lord/i );
@@ -92,6 +92,7 @@ particular when the values are hashrefs or objects.
 ## Hashes
 
     # Upper-case the genre name, and make the count say "n books"
+    #     (return a key => value pair)
     $genre_count->map_each(sub { uc( $_[0] ) => "$_ books" });
     # {
     #     "FANTASY" => "1 books",
@@ -99,6 +100,7 @@ particular when the values are hashrefs or objects.
     # },
 
     # Make the count say "n books"
+    #     (return the new value)
     $genre_count->map_each_value(sub { "$_ books" });
     # {
     #     "Fantasy" => "1 books",
@@ -106,8 +108,12 @@ particular when the values are hashrefs or objects.
     # },
 
     # Transform each pair to the string "n: genre"
+    #     (return list of items)
     $genre_count->map_each_to_array(sub { "$_: $_[0]" });
     # [ "1: Fantasy", "3: Sci-fi" ]
+
+    # Genres with more than five books
+    $genre_count->filter_each(sub { $_ > 5 });
 
     # Return reference, even in list context, e.g. in a parameter list
     %genre_count->to_ref );
@@ -146,6 +152,7 @@ and hashrefs.
 - $hash->map\_each
 - $hash->map\_each\_value
 - $hash->map\_each\_to\_array
+- $hash->filter\_each
 - $array->as\_ref()
 - $array->as\_hash()
 
@@ -155,8 +162,8 @@ and hashrefs.
 sets of hashrefs or objects.
 
 These methods are called the same way regardless of whether the array
-contains objects or hashrefs. The items in the list must all be either
-objects or hashrefs.
+contains objects or hashrefs. The items in the list must be either all
+objects or all hashrefs.
 
 If the array contains objects, a method is called on each object
 (possibly with the arguments provided).
@@ -166,11 +173,13 @@ item.
 
 ### Calling accessor methods with arguments
 
+For method calls, it's possible to provide arguments to the method.
+
 Consider `filter_by`:
 
     $array->filter_by($accessor, $predicate)
 
-If the $accessor is a string, it's a simple lookup/method call.
+If the $accessor is a string, it's a simple method call.
 
     # method call without args
     $books->filter_by("price", sub { $_ < 15.0 })
@@ -197,31 +206,31 @@ $args arrayref like so:
 
     $object->$accessor(@$args)
 
-This style is deprecated, and planned for removal in version 2.000, so if
-you have code with the old call style, please:
+_This style is deprecated_, and planned for removal in version 2.000,
+so if you have code with the old call style, please:
 
 - Replace your existing code with the new style as soon as possible. The
 change is trivial and the code easily found by grep/ack.
 - If need be, pin your version to < 2.000 in your cpanfile, dist.ini or
-whatever you use to avoid upgrading to an incompatible version.
+whatever you use to avoid upgrading modules to incompatible versions.
 
 ## Filter predicates
 
 There are several methods that filter items, e.g. `filter` (duh), and
-`filter_by`. These methods take a $predicate argument, to determine
+`filter_by`. These methods take a $predicate argument to determine
 which items to retain or filter out.
 
-If $predicate is an unblessed scalar, it is compared to each value
-with string eq.
+If $predicate is an _unblessed scalar_, it is compared to each value
+with `string eq`.
 
     $books->filter_by("author", "James A. Corey");
 
-If $predicate is a regex, it is compared to each value with =~.
+If $predicate is a _regex_, it is compared to each value with `=~`.
 
     $books->filter_by("author", qr/Corey/);
 
-If $predicate is a hashref, values in @array are retained if the
-$predicate hash key exists (the hash values are irrelevant).
+If $predicate is a _hashref_, values in @array are retained if the
+$predicate hash key `exists` (the hash values are irrelevant).
 
     $books->filter_by(
         "author", {
@@ -231,11 +240,11 @@ $predicate hash key exists (the hash values are irrelevant).
         },
     );
 
-If $predicate is a subref, the subref is called for each value to
+If $predicate is a _subref_, the subref is called for each value to
 check whether this item should remain in the list.
 
-The $filter\_subref should return a true value to remain. $\_ is set to
-the current $value.
+The $predicate subref should return a true value to remain. $\_ is set
+to the current $value.
 
     $authors->filter_by(publisher => sub { $_->name =~ /Orbit/ });
 
@@ -271,7 +280,7 @@ context. E.g.
         books => $books->filter_by("is_published")->to_ref,
     );
 
-# METHODS ON ARRAY
+# METHODS ON ARRAYS
 
 ## @array->filter($predicate = \*is\_true\_subref\*) : @array | @$array
 
@@ -343,7 +352,7 @@ return an array, not an arrayref.
 Return the @array, regardless of context. This is mostly useful if
 called on a ArrayRef at the end of a chain of method calls.
 
-# METHODS ON ARRAY-OF-OBJECTS/HASHES
+# METHODS ON ARRAYS CONTAINING OBJECTS/HASHES
 
 ## @array->map\_by($accessor) : @array | @$array
 
@@ -530,7 +539,7 @@ Example:
 $book->genre() returns the genre string. The three Sci-fi book objects
 are collected under the Sci-fi key.
 
-# METHODS ON HASH
+# METHODS ON HASHES
 
 ## %hash->map\_each($key\_value\_subref) : %new\_hash | %$new\_hash
 
@@ -581,6 +590,34 @@ the @new\_array. Typically one item is returned.
 
     { a => 1, b => 2 }->map_each_to_array(sub { "$_[0]-$_" });
     # Returns [ "a-1", "b-2" ]
+
+## %hash->filter\_each($predicate = \*is\_true\_subref\*) : @hash | @$hash
+
+Return a %hash with values for which $predicate yields a true value.
+
+$predicate can be a subref, string, undef, regex, or hashref. See
+["Filter predicates"](#filter-predicates).
+
+The default (no $predicate) is a subref which retains true values in
+the @array.
+
+Examples:
+
+    my @apples     = $fruit->filter("apple");
+    my @any_apple  = $fruit->filter( qr/apple/i );
+    my @publishers = $authors->filter(
+        sub { $_->publisher->name =~ /Orbit/ },
+    );
+
+If the $predicate is a subref, `$predicate->($key,
+$value)` is called for each pair (with $\_ set to the value).
+
+The subref should return a true value to retain the key-value pair in
+the result %hash.
+
+### Example
+
+    $book_author->filter_each(sub { $_->name =~ /Corey/ });
 
 ## %hash->to\_ref() : $hashref
 

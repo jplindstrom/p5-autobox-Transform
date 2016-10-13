@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+1.025 2016-10-13T12:18:59Z
+
   * Document %hash->filter_each to make it official.
 
 
