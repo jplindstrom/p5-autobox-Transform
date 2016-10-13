@@ -34,7 +34,7 @@ particular when the values are hashrefs or objects.
 
     # use autobox::Core for ->map etc.
 
-    # filter (grep)
+    # filter (like a more versatile grep)
     $book_locations->filter(); # true values
     $books->filter(sub { $_->is_in_library($library) });
     $book_names->filter( qr/lord/i );
@@ -105,6 +105,7 @@ particular when the values are hashrefs or objects.
 =head2 Hashes
 
     # Upper-case the genre name, and make the count say "n books"
+    #     (return a key => value pair)
     $genre_count->map_each(sub { uc( $_[0] ) => "$_ books" });
     # {
     #     "FANTASY" => "1 books",
@@ -112,6 +113,7 @@ particular when the values are hashrefs or objects.
     # },
 
     # Make the count say "n books"
+    #     (return the new value)
     $genre_count->map_each_value(sub { "$_ books" });
     # {
     #     "Fantasy" => "1 books",
@@ -119,6 +121,7 @@ particular when the values are hashrefs or objects.
     # },
 
     # Transform each pair to the string "n: genre"
+    #     (return list of items)
     $genre_count->map_each_to_array(sub { "$_: $_[0]" });
     # [ "1: Fantasy", "3: Sci-fi" ]
 
@@ -318,8 +321,8 @@ C<map_by>, C<filter_by> etc. (all methods named C<*_by>) work with
 sets of hashrefs or objects.
 
 These methods are called the same way regardless of whether the array
-contains objects or hashrefs. The items in the list must all be either
-objects or hashrefs.
+contains objects or hashrefs. The items in the list must be either all
+objects or all hashrefs.
 
 If the array contains objects, a method is called on each object
 (possibly with the arguments provided).
@@ -329,11 +332,13 @@ item.
 
 =head3 Calling accessor methods with arguments
 
+For method calls, it's possible to provide arguments to the method.
+
 Consider C<filter_by>:
 
     $array->filter_by($accessor, $predicate)
 
-If the $accessor is a string, it's a simple lookup/method call.
+If the $accessor is a string, it's a simple method call.
 
     # method call without args
     $books->filter_by("price", sub { $_ < 15.0 })
@@ -360,8 +365,8 @@ $args arrayref like so:
 
     $object->$accessor(@$args)
 
-This style is deprecated, and planned for removal in version 2.000, so if
-you have code with the old call style, please:
+I<This style is deprecated>, and planned for removal in version 2.000,
+so if you have code with the old call style, please:
 
 =over 4
 
@@ -373,7 +378,7 @@ change is trivial and the code easily found by grep/ack.
 =item
 
 If need be, pin your version to < 2.000 in your cpanfile, dist.ini or
-whatever you use to avoid upgrading to an incompatible version.
+whatever you use to avoid upgrading modules to incompatible versions.
 
 =back
 
@@ -381,20 +386,20 @@ whatever you use to avoid upgrading to an incompatible version.
 =head2 Filter predicates
 
 There are several methods that filter items, e.g. C<filter> (duh), and
-C<filter_by>. These methods take a $predicate argument, to determine
+C<filter_by>. These methods take a $predicate argument to determine
 which items to retain or filter out.
 
-If $predicate is an unblessed scalar, it is compared to each value
-with string eq.
+If $predicate is an I<unblessed scalar>, it is compared to each value
+with C<string eq>.
 
     $books->filter_by("author", "James A. Corey");
 
-If $predicate is a regex, it is compared to each value with =~.
+If $predicate is a I<regex>, it is compared to each value with C<=~>.
 
     $books->filter_by("author", qr/Corey/);
 
-If $predicate is a hashref, values in @array are retained if the
-$predicate hash key exists (the hash values are irrelevant).
+If $predicate is a I<hashref>, values in @array are retained if the
+$predicate hash key C<exists> (the hash values are irrelevant).
 
     $books->filter_by(
         "author", {
@@ -404,11 +409,11 @@ $predicate hash key exists (the hash values are irrelevant).
         },
     );
 
-If $predicate is a subref, the subref is called for each value to
+If $predicate is a I<subref>, the subref is called for each value to
 check whether this item should remain in the list.
 
-The $filter_subref should return a true value to remain. $_ is set to
-the current $value.
+The $predicate subref should return a true value to remain. $_ is set
+to the current $value.
 
     $authors->filter_by(publisher => sub { $_->name =~ /Orbit/ });
 
@@ -447,7 +452,7 @@ context. E.g.
 
 
 
-=head1 METHODS ON ARRAY
+=head1 METHODS ON ARRAYS
 
 =cut
 
@@ -573,7 +578,7 @@ sub to_array {
 
 
 
-=head1 METHODS ON ARRAY-OF-OBJECTS/HASHES
+=head1 METHODS ON ARRAYS CONTAINING OBJECTS/HASHES
 
 =cut
 
@@ -948,7 +953,7 @@ sub group_by_array {
 
 
 
-=head1 METHODS ON HASH
+=head1 METHODS ON HASHES
 
 =cut
 
