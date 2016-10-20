@@ -91,16 +91,127 @@ For objects, call $_->$accessor(@args) to set the value.
 ** Ember Array, Enumerable
 *** http://emberjs.com/api/classes/Ember.Array.html
 ** order, order_by
-*** only ever specify how to get one thing to compare to other things
+*** sort vs order
+**** With sort
+***** provide a sub that returns the comparison outcome of two values: $a and $b
+***** in case of a tie, provide another comparison of $a and $b
+***** example
+sort {
+    uc( $a->{name} ) cmp uc( $b->{name} )
+    ||
+    int( $b->{age} / 10 ) <=> int( $a->{age} / 10 ) # reverse
+} @users
+**** With order
+***** provide an order spec of how one value should be compared with another value
+****** the value can be transformed using an optional subref
+******* e.g. by looking up a hashref key
+****** how to compare (cmp or <=>)
+****** which direction to sort (ascending or descending)
+***** in case of a tie, provide another order spec
+***** example with order
+order(
+    sub { $_->{name} },
+    [ "num", "desc", sub { int( $_->{age} / 10 ) } ],
+)
+***** example with order_by
+order_by(
+    name => "str",
+    age  => [ "num", "desc", sub { int( $_ / 10 ) } ],
+)
+*** order options
+**** comparison operator
+***** str (cmp) - default
+***** num (<=>)
+***** nat (natural sort)
+**** value
+***** A subref  - default is: sub { $_ }
+****** The return value is used in the comparison
+**** sort order
+***** asc - default
+***** desc
 *** then also specify
 **** number, string, natural, etc
-**** TODO reverse
-*** multi key using arrayrefs
-**** description
-***** for _by, first item is always the accessor
-***** the rest are named options
-****** e.g. option strings, or a subref to transform it
-**** examples
+*** TODO Fresh
+**** order
+***** description
+****** for each key there's an option or arrayref of options
+****** If there are multiple keys to compare
+******* there are multiple option(s)
+***** param check
+***** examples
+->order() # str, asc, $_
+->order(sub { int($_) })
+->order([ sub { int($_) }, "num" ])
+->order(
+    [ sub { uc($_) }, "desc" ],
+    "str",
+)
+->order(
+    [ sub { $_->{price} }, "num" ],
+    [ "nat", sub { $_->{name} }, "desc" ],
+)
+->order(
+    sub { s/type: (\w+)/r },
+    [ num => desc => sub { duration: s/(\d+)/r } ],
+    [ num => sub { s/id: (\d+)/r } ],
+    "str",
+)
+**** order_by
+***** description
+****** for each key, there's pair of accessor-option(s)
+******* the first item is always the accessor
+******* the second item is always an option or an arrayref of options
+****** if there are multiple keys to compare
+******* there are multiple pairs of accessor-option(s)
+***** param check
+****** when all items are consumed,
+******* if there's an expected option
+******** the default is an empty option list
+***** examples
+->order_by("name")
+->order_by(name => sub { int($_) })
+->order_by(name => [ "desc", sub { int($_) } ])
+->order_by([ price => $discount ] => sub { int($_) })
+->order_by([ price => $discount ] => [ sub { int($_) }, "num" ])
+->order_by(
+    [ price => $discount ] => [ sub { int($_) }, "num" ],
+    name => [ sub { uc($_) }, "desc" ],
+    time => [ ],
+    [ duration => $now ] => "natural",
+)
+*** CPAN
+**** https://v1.metacpan.org/pod/Sort::Maker
+**** https://v1.metacpan.org/pod/Sort::Key
+**** https://metacpan.org/pod/Sort::Key::Multi
+**** https://metacpan.org/pod/Sort::Key::Maker
+**** https://metacpan.org/pod/Sort::Key::Natural
+*** Old attempts
+**** multi key using hashrefs
+***** description
+***** examples
+->order("num")
+->order(sub { int($_) }, "num")
+->order(
+    { num => 1, value => sub { uc($_) } },
+    { str => 1, value => sub { int($_) } },
+)
+->order({ num => sub { $_->[1] } })
+
+->order_by(
+    { num => [ "price", 0.22 ] },
+    { str => "symbol", value => sub { uc($_) } },
+    { num => "id" },
+)
+->order_by("symbol")
+->order_by([ price => 0.22 ])
+->order_by({ num => "id" })
+->order_by({ num => [ "price" => 0.22 ] })
+**** multi key using arrayrefs
+***** description
+****** for _by, first item is always the accessor
+****** the rest are named options
+******* e.g. option strings, or a subref to transform it
+***** examples
 ->order("num")
 ->order(sub { int($_) }, "num")
 ->order(
@@ -119,34 +230,6 @@ For objects, call $_->$accessor(@args) to set the value.
 ->order_by([ price => 0.22 ])
 ->order_by(id => "num", "reverse")
 ->order_by([ "price" => 0.22 ], "num")
-*** multi key using hashrefs
-**** description
-**** examples
-->order("num")
-->order(sub { int($_) }, "num")
-->order(
-    { num => 1, value => sub { uc($_) } },
-    { str => 1, value => sub { int($_) } },
-)
-->order({ num => sub { $_->[1] } })
-
-->order_by(
-    { num => [ "price", 0.22 ] },
-    { str => "symbol", value => sub { uc($_) } },
-    { num => "id" },
-)
-->order_by("symbol")
-->order_by([ price => 0.22 ])
-->order_by({ num => "id" })
-->order_by({ num => [ "price" => 0.22 ] })
-*** Issues
-**** how to represent "reverse order"
-*** CPAN
-**** https://v1.metacpan.org/pod/Sort::Maker
-**** https://v1.metacpan.org/pod/Sort::Key
-**** https://metacpan.org/pod/Sort::Key::Multi
-**** https://metacpan.org/pod/Sort::Key::Maker
-**** https://metacpan.org/pod/Sort::Key::Natural
 * Hash
 ** DONE key_value($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
 *** exists
