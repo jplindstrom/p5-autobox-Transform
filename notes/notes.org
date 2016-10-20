@@ -95,22 +95,50 @@ For objects, call $_->$accessor(@args) to set the value.
 *** then also specify
 **** number, string, natural, etc
 **** TODO reverse
-*** examples of proposed syntax
-     ->order_by(
-         { num => [ "price", 0.22 ] },
-         { str => "symbol", value => sub { uc($_) } },
-         { num => "id" },
-     )
-     ->order_by("symbol")
-     ->order_by([ price => 0.22 ])
-     ->order_by({ num => "id" })
-     ->order_by({ num => [ "price" => 0.22 ] })
-     ->order("num")
-     ->order(
-         { num => 1, value => sub { uc($_) } },
-         { str => 1, value => sub { int($_) } },
-     )
-     ->order({ num => sub { $_->[1] } })
+*** multi key using arrayrefs
+**** description
+***** for _by, first item is always the accessor
+***** the rest are named options
+****** e.g. option strings, or a subref to transform it
+**** examples
+->order("num")
+->order(sub { int($_) }, "num")
+->order(
+    [ num => sub { uc($_) } ],
+    [ "str", sub { int($_) } ],
+)
+->order(num => sub { $_->[1] })
+->order_by(
+    # PROBLEM:  how is this distinguished from an arrayref accessor?
+    [ [ "price", 0.22 ], "num" ],
+    [ "symbol", str => sub { uc($_) } ],
+    [ id => "num" ],
+)
+
+->order_by("symbol")
+->order_by([ price => 0.22 ])
+->order_by(id => "num", "reverse")
+->order_by([ "price" => 0.22 ], "num")
+*** multi key using hashrefs
+**** description
+**** examples
+->order("num")
+->order(sub { int($_) }, "num")
+->order(
+    { num => 1, value => sub { uc($_) } },
+    { str => 1, value => sub { int($_) } },
+)
+->order({ num => sub { $_->[1] } })
+
+->order_by(
+    { num => [ "price", 0.22 ] },
+    { str => "symbol", value => sub { uc($_) } },
+    { num => "id" },
+)
+->order_by("symbol")
+->order_by([ price => 0.22 ])
+->order_by({ num => "id" })
+->order_by({ num => [ "price" => 0.22 ] })
 *** Issues
 **** how to represent "reverse order"
 *** CPAN
