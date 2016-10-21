@@ -73,75 +73,116 @@ arrayref, use that format.
 *** so warnings and dies are reported from the caller.
 *** SIG __WARN__
 **** warn from caller, or use Carp::longmess
-** TODO order, order_by
-*** sort vs order
-**** With sort
-***** provide a sub that returns the comparison outcome of two values: $a and $b
-***** in case of a tie, provide another comparison of $a and $b
-***** example
-sort {
-    uc( $a->{name} ) cmp uc( $b->{name} )
-    ||
-    int( $b->{age} / 10 ) <=> int( $a->{age} / 10 ) # reverse
-} @users
-**** With order
-***** provide an order spec of how one value should be compared with another value
-****** the value can be transformed using an optional subref
-******* e.g. by looking up a hashref key
-****** how to compare (cmp or <=>)
-****** which direction to sort (ascending or descending)
-***** in case of a tie, provide another order spec
-***** example with order
-order(
-    sub { $_->{name} },
-    [ "num", "desc", sub { int( $_->{age} / 10 ) } ],
-)
-***** example with order_by
-order_by(
-    name => "str",
-    age  => [ "num", "desc", sub { int( $_ / 10 ) } ],
-)
-*** order options
-**** one or many options?
-***** if there's only one option, provide a scalar or subref
-***** if there are many options, provide them in an arrayref in any order
-**** which comparison operator
-***** "str" (cmp) - default
-***** "num" (<=>)
-***** "nat" (natural sort)
-**** which sort order
-***** "asc" (ascending) - default
-***** "desc" (descending)
-**** the value to compare
-***** A subref  - default is: sub { $_ }
-****** The return value is used in the comparison
-***** A regex
-****** $1 is used in the comparison
+** TODO Sorting using order and order_by (h2)
+*** Sorting with sort
+
+- provide a sub that returns the comparison outcome of two values: $a and $b
+- in case of a tie, provide another comparison of $a and $b
+
+    # If the name is the same, compare age (oldest first)
+
+    sort {
+        uc( $a->{name} ) cmp uc( $b->{name} )
+        ||
+        int( $b->{age} / 10 ) <=> int( $a->{age} / 10 )
+    } @users
+
+(note the opposite order of $a and $b for the age comparison,
+something that's often difficult to discern at a glance)
+
+*** Sorting with order, order_by
+
+- provide order options for how one value should be compared with another value
+    - the value can be transformed using an optional subref, e.g. by uc($_)
+    - how to compare (cmp or <=>)
+    - which direction to sort (ascending or descending)
+- in case of a tie, provide another comparison
+
+    # If the name is the same, compare age (oldest first)
+
+    @users->order(
+        sub { $_->{name} },                               # first comparison
+        [ "num", sub { int( $_->{age} / 10 ) }, "desc" ], # second comparison
+    )
+
+    @users->order_by(
+        name => "str",                                     # first comparison
+        age  => [ num => desc => sub { int( $_ / 10 ) } ], # second comparison
+    )
+
+*** Order Options for a comparison
+
+If there's only one option for a comparison, provide a single option
+(string/regex/subref) value. If there are many options, provide them
+in an arrayref in any order.
+
+*** Comparison operator
+- "str" (cmp) - default
+- "num" (<=>)
+- "nat" (natural sort)
+*** Sort order
+- "asc" (ascending) - default
+- "desc" (descending)
+*** The value to compare
+- A subref - default is: sub { $_ }
+  - The return value is used in the comparison
+- A regex
+  - The value of join("", @captured_groups) are used in the comparison (i.e. $1, $2, $3 etc.)
+
+*** Examples
+
+    ## Simple
+    # order: first item is the comparison options (one or an arrayref
+    # with many)
+    ->order()  # Defaults: str, asc, $_, just like sort
+    ->order(sub { uc($_) })
+    ->order( qr/first_name: (\w+), last_name: (\w+)/ )
+    ->order([ num => qr/id: (\d+)/ ])
+    ->order([ sub { int($_) }, "num" ])
+
+    # order_by: first item is the accessor, second item is the
+    # comparison options (one or an arrayref with many)
+    ->order_by("id")
+    ->order_by("id", "num")
+    ->order_by("name", sub { uc($_) })
+    ->order_by(log_line => qr/first_name: (\w+), last_name: (\w+)/ )
+    ->order_by("log_line", [ num => qr/id: (\d+)/ ])
+    ->order_by(age => [ sub { int($_) }, "num" ])
+    ->order_by([ age_by_interval => 10 ] => [ sub { int($_) }, "num" ])
+    ->order_by([ name_with_title => $title ], sub { uc($_) })
+
+    ## Multiple comparisons
+    # order: subsequent comparison options are added as needed (one or
+    # an arrayref with many, per comparison)
+    ->order(
+        [ sub { uc($_) }, "desc" ],
+        "str",
+    )
+    ->order(
+        [ sub { $_->{price} }, "num" ], # First a numeric comparison of price
+        [ sub { $_->{name} }, "desc" ], # or if same, a reverse comparison of the name
+    )
+    ->order(
+        qr/type: (\w+)/,
+        [ num => desc => qr/duration: (\d+)/ ]
+        [ num => sub { /id: (\d+)/ } ],
+        "str",
+    )
+
+    # order_by:
+    ...
+
+*** Order methods
+
+See L</order> and L</order_by>
 *** TODO Fresh
 **** order
 ***** description
 ****** for each key there's an option or arrayref of options
 ****** If there are multiple keys to compare
 ******* there are multiple option(s)
-***** param check
 ***** examples
-->order() # str, asc, $_
-->order(sub { int($_) })
-->order([ sub { int($_) }, "num" ])
-->order(
-    [ sub { uc($_) }, "desc" ],
-    "str",
-)
-->order(
-    [ sub { $_->{price} }, "num" ],
-    [ "nat", sub { $_->{name} }, "desc" ],
-)
-->order(
-    qr/type: (\w+)/,
-    [ num => desc => qr/duration: (\d+)/ ]
-    [ num => sub { /id: (\d+)/; $1 } ],
-    "str",
-)
+
 **** order_by
 ***** description
 ****** for each key, there's pair of accessor-option(s)
