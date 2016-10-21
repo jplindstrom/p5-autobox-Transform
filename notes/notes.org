@@ -73,24 +73,7 @@ arrayref, use that format.
 *** so warnings and dies are reported from the caller.
 *** SIG __WARN__
 **** warn from caller, or use Carp::longmess
-** set_each
-set_each([$accessor, @args])
-
-This uses the same format for getting at a accessor and args as
-everything else, i.e. an arrayref.
-
-For hashrefs, set the key $accessor to $args[0] (because a hashref
-value can't be a list)
-
-For objects, call $_->$accessor(@args) to set the value.
-** array includes, includes_by / contains, contains_by
-*** http://emberjs.com/api/classes/Ember.Enumerable.html
-*** with predicate, same as always: string eq, regex, hashref keys, (array in (later))
-*** hash contains_value_by
-** hash contains_key, contains_value -- checks the predicate for keys/values
-** Ember Array, Enumerable
-*** http://emberjs.com/api/classes/Ember.Array.html
-** order, order_by
+** TODO order, order_by
 *** sort vs order
 **** With sort
 ***** provide a sub that returns the comparison outcome of two values: $a and $b
@@ -119,18 +102,21 @@ order_by(
     age  => [ "num", "desc", sub { int( $_ / 10 ) } ],
 )
 *** order options
-**** comparison operator
-***** str (cmp) - default
-***** num (<=>)
-***** nat (natural sort)
-**** value
+**** one or many options?
+***** if there's only one option, provide a scalar or subref
+***** if there are many options, provide them in an arrayref in any order
+**** which comparison operator
+***** "str" (cmp) - default
+***** "num" (<=>)
+***** "nat" (natural sort)
+**** which sort order
+***** "asc" (ascending) - default
+***** "desc" (descending)
+**** the value to compare
 ***** A subref  - default is: sub { $_ }
 ****** The return value is used in the comparison
-**** sort order
-***** asc - default
-***** desc
-*** then also specify
-**** number, string, natural, etc
+***** A regex
+****** $1 is used in the comparison
 *** TODO Fresh
 **** order
 ***** description
@@ -151,9 +137,9 @@ order_by(
     [ "nat", sub { $_->{name} }, "desc" ],
 )
 ->order(
-    sub { s/type: (\w+)/r },
-    [ num => desc => sub { duration: s/(\d+)/r } ],
-    [ num => sub { s/id: (\d+)/r } ],
+    qr/type: (\w+)/,
+    [ num => desc => qr/duration: (\d+)/ ]
+    [ num => sub { /id: (\d+)/; $1 } ],
     "str",
 )
 **** order_by
@@ -230,6 +216,23 @@ order_by(
 ->order_by([ price => 0.22 ])
 ->order_by(id => "num", "reverse")
 ->order_by([ "price" => 0.22 ], "num")
+** set_each
+set_each([$accessor, @args])
+
+This uses the same format for getting at a accessor and args as
+everything else, i.e. an arrayref.
+
+For hashrefs, set the key $accessor to $args[0] (because a hashref
+value can't be a list)
+
+For objects, call $_->$accessor(@args) to set the value.
+** array includes, includes_by / contains, contains_by
+*** http://emberjs.com/api/classes/Ember.Enumerable.html
+*** with predicate, same as always: string eq, regex, hashref keys, (array in (later))
+*** hash contains_value_by
+** hash contains_key, contains_value -- checks the predicate for keys/values
+** Ember Array, Enumerable
+*** http://emberjs.com/api/classes/Ember.Array.html
 * Hash
 ** DONE key_value($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
 *** exists
