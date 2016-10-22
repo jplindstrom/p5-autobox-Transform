@@ -459,6 +459,160 @@ context. E.g.
     );
 
 
+=head2 Sorting using order and order_by
+
+=head3 Sorting with sort
+
+=over 4
+
+=item provide a sub that returns the comparison outcome of two values: $a and $b
+
+=item in case of a tie, provide another comparison of $a and $b
+
+=back
+
+    # If the name is the same, compare age (oldest first)
+    sort {
+        uc( $a->{name} ) cmp uc( $b->{name} )
+        ||
+        int( $b->{age} / 10 ) <=> int( $a->{age} / 10 )
+    } @users
+
+(note the opposite order of $a and $b for the age comparison,
+something that's often difficult to discern at a glance)
+
+=head3 Sorting with order, order_by
+
+=over 4
+
+=item provide order options for how one value should be compared with the others
+
+=over 8
+
+=item how to compare (cmp or <=>)
+
+=item which direction to sort (ascending or descending)
+
+=item the value can be transformed using an optional subref, e.g. by uc($_)
+
+=back
+
+=item in case of a tie, provide another comparison
+
+=back
+
+    # If the name is the same, compare age (oldest first)
+
+    @users->order(
+        sub { $_->{name} },                               # first comparison
+        [ "num", sub { int( $_->{age} / 10 ) }, "desc" ], # second comparison
+    )
+
+    @users->order_by(
+        name => "str",                                     # first comparison
+        age  => [ num => desc => sub { int( $_ / 10 ) } ], # second comparison
+    )
+
+=head3 Comparison Options
+
+If there's only one option for a comparison, provide a single option
+(string/regex/subref) value. If there are many options, provide them
+in an arrayref in any order.
+
+=head3 Comparison operator
+
+=over 4
+
+=item C<str> (cmp) - default
+
+=item C<num> (<=>)
+
+=back
+
+
+=head3 Sort order
+
+=over 4
+
+=item C<asc> (ascending) - default
+
+=item C<desc> (descending)
+
+=back
+
+
+=head3 The value to compare
+
+=over 4
+
+=item A subref - default is: sub { $_ }
+
+=over 8
+
+=item The return value is used in the comparison
+
+=back
+
+=item A regex
+
+=over 8
+
+=item The value of join("", @captured_groups) are used in the comparison (@captured_groups are $1, $2, $3 etc.)
+
+=back
+
+=back
+
+=head3 Examples
+
+    ## A single comparison
+
+    # order: the first arg is the comparison options (one or an
+    # arrayref with many)
+    ->order()  # Defaults: str, asc, $_, just like sort
+    ->order(sub { uc($_) })
+    ->order( qr/first_name: (\w+), last_name: (\w+)/ )
+    ->order([ num => qr/id: (\d+)/ ])
+    ->order([ sub { int($_) }, "num" ])
+
+    # order_by: the first arg is the accessor, second arg is the
+    # comparison options (one or an arrayref with many)
+    ->order_by("id")
+    ->order_by("id", "num")
+    ->order_by("name", sub { uc($_) })
+    ->order_by(log_line => qr/first_name: (\w+), last_name: (\w+)/ )
+    ->order_by("log_line", [ num => qr/id: (\d+)/ ])
+    ->order_by(age => [ sub { int($_) }, "num" ])
+    ->order_by([ age_by_interval => 10 ] => [ sub { int($_) }, "num" ])
+    ->order_by([ name_with_title => $title ], sub { uc($_) })
+
+
+    ## Multiple comparisons
+    # order: subsequent comparison options are added as needed (one or
+    # an arrayref with many, per comparison)
+    ->order(
+        [ sub { uc($_) }, "desc" ],
+        "str",
+    )
+    ->order(
+        [ sub { $_->{price} }, "num" ], # First a numeric comparison of price
+        [ sub { $_->{name} }, "desc" ], # or if same, a reverse comparison of the name
+    )
+    ->order(
+        qr/type: (\w+)/,
+        [ num => desc => qr/duration: (\d+)/ ]
+        [ num => sub { /id: (\d+)/ } ],
+        "str",
+    )
+
+    # order_by:
+    ...
+
+=head3 Order methods
+
+See L</order> and L</order_by>
+
+
 
 =head1 METHODS ON ARRAYS
 
