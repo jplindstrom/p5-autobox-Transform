@@ -46,6 +46,10 @@ particular when the values are hashrefs or objects.
     $book_prices->order([ "num", "desc" ]);
     $books->order([ sub { $_->{price} }, "desc", "num" ]);
     $log_lines->order([ num => qr/pid: "(\d+)"/ ]);
+    $books->order(
+        [ sub { $_->{price} }, "desc", "num" ] # first price
+        sub { $_->{name} },                    # then name
+    );
 
     # Flatten arrayrefs-of-arrayrefs
     $authors->map_by("books") # ->books returns an arrayref
@@ -79,6 +83,18 @@ particular when the values are hashrefs or objects.
     $books->grep_by("is_sold_out");
 
     $books->uniq_by("id");
+
+    $books->order_by("name");
+    $books->order_by(name => "desc");
+    $books->order_by(price => "num");
+    $books->order_by(price => [ "num", "desc" ]);
+    $books->order_by(name => [ sub { uc($_) }, "desc" ]);
+    $books->order_by([ price_with_tax => $rate ] => "num");
+    $books->order_by(
+        [ price_with_tax => $rate ] => [ "num", "desc" ],
+        name                        => [ "desc", sub { uc($_) } ],
+    );
+
 
     $books->group_by("title"),
     # {
