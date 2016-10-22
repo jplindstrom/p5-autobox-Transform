@@ -41,6 +41,12 @@ particular when the values are hashrefs or objects.
     $book_types->filter("scifi");
     $book_types->filter({ fantasy => 1, scifi => 1 }); # hash key exists
 
+    $book_types->order;
+    $book_types->order("desc");
+    $book_prices->order([ "num", "desc" ]);
+    $books->order([ sub { $_->{price} }, "desc", "num" ]);
+    $log_lines->order([ num => qr/pid: "(\d+)"/ ]);
+
     # Flatten arrayrefs-of-arrayrefs
     $authors->map_by("books") # ->books returns an arrayref
     # [ [ $book1, $book2 ], [ $book3 ] ]
