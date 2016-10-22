@@ -576,7 +576,8 @@ There are comparison options for how to compare values
 
     # order: the first arg is the comparison options (one or an
     # arrayref with many)
-    ->order()  # Defaults: str, asc, $_, just like sort
+    ->order()  # Defaults to str, asc, $_, just like sort
+    ->order("num")
     ->order(sub { uc($_) })
     ->order( qr/first_name: (\w+), last_name: (\w+)/ )
     ->order([ num => qr/id: (\d+)/ ])
@@ -586,6 +587,7 @@ There are comparison options for how to compare values
     # comparison options (one or an arrayref with many)
     ->order_by("id")
     ->order_by("id", "num")
+    ->order_by("id", [ "num", "desc" ])
     ->order_by("name", sub { uc($_) })
     ->order_by(log_line => qr/first_name: (\w+), last_name: (\w+)/ )
     ->order_by("log_line", [ num => qr/id: (\d+)/ ])
@@ -613,7 +615,20 @@ There are comparison options for how to compare values
     )
 
     # order_by:
-    ...
+    ->order(
+        price => "num", # First a numeric comparison of price
+        name => "desc", # or if same, a reverse comparison of the name
+    )
+    ->order(
+        price => [ "num", "desc" ],
+        name  => "str",
+    )
+    ->order(
+        [ price_with_discount => $discount ] => [ "num", "desc" ],
+        name                                 => [ str => sub { uc($_) } ],
+        "id",
+    )
+
 
 =head3 Order methods
 
