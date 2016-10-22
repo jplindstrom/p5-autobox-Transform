@@ -461,6 +461,10 @@ context. E.g.
 
 =head2 Sorting using order and order_by
 
+Let's first compare how sorting is done with Perl's C<sort> and
+autobox::Transform's C<order>/C<order_by>.
+
+
 =head3 Sorting with sort
 
 =over 4
@@ -515,9 +519,12 @@ something that's often difficult to discern at a glance)
 
 =head3 Comparison Options
 
-If there's only one option for a comparison, provide a single option
-(string/regex/subref) value. If there are many options, provide them
-in an arrayref in any order.
+If there's only one option for a comparison (e.g. C<num>), provide a
+single option (string/regex/subref) value. If there are many options,
+provide them in an arrayref in any order.
+
+There are comparison options for how to compare values
+(string/numeric), sort order, and how to get at the value to compare.
 
 =head3 Comparison operator
 
