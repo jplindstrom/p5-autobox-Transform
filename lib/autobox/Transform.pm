@@ -90,9 +90,11 @@ particular when the values are hashrefs or objects.
     $books->order_by(price => [ "num", "desc" ]);
     $books->order_by(name => [ sub { uc($_) }, "desc" ]);
     $books->order_by([ price_with_tax => $rate ] => "num");
+    $books->order_by(author => "str", price => [ "num", "desc" ]);
     $books->order_by(
+        author                      => [ "desc", sub { uc($_) } ],
         [ price_with_tax => $rate ] => [ "num", "desc" ],
-        name                        => [ "desc", sub { uc($_) } ],
+        "name",
     );
 
 
