@@ -52,5 +52,15 @@ subtest order_num_str => sub {
     );
 };
 
+subtest comparison_args_validation => sub {
+    throws_ok(
+        sub { [1]->order("blah")->to_ref },
+        qr/\Q->order(): Invalid comparison (blah)/,
+        "Invalid arg dies ok",
+    );
+
+    # TODO: only one in each group
+};
+
 
 done_testing();

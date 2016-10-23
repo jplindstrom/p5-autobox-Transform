@@ -77,9 +77,11 @@ arrayref, use that format.
 *** TODO tasks
 **** DONE order
 **** DONE simple value
-**** TODO num/str
-**** arg validation
+**** DONE num/str
+**** TODO arg validation
+***** unknown
 **** asc/desc
+**** arg validation - only one in each group
 **** multiple comparisons
 **** order_by
 **** subref
@@ -286,6 +288,7 @@ For objects, call $_->$accessor(@args) to set the value.
 ** hash contains_key, contains_value -- checks the predicate for keys/values
 ** Ember Array, Enumerable
 *** http://emberjs.com/api/classes/Ember.Array.html
+** Fix croak, use throw
 * Hash
 ** DONE key_value($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
 *** exists

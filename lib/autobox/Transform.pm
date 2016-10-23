@@ -726,11 +726,14 @@ sub order {
         str => "string",
         num => "number",
     };
-    my $ms_operator = $t__ms->{$operator}; ###JPL: or die
+
+    my $ms_operator = $t__ms->{$operator}
+        or Carp::croak("->order(): Invalid comparison ($operator)");
     my $sorter = make_sorter(
         "plain", "ref_in", "ref_out",
         $ms_operator => { },
     );
+    $sorter or die(__PACKAGE__ . " internal error: $@");
     my $result = $sorter->($array);
 
     return wantarray ? @$result : $result;
