@@ -52,6 +52,20 @@ subtest order_num_str => sub {
     );
 };
 
+subtest order_asc_desc => sub {
+    eq_or_diff(
+        $books->map_by("title")->order("asc")->to_ref,
+        $expected_titles_str,
+        "order str asc",
+    );
+    eq_or_diff(
+        $books->map_by("title")->order("desc")->to_ref,
+        $expected_titles_str->reverse->to_ref,
+        "order str desc",
+    );
+};
+
+
 subtest comparison_args_validation => sub {
     throws_ok(
         sub { [1]->order("blah")->to_ref },
@@ -59,7 +73,7 @@ subtest comparison_args_validation => sub {
         "Invalid arg dies ok",
     );
 
-    # TODO: only one in each group
+    # TODO: only one in each group, only once
 };
 
 

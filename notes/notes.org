@@ -78,7 +78,7 @@ arrayref, use that format.
 **** DONE order
 **** DONE simple value
 **** DONE num/str
-**** TODO arg validation
+**** DONE arg validation
 ***** unknown
 **** asc/desc
 **** arg validation - only one in each group

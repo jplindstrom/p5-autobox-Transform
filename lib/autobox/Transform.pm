@@ -719,19 +719,37 @@ sub filter {
 
 sub order {
     my $array = shift;
-    my ($comparison) = @_;
-    my $operator = $comparison // "str";
+    my ($option) = @_;
 
-    my $t__ms = {
-        str => "string",
-        num => "number",
+    my $option__group = {
+        str  => "operator",
+        num  => "operator",
+        asc  => "direction",
+        desc => "direction",
     };
 
-    my $ms_operator = $t__ms->{$operator}
-        or Carp::croak("->order(): Invalid comparison ($operator)");
+    # Check one operator
+    my $group__value = {};
+    if ($option) {
+        my $group = $option__group->{ $option }
+            or Carp::croak("->order(): Invalid comparison ($option)");
+        $group__value->{ $group } = $option;
+    }
+
+    my $operator = $group__value->{operator} // "str";
+    my $direction = $group__value->{direction} // "asc";
+
+    my $t__ms = {
+        str  => "string",
+        num  => "number",
+        asc  => "ascending",
+        desc => "descending",
+    };
+    my $ms_operator = $t__ms->{$operator};
+    my $ms_direction = $t__ms->{$direction};
     my $sorter = make_sorter(
         "plain", "ref_in", "ref_out",
-        $ms_operator => { },
+        $ms_operator => [ $ms_direction ],
     );
     $sorter or die(__PACKAGE__ . " internal error: $@");
     my $result = $sorter->($array);
