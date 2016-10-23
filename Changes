@@ -2,7 +2,8 @@
 
 {{$NEXT}}
 
-  * POD fix for where order_by is placed.
+  * POD fixes for order, order_by
+  * Other docs improvements
 
 
 1.026 2016-10-23T16:58:04Z
