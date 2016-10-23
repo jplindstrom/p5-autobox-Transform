@@ -734,8 +734,10 @@ sub order {
     my $group__value = {};
     for my $option (grep { $_ } @$options) {
         my $group;
-        ref($option) eq "CODE"   and $group = "extract";
-        if( ref($option) eq "Regexp" ) {
+
+        my $ref_option = ref($option);
+        ( $ref_option eq "CODE" ) and $group = "extract";
+        if( $ref_option eq "Regexp" ) {
             my $regex = $option;
             $option = sub { join("", m/$regex/) };
             $group = "extract";
