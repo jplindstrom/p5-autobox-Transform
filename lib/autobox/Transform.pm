@@ -429,8 +429,8 @@ whatever you use to avoid upgrading modules to incompatible versions.
 =head2 Filter predicates
 
 There are several methods that filter items,
-e.g. C<@array-E<gt>>filter> (duh), C<@array-E<gt>>filter_by>, and
-C<%hash-E<gt>>filter_each>. These methods take a $predicate argument to
+e.g. C<@array-E<gt>filter> (duh), C<@array-E<gt>filter_by>, and
+C<%hash-E<gt>filter_each>. These methods take a $predicate argument to
 determine which items to retain or filter out.
 
 If $predicate is an I<unblessed scalar>, it is compared to each value
@@ -460,43 +460,6 @@ The $predicate subref should return a true value to remain. $_ is set
 to the current $value.
 
     $authors->filter_by(publisher => sub { $_->name =~ /Orbit/ });
-
-
-=head2 List and Scalar Context
-
-Almost all of the methods are context sensitive, i.e. they return a
-list in list context and an arrayref in scalar context, just like
-autobox::Core.
-
-Beware: you might be in list context when you need an arrayref.
-
-When in doubt, assume they work like C<map> and C<grep> (i.e. return a
-list), and convert the return value to references where you might have
-an unobvious list context. E.g.
-
-=head3 Incorrect
-
-    $self->my_method(
-        # Wrong, this is list context and wouldn't return an array ref
-        books => $books->filter_by("is_published"),
-    );
-
-=head3 Correct
-
-    $self->my_method(
-        # Correct, put the returned list in an anonymous array ref
-        books => [ $books->filter_by("is_published") ],
-    );
-    $self->my_method(
-        # Correct, ensure scalar context to get an array ref
-        books => scalar $books->filter_by("is_published"),
-    );
-
-    # Probably the nicest, since ->to_ref goes at the end
-    $self->my_method(
-        # Correct, use ->to_ref to ensure an array ref is returned
-        books => $books->filter_by("is_published")->to_ref,
-    );
 
 
 =head2 Sorting using order and order_by
@@ -541,15 +504,15 @@ Provide order options for how one value should be compared with the others:
 
 =item *
 
-how to compare (cmp or <=>)
+how to compare (C<cmp> or C<<=>>)
 
 =item *
 
-which direction to sort (ascending or descending)
+which direction to sort (C<asc>ending or C<desc>ending)
 
 =item *
 
-which value to compare, using a subref, e.g. by uc($_)
+which value to compare, using a regex or subref, e.g. by uc($_)
 
 =back
 
@@ -561,11 +524,13 @@ In case of a tie, provide another comparison
 
     # If the name is the same, compare age (oldest first)
 
+    # ->order
     @users->order(
         sub { $_->{name} },                               # first comparison
         [ "num", sub { int( $_->{age} / 10 ) }, "desc" ], # second comparison
     )
 
+    # ->order_by
     @users->order_by(
         name => "str",                                     # first comparison
         age  => [ num => desc => sub { int( $_ / 10 ) } ], # second comparison
@@ -577,20 +542,17 @@ If there's only one option for a comparison (e.g. C<num>), provide a
 single option (string/regex/subref) value. If there are many options,
 provide them in an arrayref in any order.
 
-There are comparison options for how to compare values
-(string/numeric), sort order, and how to get at the value to compare.
-
 =head3 Comparison operator
 
 =over 4
 
 =item *
 
-C<str> (cmp) - default
+C<"str"> (cmp) - default
 
 =item *
 
-C<num> (<=>)
+C<"num"> (<=>)
 
 =back
 
@@ -601,11 +563,11 @@ C<num> (<=>)
 
 =item *
 
-C<asc> (ascending) - default
+C<"asc"> (ascending) - default
 
 =item *
 
-C<desc> (descending)
+C<"desc"> (descending)
 
 =back
 
@@ -616,7 +578,7 @@ C<desc> (descending)
 
 =item *
 
-A subref - default is: sub { $_ }
+A subref - default is: C<sub { $_ }>
 
 =over 8
 
@@ -628,7 +590,7 @@ The return value is used in the comparison
 
 =item *
 
-A regex
+A regex, e.g. C<qr/id: (\d+)/>
 
 =over 8
 
@@ -640,9 +602,7 @@ The value of join("", @captured_groups) are used in the comparison (@captured_gr
 
 =back
 
-=head3 Examples
-
-    ## A single comparison
+=head3 Examples of a single comparison
 
     # order: the first arg is the comparison options (one or an
     # arrayref with many options)
@@ -671,9 +631,12 @@ The value of join("", @captured_groups) are used in the comparison (@captured_gr
     ->order_by([ name_with_title => $title ], sub { uc($_) })
 
 
-    ## Multiple comparisons
-    # order: subsequent comparison options are added as needed (one or
-    # an arrayref with many, per comparison)
+=head3 Examples of fallback comparisons
+
+When the first comparison is a tie, the subsequenc ones are used.
+
+    # order: list of comparison options (one or an arrayref with many
+    # options, per comparison)
     ->order(
         [ sub { $_->{price} }, "num" ], # First a numeric comparison of price
         [ sub { $_->{name} }, "desc" ], # or if same, a reverse comparison of the name
@@ -704,6 +667,44 @@ The value of join("", @captured_groups) are used in the comparison (@captured_gr
         name                                 => [ str => sub { uc($_) } ],
         "id",
     )
+
+
+
+=head2 List and Scalar Context
+
+Almost all of the methods are context sensitive, i.e. they return a
+list in list context and an arrayref in scalar context, just like
+autobox::Core.
+
+Beware: you might be in list context when you need an arrayref.
+
+When in doubt, assume they work like C<map> and C<grep> (i.e. return a
+list), and convert the return value to references where you might have
+an unobvious list context. E.g.
+
+=head3 Incorrect
+
+    $self->my_method(
+        # Wrong, this is list context and wouldn't return an array ref
+        books => $books->filter_by("is_published"),
+    );
+
+=head3 Correct
+
+    $self->my_method(
+        # Correct, put the returned list in an anonymous array ref
+        books => [ $books->filter_by("is_published") ],
+    );
+    $self->my_method(
+        # Correct, ensure scalar context to get an array ref
+        books => scalar $books->filter_by("is_published"),
+    );
+
+    # Probably the nicest, since ->to_ref goes at the end
+    $self->my_method(
+        # Correct, use ->to_ref to ensure an array ref is returned
+        books => $books->filter_by("is_published")->to_ref,
+    );
 
 
 
@@ -1211,17 +1212,23 @@ sub uniq_by {
 
 Return @array ordered according to the @accessor_comparison_pairs.
 
-The comparison value comes from an initial C<map_by($accessor)> on
-each @array item. It then works just like with C<-E<gt>order_by>.
+The comparison value comes from an initial
+C<@array->map_by($accessor)> for each accessor-comparison pair. It is
+important that the $accessor call returns exactly a single scalar that
+can be compared with the other values.
 
-    $books->order_by("name");
+It then works just like with C<-E<gt>order>.
+
+    $books->order_by("name"); # default order, i.e. "str"
     $books->order_by(price => "num");
     $books->order_by(price => [ "num", "desc" ]);
 
-It is important that the C<map_by> call returns exactly a single
-scalar that can be compared with the other values.
+As with C<map_by>, if the $accessor is used on an object, the method
+call can include arguments.
 
-Just like with C<order>, the value to actually compare can be
+    $books->order_by([ price_wih_tax => $tax_rate ] => "num");
+
+Just like with C<order>, the value returned by the accessor can be
 transformed using a sub, or be matched against a regex.
 
     $books->order_by(price => [ num => sub { int($_) } ]);
