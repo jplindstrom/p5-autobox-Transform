@@ -734,8 +734,11 @@ sub order {
     my $group__value = {};
     for my $option (grep { $_ } @$options) {
         my $group = $option__group->{ $option }
-            or Carp::croak("->order(): Invalid comparison ($option)");
-        ###JPL: check group not already set
+            or Carp::croak("->order(): Invalid comparison option ($option)");
+
+        exists $group__value->{ $group }
+            and Carp::croak("->order(): Conflicting comparison options: ($group__value->{ $group }) and ($option)");
+
         $group__value->{ $group } = $option;
     }
 

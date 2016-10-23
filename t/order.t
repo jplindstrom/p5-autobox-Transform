@@ -77,7 +77,12 @@ subtest order_multiple_options__num_desc => sub {
 subtest comparison_args_validation => sub {
     throws_ok(
         sub { [1]->order("blah")->to_ref },
-        qr/\Q->order(): Invalid comparison (blah)/,
+        qr/\Q->order(): Invalid comparison option (blah)/,
+        "Invalid arg dies ok",
+    );
+    throws_ok(
+        sub { [1]->order([ "asc", "desc", ])->to_ref },
+        qr/\Q->order(): Conflicting comparison options: (asc) and (desc)/,
         "Invalid arg dies ok",
     );
 

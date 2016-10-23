@@ -81,12 +81,12 @@ arrayref, use that format.
 **** DONE arg validation
 ***** unknown
 **** DONE asc/desc
-**** multiple options
-**** arg validation - only one in each group
-**** multiple comparisons
-**** order_by
+**** DONE multiple options
+**** TODO arg validation - only one in each group, no repeating
 **** subref
 **** regex
+**** multiple comparisons
+**** order_by
 **** cache sorts?
 **** undef warnings?
 *** Sorting with sort
