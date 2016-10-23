@@ -741,7 +741,7 @@ sub _group__value_from_order_options {
         }
 
         $group ||= $option__group->{ $option }
-            or Carp::croak("->order(): Invalid comparison option ($option)");
+            or Carp::croak("->order(): Invalid comparison option ($option), did you mean ->order_by('$option')?");
 
         exists $group__value->{ $group }
             and Carp::croak("->order(): Conflicting comparison options: ($group__value->{ $group }) and ($option)");
