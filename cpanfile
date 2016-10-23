@@ -5,6 +5,7 @@ requires 'autobox::Core';
 requires 'true';
 requires 'Carp';
 requires 'Sort::Maker';
+requiers 'List::MoreUtils';
 
 on 'test' => sub {
     requires 'Test::More', '0.98';

@@ -669,6 +669,7 @@ package # hide from PAUSE
 
 use autobox::Core;
 use Sort::Maker ();
+use List::MoreUtils ();
 
 
 
@@ -816,7 +817,31 @@ sub _item_values_array_from_array_item_extracts {
     ];
 }
 
-# order has comparisons has options
+sub _item_values_array_from_map_by_extracts {
+    my ($array, $accessors, $extracts) = @_;
+
+    # Custom Schwartzian Transform where each array item is arrayref of:
+    # 0: $array item; rest 1..n : comparison values
+    # The sorter keys are simply indexed into the nth value
+    return [
+        map { ## no critic
+            my $item = $_;
+            ###JPL: super inefficient to run map_by on one-element arrays
+            my @accessors = @$accessors;
+            [
+                $item, # array item to compare
+                map {
+                    my $accessor = shift @accessors;
+                    my ($value) = map_by([ $item ], $accessor);
+                    my $extract = $_; local $_ = $value;
+                    $extract->();
+                } @$extracts, # comparison values for array item
+            ];
+        }
+        @$array
+    ];
+}
+
 sub order {
     my $array = shift;
     my (@comparisons) = @_;
@@ -824,11 +849,34 @@ sub order {
 
     my ($sorter, $extracts) = _sorter_from_comparisons(\@comparisons);
 
-    # Custom Schwartzian Transform where each array item is arrayref of:
-    # 0: $array item; rest 1..n : comparison values
-    # The sorter keys are simply indexed into the nth value
     my $item_values_array = _item_values_array_from_array_item_extracts(
         $array,
+        $extracts,
+    );
+    my $sorted_array = $sorter->($item_values_array);
+    my $result = [ map { $_->[0] } @$sorted_array ];
+
+    return wantarray ? @$result : $result;
+}
+
+sub order_by {
+    my $array = shift;
+    my (@accessors_and_comparisons) = @_;
+    ###JPL: die if no accessors at all
+
+    my $i = 0;
+    my ($accessors, $comparisons) = List::MoreUtils::part
+        { $i++ %2 }
+        @accessors_and_comparisons;
+    $comparisons ||= [];
+    # Default comparison
+    @$accessors == @$comparisons or push(@$comparisons, "str");
+
+    my ($sorter, $extracts) = _sorter_from_comparisons($comparisons);
+
+    my $item_values_array = _item_values_array_from_map_by_extracts(
+        $array,
+        $accessors,
         $extracts,
     );
     my $sorted_array = $sorter->($item_values_array);
