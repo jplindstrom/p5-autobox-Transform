@@ -892,6 +892,45 @@ sub order {
     return wantarray ? @$result : $result;
 }
 
+=head2 @array->order_by(@accessor_comparison_pairs) : @array | @$array
+
+Return @array ordered according to the @accessor_comparison_pairs.
+
+The comparison value comes from an initial map_by($accessor) on each
+@array item. It then works just like with C<-E<gt>>order_by>.
+
+    $books->order_by(price => "num");
+    $books->order_by(price => [ "num", "desc" ]);
+
+It is important that the C<map_by> call returns exactly a single
+scalar that can be compared with the other values.
+
+Just like with C<order>, the value to actually compare can be
+transformed using a sub, or be matched against a regex.
+
+    $books->order_by(price => [ num => sub { int($_) } ]);
+
+    # Ignore leading "The" in book titles by optionally matching it
+    # with a non-capturing group and the rest with a capturing paren
+    $books->order_by( title => qr/^ (?: The \s+ )? (.+) /x );
+
+If a comparison is missing for the last pair, the default is a normal
+C<str> comparison.
+
+    $books->order_by("name"); # default "str"
+
+If the first comparison ends in a tie, the next pair is used,
+etc. Note that in order to provide accessor-comparison pairs, it's
+often necessary to provide a default "str" comparison just to make it
+a pair.
+
+    $books->order_by(
+        author => "str",
+        price  => [ "num", "desc" ],
+    );
+
+=cut
+
 sub order_by {
     my $array = shift;
     my (@accessors_and_comparisons) = @_;

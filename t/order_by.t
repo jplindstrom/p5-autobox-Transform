@@ -165,6 +165,30 @@ subtest order_by_multiple_comparisons => sub {
     );
 };
 
+subtest examples => sub {
+    my $titles = [
+        "Leviathan Wakes",
+        "The Name of the Wind",
+        "The Tree-Body Problem",
+        "Caliban's War",
+        "The Butcher of Anderson Station",
+    ];
+    my $expected_titles = [
+        "The Butcher of Anderson Station",
+        "Caliban's War",
+        "Leviathan Wakes",
+        "The Name of the Wind",
+        "The Tree-Body Problem",
+    ];
+    eq_or_diff(
+        $titles->order( qr/^ (?: The \s+ )? (.+) /x )->to_ref,
+        $expected_titles,
+        "regex to remove leading article",
+    );
+};
+
+
+
 done_testing();
 
 
