@@ -157,7 +157,7 @@ particular when the values are hashrefs or objects.
     $genre_count->filter_each(sub { $_ > 5 });
 
     # Return reference, even in list context, e.g. in a parameter list
-    %genre_count->to_ref );
+    %genre_count->to_ref;
 
     # Return hash, even in scalar context
     $author->book_count->to_hash;
