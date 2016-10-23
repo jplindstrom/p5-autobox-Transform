@@ -83,7 +83,7 @@ sub literature {
         title      => "The Name of the Wind",
         genre      => "Fantasy",
         page_count => 676,
-        price      => 8,
+        price      => 11,
     });
 
     my $a_corey = Author->new({
