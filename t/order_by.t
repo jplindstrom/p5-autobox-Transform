@@ -34,7 +34,6 @@ my $expected_titles_regex = [
 
 my $expected_prices_asc = [ 5, 6, 6, 11 ];
 
-###JPL: test no accessor
 
 subtest order_by_simple => sub {
     eq_or_diff(
@@ -115,6 +114,14 @@ subtest order_by_multiple_options__num_desc => sub {
         $books->order_by(price => [ "num", "desc" ])->map_by("price")->to_ref,
         $expected_prices_asc->reverse->to_ref,
         "order_by num, desc",
+    );
+};
+
+subtest accessor_missing => sub {
+    throws_ok(
+        sub { $books->order_by() },
+        qr/\Q->order_by() missing argument:\E \$accessor/,
+        "Missing arg dies ok",
     );
 };
 

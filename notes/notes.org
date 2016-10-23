@@ -86,7 +86,7 @@ arrayref, use that format.
 **** DONE subref
 **** DONE regex
 **** DONE multiple comparisons
-**** TODO order_by
+**** DONE order_by
 **** cache sorts?
 **** undef warnings?
 *** Sorting with sort

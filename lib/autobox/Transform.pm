@@ -865,13 +865,14 @@ sub order {
 sub order_by {
     my $array = shift;
     my (@accessors_and_comparisons) = @_;
-    ###JPL: die if no accessors at all
 
     my $i = 0;
     my ($accessors, $comparisons) = List::MoreUtils::part
         { $i++ %2 }
         @accessors_and_comparisons;
+    $accessors   ||= [];
     $comparisons ||= [];
+    @$accessors or Carp::croak("->order_by() missing argument: \$accessor");
     # Default comparison
     @$accessors == @$comparisons or push(@$comparisons, "str");
 
