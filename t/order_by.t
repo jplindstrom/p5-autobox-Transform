@@ -77,6 +77,20 @@ subtest order_by_asc_desc => sub {
     );
 };
 
+subtest order_by_method_accessor => sub {
+    # Call method with dummy arg
+    eq_or_diff(
+        $books->order_by([ title_uc => "dummy" ])->map_by("title")->to_ref,
+        $expected_titles_str,
+        "order_by method call without comparison",
+    );
+    eq_or_diff(
+        $books->order_by([ title_uc => "dummy" ] => "desc")->map_by("title")->to_ref,
+        $expected_titles_str->reverse->to_ref,
+        "order_by method call with comparison",
+    );
+};
+
 
 subtest order_by_sub => sub {
     eq_or_diff(
@@ -125,7 +139,7 @@ subtest order_by_multiple_comparisons => sub {
         "ABC",
         "DEF",
         "Abc",
-    ];
+    ]->map(sub { { word => $_ }});
     # ASCII order is UPPER before lower
     my $expected_words = [
         "DEF",
@@ -135,10 +149,10 @@ subtest order_by_multiple_comparisons => sub {
         "abc",
     ];
     eq_or_diff(
-        $words->order(
-            [ desc => sub { uc($_) } ],
-            qr/(.+)/,
-        )->to_ref,
+        $words->order_by(
+            word => [ desc => sub { uc($_) } ],
+            word => qr/(.+)/,
+        )->map_by("word")->to_ref,
         $expected_words,
         "First reverse uc, then whole match cmp",
     );

@@ -38,6 +38,11 @@ sub price_with_tax {
     return $self->price + ( $self->price * $tax_percent );
 }
 
+sub title_uc {
+    my $self = shift;
+    return $self->title->uc;
+}
+
 package # hide from PAUSE
     Publisher;
 use Moo;
