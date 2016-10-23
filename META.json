@@ -4,7 +4,7 @@
       "Johan Lindstrom, C<< <johanl [AT] cpan.org> >>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.0.1, CPAN::Meta::Converter version 2.143240",
+   "generated_by" : "Minilla/v3.0.1, CPAN::Meta::Converter version 2.150005",
    "license" : [
       "perl_5"
    ],
@@ -43,6 +43,8 @@
       "runtime" : {
          "requires" : {
             "Carp" : "0",
+            "List::MoreUtils" : "0",
+            "Sort::Maker" : "0",
             "autobox" : "0",
             "autobox::Core" : "0",
             "perl" : "5.010",
@@ -70,10 +72,11 @@
          "web" : "https://github.com/jplindstrom/p5-autobox-Transform"
       }
    },
-   "version" : "1.025",
+   "version" : "1.026",
    "x_authority" : "cpan:JOHANL",
    "x_contributors" : [
       "Johan Lindstrom <johan.lindstrom@broadbean.com>",
       "Johan Lindstrom <jpl@nospam>"
-   ]
+   ],
+   "x_serialization_backend" : "JSON::PP version 2.27300"
 }
