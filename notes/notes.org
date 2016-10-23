@@ -87,6 +87,9 @@ arrayref, use that format.
 **** DONE regex
 **** DONE multiple comparisons
 **** DONE order_by
+**** docs: order_by must return a single value that can be compared as a scalar
+**** bonus: rewrite map_by to take a subref transformer, so it can be used here
+***** and do the map_by and extractor in the same go, with just the map_by return values
 **** cache sorts?
 **** undef warnings?
 *** Sorting with sort
