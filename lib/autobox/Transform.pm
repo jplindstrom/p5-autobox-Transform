@@ -725,45 +725,48 @@ my $option__group = {
     asc  => "direction",
     desc => "direction",
 };
+sub _group__value_from_order_options {
+    my ($options) = @_;
+    my $group__value = {};
+    for my $option (grep { $_ } @$options) {
+        my $group;
+
+        my $ref_option = ref($option);
+        ( $ref_option eq "CODE" ) and $group = "extract";
+        if ( $ref_option eq "Regexp" ) {
+            my $regex = $option;
+            $option = sub { join("", m/$regex/) };
+            $group = "extract";
+        }
+
+        $group ||= $option__group->{ $option }
+            or Carp::croak("->order(): Invalid comparison option ($option)");
+
+        exists $group__value->{ $group }
+            and Carp::croak("->order(): Conflicting comparison options: ($group__value->{ $group }) and ($option)");
+
+        $group__value->{ $group } = $option;
+    }
+
+    return $group__value;
+}
+
 my $transform__sorter = {
     str  => "string",
     num  => "number",
     asc  => "ascending",
     desc => "descending",
 };
-# order has comparisons has options
-sub order {
-    my $array = shift;
-    my (@comparisons) = @_;
-    @comparisons or @comparisons = ("str");
+sub _sorter_from_comparisons {
+    my ($comparisons) = @_;
 
-    ###JPL: extract
     my @sorter_keys;
     my @extracts;
-    for my $options (@comparisons) {
+    for my $options (@$comparisons) {
         ref($options) eq "ARRAY" or $options = [ $options ];
 
         # Check one comparison
-        my $group__value = {};
-        for my $option (grep { $_ } @$options) {
-            my $group;
-
-            my $ref_option = ref($option);
-            ( $ref_option eq "CODE" ) and $group = "extract";
-            if ( $ref_option eq "Regexp" ) {
-                my $regex = $option;
-                $option = sub { join("", m/$regex/) };
-                $group = "extract";
-            }
-
-            $group ||= $option__group->{ $option }
-                or Carp::croak("->order(): Invalid comparison option ($option)");
-
-            exists $group__value->{ $group }
-                and Carp::croak("->order(): Conflicting comparison options: ($group__value->{ $group }) and ($option)");
-
-            $group__value->{ $group } = $option;
-        }
+        my $group__value = _group__value_from_order_options($options);
 
         my $operator  = $group__value->{operator}  // "str";
         my $direction = $group__value->{direction} // "asc";
@@ -787,10 +790,21 @@ sub order {
     my $sorter = Sort::Maker::make_sorter(
         "plain", "ref_in", "ref_out",
         @sorter_keys,
-    ) or die(__PACKAGE__ . " internal error: $@");
+    ) or Carp::croak(__PACKAGE__ . " internal error: $@");
+
+    return ($sorter, \@extracts);
+}
+
+# order has comparisons has options
+sub order {
+    my $array = shift;
+    my (@comparisons) = @_;
+    @comparisons or @comparisons = ("str");
+
+    my ($sorter, $extracts) = _sorter_from_comparisons(\@comparisons);
 
     # Custom Schwartzian Transform where each array item is arrayref of:
-    # 0: $array item; rest 1..n : comparion values
+    # 0: $array item; rest 1..n : comparison values
     my $item_values_array = [
         map { ## no critic
             my $item = $_;
@@ -799,7 +813,7 @@ sub order {
                 map {
                     my $extract = $_; local $_ = $item;
                     $extract->();
-                } @extracts, # comparison values for array item
+                } @$extracts, # comparison values for array item
             ];
         }
         @$array
