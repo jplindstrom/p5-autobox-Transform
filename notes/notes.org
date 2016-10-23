@@ -75,15 +75,15 @@ arrayref, use that format.
 **** warn from caller, or use Carp::longmess
 ** TODO Sorting using order and order_by (h2)
 *** TODO tasks
-**** TODO order
-**** simple value
-**** num/str
+**** DONE order
+**** DONE simple value
+**** TODO num/str
 **** arg validation
 **** asc/desc
+**** multiple comparisons
 **** order_by
 **** subref
 **** regex
-**** multiple comparisons
 **** cache sorts?
 **** undef warnings?
 *** Sorting with sort

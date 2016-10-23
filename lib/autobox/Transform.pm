@@ -668,6 +668,7 @@ package # hide from PAUSE
     autobox::Transform::Array;
 
 use autobox::Core;
+use Sort::Maker;
 
 
 
@@ -718,9 +719,19 @@ sub filter {
 
 sub order {
     my $array = shift;
-    my ($comparisons) = @_;
+    my ($comparison) = @_;
+    my $operator = $comparison // "str";
 
-    my $result = [ sort @$array ];
+    my $t__ms = {
+        str => "string",
+        num => "number",
+    };
+    my $ms_operator = $t__ms->{$operator}; ###JPL: or die
+    my $sorter = make_sorter(
+        "plain", "ref_in", "ref_out",
+        $ms_operator => { },
+    );
+    my $result = $sorter->($array);
 
     return wantarray ? @$result : $result;
 }
