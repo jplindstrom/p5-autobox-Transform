@@ -826,17 +826,20 @@ sub _item_values_array_from_map_by_extracts {
     # Custom Schwartzian Transform where each array item is arrayref of:
     # 0: $array item; rest 1..n : comparison values
     # The sorter keys are simply indexed into the nth value
+    my $accessor_values = $accessors->map(
+        sub { [ map_by($array, $_) ] }
+    );
     return [
         map { ## no critic
             my $item = $_;
-            ###JPL: super inefficient to run map_by on one-element arrays
-            my @accessors = @$accessors;
+            my $accessor_index = 0;
             [
                 $item, # array item to compare
                 map {
-                    my $accessor = shift @accessors;
-                    my ($value) = map_by([ $item ], $accessor);
-                    my $extract = $_; local $_ = $value;
+                    my $extract = $_;
+                    my $value = shift @{$accessor_values->[ $accessor_index++ ]};
+
+                    local $_ = $value;
                     $extract->();
                 } @$extracts, # comparison values for array item
             ];
