@@ -65,14 +65,22 @@ subtest order_asc_desc => sub {
     );
 };
 
+subtest order_sub => sub {
+    eq_or_diff(
+        $books->map_by("price")->order([ "num", sub { 0 - $_ } ])->to_ref,
+        $expected_prices_asc->reverse->to_ref,
+        "order num, subref",
+    );
+};
+
 subtest order_multiple_options__num_desc => sub {
     eq_or_diff(
         $books->map_by("price")->order([ "num", "desc" ])->to_ref,
         $expected_prices_asc->reverse->to_ref,
         "order num, desc",
     );
+    ###JPL: sub
 };
-
 
 subtest comparison_args_validation => sub {
     throws_ok(
@@ -86,7 +94,7 @@ subtest comparison_args_validation => sub {
         "Invalid arg dies ok",
     );
 
-    # TODO: only one in each group, only once
+    # TODO: only one in each group, only once, for sub, regex
 };
 
 

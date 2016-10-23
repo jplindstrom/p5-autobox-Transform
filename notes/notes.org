@@ -82,9 +82,9 @@ arrayref, use that format.
 ***** unknown
 **** DONE asc/desc
 **** DONE multiple options
-**** TODO arg validation - only one in each group, no repeating
-**** subref
-**** regex
+**** DONE arg validation - only one in each group, no repeating
+**** DONE subref
+**** TODO regex
 **** multiple comparisons
 **** order_by
 **** cache sorts?

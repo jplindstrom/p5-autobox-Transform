@@ -733,7 +733,10 @@ sub order {
     # Check one comparison
     my $group__value = {};
     for my $option (grep { $_ } @$options) {
-        my $group = $option__group->{ $option }
+        my $group;
+        ref($option) eq "CODE" and $group = "extract";
+
+        $group ||= $option__group->{ $option }
             or Carp::croak("->order(): Invalid comparison option ($option)");
 
         exists $group__value->{ $group }
@@ -742,8 +745,9 @@ sub order {
         $group__value->{ $group } = $option;
     }
 
-    my $operator = $group__value->{operator} // "str";
+    my $operator  = $group__value->{operator}  // "str";
     my $direction = $group__value->{direction} // "asc";
+    my $extract   = $group__value->{extract}   // sub { $_ };
 
     my $t__ms = {
         str  => "string",
@@ -755,10 +759,18 @@ sub order {
     my $ms_direction = $t__ms->{$direction};
     my $sorter = make_sorter(
         "plain", "ref_in", "ref_out",
-        $ms_operator => [ $ms_direction ],
+        $ms_operator => [
+            $ms_direction,
+            code => sub { $_->[1] },
+        ],
     );
     $sorter or die(__PACKAGE__ . " internal error: $@");
-    my $result = $sorter->($array);
+
+    # TODO: compute the value on demand, for multiple comparisons it's
+    # wasteful to compute all
+    my $item_values_array = [ map { [ $_, $extract->($_) ] } @$array ];
+    my $sorted_array = $sorter->($item_values_array);
+    my $result = [ map { $_->[0] } @$sorted_array ];
 
     return wantarray ? @$result : $result;
 }
