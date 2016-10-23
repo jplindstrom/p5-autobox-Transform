@@ -848,6 +848,33 @@ sub _item_values_array_from_map_by_extracts {
     ];
 }
 
+=head2 @array->order(@comparisons = ("str")) : @array | @$array
+
+Return @array ordered according to the @comparisons. The default
+comparison is the same as the default sort, e.g. a normal string
+comparison of the @array values.
+
+If the first item in @comparison ends in a tie, the next one is used,
+etc.
+
+Each I<comparison> consists of a single I<option> or an I<arrayref of
+options>, e.g. C<str>/C<num>, C<asc>/C<desc>, or a subref/regex. See
+L</Sorting using order and order_by> for details about how these work.
+
+Examples:
+
+    @book_types->order;
+    @book_types->order("desc");
+    @book_prices->order([ "num", "desc" ]);
+    @books->order([ sub { $_->{price} }, "desc", "num" ]);
+    @log_lines->order([ num => qr/pid: "(\d+)"/ ]);
+    @books->order(
+        [ sub { $_->{price} }, "desc", "num" ] # first price
+        sub { $_->{name} },                    # then name
+    );
+
+=cut
+
 sub order {
     my $array = shift;
     my (@comparisons) = @_;
