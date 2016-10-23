@@ -104,18 +104,15 @@ subtest order_by_multiple_options__num_desc => sub {
     );
 };
 
-done_testing();
-__END__
-
 subtest comparison_args_validation => sub {
     throws_ok(
-        sub { [1]->order("blah")->to_ref },
-        qr/\Q->order(): Invalid comparison option (blah)/,
+        sub { $books->order_by(title => "blah")->to_ref },
+        qr/\Q->order_by(): Invalid comparison option (blah)/,
         "Invalid arg dies ok",
     );
     throws_ok(
-        sub { [1]->order([ "asc", "desc" ])->to_ref },
-        qr/\Q->order(): Conflicting comparison options: (asc) and (desc)/,
+        sub { [1]->order_by(title => [ "asc", "desc" ])->to_ref },
+        qr/\Q->order_by(): Conflicting comparison options: (asc) and (desc)/,
         "Invalid arg dies ok",
     );
     # Ignore ugly subref vs regex for now
@@ -146,6 +143,8 @@ subtest order_by_multiple_comparisons => sub {
         "First reverse uc, then whole match cmp",
     );
 };
+
+done_testing();
 
 
 

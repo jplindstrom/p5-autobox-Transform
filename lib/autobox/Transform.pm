@@ -727,7 +727,7 @@ my $option__group = {
     desc => "direction",
 };
 sub _group__value_from_order_options {
-    my ($options) = @_;
+    my ($method_name, $options) = @_;
     my $group__value = {};
     for my $option (grep { $_ } @$options) {
         my $group;
@@ -741,10 +741,10 @@ sub _group__value_from_order_options {
         }
 
         $group ||= $option__group->{ $option }
-            or Carp::croak("->order(): Invalid comparison option ($option), did you mean ->order_by('$option')?");
+            or Carp::croak("->$method_name(): Invalid comparison option ($option), did you mean ->order_by('$option')?");
 
         exists $group__value->{ $group }
-            and Carp::croak("->order(): Conflicting comparison options: ($group__value->{ $group }) and ($option)");
+            and Carp::croak("->$method_name(): Conflicting comparison options: ($group__value->{ $group }) and ($option)");
 
         $group__value->{ $group } = $option;
     }
@@ -759,7 +759,7 @@ my $transform__sorter = {
     desc => "descending",
 };
 sub _sorter_from_comparisons {
-    my ($comparisons) = @_;
+    my ($method_name, $comparisons) = @_;
 
     my @sorter_keys;
     my @extracts;
@@ -767,7 +767,10 @@ sub _sorter_from_comparisons {
         ref($options) eq "ARRAY" or $options = [ $options ];
 
         # Check one comparison
-        my $group__value = _group__value_from_order_options($options);
+        my $group__value = _group__value_from_order_options(
+            $method_name,
+            $options,
+        );
 
         my $operator  = $group__value->{operator}  // "str";
         my $direction = $group__value->{direction} // "asc";
@@ -847,7 +850,7 @@ sub order {
     my (@comparisons) = @_;
     @comparisons or @comparisons = ("str");
 
-    my ($sorter, $extracts) = _sorter_from_comparisons(\@comparisons);
+    my ($sorter, $extracts) = _sorter_from_comparisons("order", \@comparisons);
 
     my $item_values_array = _item_values_array_from_array_item_extracts(
         $array,
@@ -872,7 +875,7 @@ sub order_by {
     # Default comparison
     @$accessors == @$comparisons or push(@$comparisons, "str");
 
-    my ($sorter, $extracts) = _sorter_from_comparisons($comparisons);
+    my ($sorter, $extracts) = _sorter_from_comparisons("order_by", $comparisons);
 
     my $item_values_array = _item_values_array_from_map_by_extracts(
         $array,
