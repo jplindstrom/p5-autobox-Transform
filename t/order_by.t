@@ -40,12 +40,12 @@ subtest order_by_simple => sub {
     eq_or_diff(
         $books->order_by("title")->map_by("title")->to_ref,
         $expected_titles_str,
-        "order default everything, scalar context",
+        "order_by default everything, scalar context",
     );
     eq_or_diff(
         [ $books->order_by("title")->map_by("title") ],
         $expected_titles_str,
-        "order default everything, list context",
+        "order_by default everything, list context",
     );
 };
 
@@ -54,12 +54,26 @@ subtest order_by_num_str => sub {
     eq_or_diff(
         $books->order_by(price => "num")->map_by("price")->to_ref,
         $expected_prices_asc,
-        "order num",
+        "order_by num",
     );
     eq_or_diff(
         $books->order_by(title => "str")->map_by("title")->to_ref,
         $expected_titles_str,
-        "order str",
+        "order_by str",
+    );
+};
+
+
+subtest order_by_asc_desc => sub {
+    eq_or_diff(
+        $books->order_by(title => "asc")->map_by("title")->to_ref,
+        $expected_titles_str,
+        "order_by str asc",
+    );
+    eq_or_diff(
+        $books->order_by(title => "desc")->map_by("title")->to_ref,
+        $expected_titles_str->reverse->to_ref,
+        "order_by str desc",
     );
 };
 
@@ -67,24 +81,11 @@ done_testing();
 __END__
 
 
-subtest order_by_asc_desc => sub {
-    eq_or_diff(
-        $books->map_by("title")->order("asc")->to_ref,
-        $expected_titles_str,
-        "order str asc",
-    );
-    eq_or_diff(
-        $books->map_by("title")->order("desc")->to_ref,
-        $expected_titles_str->reverse->to_ref,
-        "order str desc",
-    );
-};
-
 subtest order_by_sub => sub {
     eq_or_diff(
         $books->map_by("price")->order([ "num", sub { 0 - $_ } ])->to_ref,
         $expected_prices_asc->reverse->to_ref,
-        "order num, subref",
+        "order_by num, subref",
     );
 };
 
@@ -92,7 +93,7 @@ subtest order_by_regex => sub {
     eq_or_diff(
         $books->map_by("title")->order(qr/(.)$/)->to_ref,
         $expected_titles_regex->to_ref,
-        "order regex",
+        "order_by regex",
     );
 };
 
@@ -100,7 +101,7 @@ subtest order_by_multiple_options__num_desc => sub {
     eq_or_diff(
         $books->map_by("price")->order([ "num", "desc" ])->to_ref,
         $expected_prices_asc->reverse->to_ref,
-        "order num, desc",
+        "order_by num, desc",
     );
 };
 
