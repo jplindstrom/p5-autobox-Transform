@@ -2,6 +2,9 @@
 
 {{$NEXT}}
 
+  * POD fix for where order_by is placed.
+
+
 1.026 2016-10-23T16:58:04Z
 
   * New feature: sorting using @array->order and @array->order_by.
