@@ -95,7 +95,6 @@ subtest order_multiple_options__num_desc => sub {
         $expected_prices_asc->reverse->to_ref,
         "order num, desc",
     );
-    ###JPL: sub
 };
 
 subtest comparison_args_validation => sub {
@@ -105,12 +104,11 @@ subtest comparison_args_validation => sub {
         "Invalid arg dies ok",
     );
     throws_ok(
-        sub { [1]->order([ "asc", "desc", ])->to_ref },
+        sub { [1]->order([ "asc", "desc" ])->to_ref },
         qr/\Q->order(): Conflicting comparison options: (asc) and (desc)/,
         "Invalid arg dies ok",
     );
-
-    # TODO: only one in each group, only once, for sub, regex
+    # Ignore ugly subref vs regex for now
 };
 
 
