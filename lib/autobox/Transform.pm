@@ -737,8 +737,8 @@ sub order {
         ref($option) eq "CODE"   and $group = "extract";
         if( ref($option) eq "Regexp" ) {
             my $regex = $option;
-            $group = "extract";
             $option = sub { join("", m/$regex/) };
+            $group = "extract";
         }
 
         $group ||= $option__group->{ $option }
@@ -762,6 +762,8 @@ sub order {
     };
     my $ms_operator = $t__ms->{$operator};
     my $ms_direction = $t__ms->{$direction};
+
+
     my $sorter = make_sorter(
         "plain", "ref_in", "ref_out",
         $ms_operator => [

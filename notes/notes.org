@@ -84,8 +84,8 @@ arrayref, use that format.
 **** DONE multiple options
 **** DONE arg validation - only one in each group, no repeating
 **** DONE subref
-**** TODO regex
-**** multiple comparisons
+**** DONE regex
+**** TODO multiple comparisons
 **** order_by
 **** cache sorts?
 **** undef warnings?
