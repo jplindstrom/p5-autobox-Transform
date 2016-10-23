@@ -65,6 +65,14 @@ subtest order_asc_desc => sub {
     );
 };
 
+subtest order_multiple_options__num_desc => sub {
+    eq_or_diff(
+        $books->map_by("price")->order([ "num", "desc" ])->to_ref,
+        $expected_prices_asc->reverse->to_ref,
+        "order num, desc",
+    );
+};
+
 
 subtest comparison_args_validation => sub {
     throws_ok(

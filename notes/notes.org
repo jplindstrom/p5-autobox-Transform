@@ -80,7 +80,8 @@ arrayref, use that format.
 **** DONE num/str
 **** DONE arg validation
 ***** unknown
-**** asc/desc
+**** DONE asc/desc
+**** multiple options
 **** arg validation - only one in each group
 **** multiple comparisons
 **** order_by

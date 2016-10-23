@@ -717,9 +717,11 @@ sub filter {
     return wantarray ? @$result : $result;
 }
 
+# order has comparisons has options
 sub order {
     my $array = shift;
-    my ($option) = @_;
+    my ($options) = @_;
+    ref($options) eq "ARRAY" or $options = [ $options ];
 
     my $option__group = {
         str  => "operator",
@@ -728,11 +730,12 @@ sub order {
         desc => "direction",
     };
 
-    # Check one operator
+    # Check one comparison
     my $group__value = {};
-    if ($option) {
+    for my $option (grep { $_ } @$options) {
         my $group = $option__group->{ $option }
             or Carp::croak("->order(): Invalid comparison ($option)");
+        ###JPL: check group not already set
         $group__value->{ $group } = $option;
     }
 
