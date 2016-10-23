@@ -754,20 +754,20 @@ sub order {
     my $direction = $group__value->{direction} // "asc";
     my $extract   = $group__value->{extract}   // sub { $_ };
 
-    my $t__ms = {
+    my $transform__sorter = {
         str  => "string",
         num  => "number",
         asc  => "ascending",
         desc => "descending",
     };
-    my $ms_operator = $t__ms->{$operator};
-    my $ms_direction = $t__ms->{$direction};
+    my $sorter_operator = $transform__sorter->{$operator};
+    my $sorter_direction = $transform__sorter->{$direction};
 
 
     my $sorter = make_sorter(
         "plain", "ref_in", "ref_out",
-        $ms_operator => [
-            $ms_direction,
+        $sorter_operator => [
+            $sorter_direction,
             code => sub { $_->[1] },
         ],
     );
