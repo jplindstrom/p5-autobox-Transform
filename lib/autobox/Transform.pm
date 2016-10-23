@@ -668,7 +668,7 @@ package # hide from PAUSE
     autobox::Transform::Array;
 
 use autobox::Core;
-use Sort::Maker;
+use Sort::Maker ();
 
 
 
@@ -717,72 +717,101 @@ sub filter {
     return wantarray ? @$result : $result;
 }
 
+
+
+my $option__group = {
+    str  => "operator",
+    num  => "operator",
+    asc  => "direction",
+    desc => "direction",
+};
+my $transform__sorter = {
+    str  => "string",
+    num  => "number",
+    asc  => "ascending",
+    desc => "descending",
+};
 # order has comparisons has options
 sub order {
     my $array = shift;
-    my ($options) = @_;
-    ref($options) eq "ARRAY" or $options = [ $options ];
+    my (@comparisons) = @_;
+    @comparisons or @comparisons = ("str");
 
-    my $option__group = {
-        str  => "operator",
-        num  => "operator",
-        asc  => "direction",
-        desc => "direction",
-    };
+    ###JPL: extract
+    my @sorter_keys;
+    my @extracts;
+    for my $options (@comparisons) {
+        ref($options) eq "ARRAY" or $options = [ $options ];
 
-    # Check one comparison
-    my $group__value = {};
-    for my $option (grep { $_ } @$options) {
-        my $group;
+        # Check one comparison
+        my $group__value = {};
+        for my $option (grep { $_ } @$options) {
+            my $group;
 
-        my $ref_option = ref($option);
-        ( $ref_option eq "CODE" ) and $group = "extract";
-        if( $ref_option eq "Regexp" ) {
-            my $regex = $option;
-            $option = sub { join("", m/$regex/) };
-            $group = "extract";
+            my $ref_option = ref($option);
+            ( $ref_option eq "CODE" ) and $group = "extract";
+            if ( $ref_option eq "Regexp" ) {
+                my $regex = $option;
+                $option = sub { join("", m/$regex/) };
+                $group = "extract";
+            }
+
+            $group ||= $option__group->{ $option }
+                or Carp::croak("->order(): Invalid comparison option ($option)");
+
+            exists $group__value->{ $group }
+                and Carp::croak("->order(): Conflicting comparison options: ($group__value->{ $group }) and ($option)");
+
+            $group__value->{ $group } = $option;
         }
 
-        $group ||= $option__group->{ $option }
-            or Carp::croak("->order(): Invalid comparison option ($option)");
+        my $operator  = $group__value->{operator}  // "str";
+        my $direction = $group__value->{direction} // "asc";
+        my $extract   = $group__value->{extract}   // sub { $_ };
 
-        exists $group__value->{ $group }
-            and Carp::croak("->order(): Conflicting comparison options: ($group__value->{ $group }) and ($option)");
+        my $sorter_operator = $transform__sorter->{$operator};
+        my $sorter_direction = $transform__sorter->{$direction};
 
-        $group__value->{ $group } = $option;
+        push(@extracts, $extract);
+        my $extract_index = @extracts;
+        push(
+            @sorter_keys,
+            $sorter_operator => [
+                $sorter_direction,
+                # Sort this one by the extracted value
+                code => "\$_->[ $extract_index ]",
+            ],
+        );
     }
 
-    my $operator  = $group__value->{operator}  // "str";
-    my $direction = $group__value->{direction} // "asc";
-    my $extract   = $group__value->{extract}   // sub { $_ };
-
-    my $transform__sorter = {
-        str  => "string",
-        num  => "number",
-        asc  => "ascending",
-        desc => "descending",
-    };
-    my $sorter_operator = $transform__sorter->{$operator};
-    my $sorter_direction = $transform__sorter->{$direction};
-
-
-    my $sorter = make_sorter(
+    my $sorter = Sort::Maker::make_sorter(
         "plain", "ref_in", "ref_out",
-        $sorter_operator => [
-            $sorter_direction,
-            code => sub { $_->[1] },
-        ],
-    );
-    $sorter or die(__PACKAGE__ . " internal error: $@");
+        @sorter_keys,
+    ) or die(__PACKAGE__ . " internal error: $@");
 
-    # TODO: compute the value on demand, for multiple comparisons it's
-    # wasteful to compute all
-    my $item_values_array = [ map { [ $_, $extract->($_) ] } @$array ];
+    # Custom Schwartzian Transform where each array item is arrayref of:
+    # 0: $array item; rest 1..n : comparion values
+    my $item_values_array = [
+        map { ## no critic
+            my $item = $_;
+            [
+                $item,                         # array item to compare
+                map {
+                    my $extract = $_; local $_ = $item;
+                    $extract->();
+                } @extracts, # comparison values for array item
+            ];
+        }
+        @$array
+    ];
+
     my $sorted_array = $sorter->($item_values_array);
     my $result = [ map { $_->[0] } @$sorted_array ];
 
     return wantarray ? @$result : $result;
 }
+
+
 
 =head2 @array->flat() : @array | @$array
 

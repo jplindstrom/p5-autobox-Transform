@@ -111,5 +111,32 @@ subtest comparison_args_validation => sub {
     # Ignore ugly subref vs regex for now
 };
 
+subtest order_multiple_comparisons => sub {
+    my $words = [
+        "abc",
+        "def",
+        "ABC",
+        "DEF",
+        "Abc",
+    ];
+    # ASCII order is UPPER before lower
+    my $expected_words = [
+        "DEF",
+        "def",
+        "ABC",
+        "Abc",
+        "abc",
+    ];
+    eq_or_diff(
+        $words->order(
+            [ desc => sub { uc($_) } ],
+            qr/(.+)/,
+        )->to_ref,
+        $expected_words,
+        "First reverse uc, then whole match cmp",
+    );
+};
+
+
 
 done_testing();
