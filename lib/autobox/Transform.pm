@@ -166,9 +166,12 @@ particular when the values are hashrefs or objects.
 =head2 Combined examples
 
     my $order_authors = $order->books
+        ->filter_by("title", qr/^The/)
         ->uniq_by("isbn")
         ->map_by("author")
-        ->map_by("name")->uniq->sort->join(", ");
+        ->uniq_by("name")
+        ->order_by(publisher => "str", name => "str")
+        ->map_by("name")->uniq->join(", ");
 
     my $total_order_amount = $order->books
         ->filter_by([ not_covered_by_vouchers => $vouchers ])
