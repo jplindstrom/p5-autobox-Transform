@@ -795,17 +795,13 @@ sub _sorter_from_comparisons {
     return ($sorter, \@extracts);
 }
 
-# order has comparisons has options
-sub order {
-    my $array = shift;
-    my (@comparisons) = @_;
-    @comparisons or @comparisons = ("str");
-
-    my ($sorter, $extracts) = _sorter_from_comparisons(\@comparisons);
+sub _item_values_array_from_array_item_extracts {
+    my ($array, $extracts) = @_;
 
     # Custom Schwartzian Transform where each array item is arrayref of:
     # 0: $array item; rest 1..n : comparison values
-    my $item_values_array = [
+    # The sorter keys are simply indexed into the nth value
+    return [
         map { ## no critic
             my $item = $_;
             [
@@ -818,7 +814,23 @@ sub order {
         }
         @$array
     ];
+}
 
+# order has comparisons has options
+sub order {
+    my $array = shift;
+    my (@comparisons) = @_;
+    @comparisons or @comparisons = ("str");
+
+    my ($sorter, $extracts) = _sorter_from_comparisons(\@comparisons);
+
+    # Custom Schwartzian Transform where each array item is arrayref of:
+    # 0: $array item; rest 1..n : comparison values
+    # The sorter keys are simply indexed into the nth value
+    my $item_values_array = _item_values_array_from_array_item_extracts(
+        $array,
+        $extracts,
+    );
     my $sorted_array = $sorter->($item_values_array);
     my $result = [ map { $_->[0] } @$sorted_array ];
 
