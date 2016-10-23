@@ -716,6 +716,15 @@ sub filter {
     return wantarray ? @$result : $result;
 }
 
+sub order {
+    my $array = shift;
+    my ($comparisons) = @_;
+
+    my $result = [ sort @$array ];
+
+    return wantarray ? @$result : $result;
+}
+
 =head2 @array->flat() : @array | @$array
 
 Return a (one level) flattened array, assuming the array items

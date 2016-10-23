@@ -74,6 +74,18 @@ arrayref, use that format.
 *** SIG __WARN__
 **** warn from caller, or use Carp::longmess
 ** TODO Sorting using order and order_by (h2)
+*** TODO tasks
+**** TODO order
+**** simple value
+**** num/str
+**** arg validation
+**** asc/desc
+**** order_by
+**** subref
+**** regex
+**** multiple comparisons
+**** cache sorts?
+**** undef warnings?
 *** Sorting with sort
 
 - provide a sub that returns the comparison outcome of two values: $a and $b
