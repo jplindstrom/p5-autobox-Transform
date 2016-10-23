@@ -675,7 +675,7 @@ use Sort::Maker;
 =head2 @array->filter($predicate = *is_true_subref*) : @array | @$array
 
 Similar to Perl's C<grep>, return an @array with values for which
-$predicate yields a true value. 
+$predicate yields a true value.
 
 $predicate can be a subref, string, undef, regex, or hashref. See
 L</Filter predicates>.
