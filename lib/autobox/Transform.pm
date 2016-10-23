@@ -734,7 +734,12 @@ sub order {
     my $group__value = {};
     for my $option (grep { $_ } @$options) {
         my $group;
-        ref($option) eq "CODE" and $group = "extract";
+        ref($option) eq "CODE"   and $group = "extract";
+        if( ref($option) eq "Regexp" ) {
+            my $regex = $option;
+            $group = "extract";
+            $option = sub { join("", m/$regex/) };
+        }
 
         $group ||= $option__group->{ $option }
             or Carp::croak("->order(): Invalid comparison option ($option)");

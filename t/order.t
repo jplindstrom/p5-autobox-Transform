@@ -24,6 +24,14 @@ my $expected_titles_str = [
     "The Tree-Body Problem",
 ];
 
+# order by last char
+my $expected_titles_regex = [
+    "The Name of the Wind",
+    "The Tree-Body Problem",
+    "Caliban's War",
+    "Leviathan Wakes",
+];
+
 my $expected_prices_asc = [ 5, 6, 6, 11 ];
 
 subtest order_simple => sub {
@@ -70,6 +78,14 @@ subtest order_sub => sub {
         $books->map_by("price")->order([ "num", sub { 0 - $_ } ])->to_ref,
         $expected_prices_asc->reverse->to_ref,
         "order num, subref",
+    );
+};
+
+subtest order_regex => sub {
+    eq_or_diff(
+        $books->map_by("title")->order(qr/(.)$/)->to_ref,
+        $expected_titles_regex->to_ref,
+        "order regex",
     );
 };
 
