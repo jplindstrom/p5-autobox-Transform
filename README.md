@@ -30,6 +30,7 @@ particular when the values are hashrefs or objects.
     $book_types->filter("scifi");
     $book_types->filter({ fantasy => 1, scifi => 1 }); # hash key exists
 
+    # order (like a more succinct sort)
     $book_types->order;
     $book_types->order("desc");
     $book_prices->order([ "num", "desc" ]);
@@ -78,7 +79,10 @@ particular when the values are hashrefs or objects.
     $books->order_by(price => [ "num", "desc" ]);
     $books->order_by(name => [ sub { uc($_) }, "desc" ]);
     $books->order_by([ price_with_tax => $rate ] => "num");
-    $books->order_by(author => "str", price => [ "num", "desc" ]);
+    $books->order_by(
+        author => "str",             # first by author
+        price  => [ "num", "desc" ], # then by price, most expensive first
+    );
     $books->order_by(
         author                      => [ "desc", sub { uc($_) } ],
         [ price_with_tax => $rate ] => [ "num", "desc" ],
@@ -163,12 +167,14 @@ High level autobox methods you can call on arrays, arrayrefs, hashes
 and hashrefs.
 
 - $array->filter()
+- $array->order()
 - $array->flat()
 - $array->as\_ref()
 - $array->as\_array()
 - $array->map\_by()
 - $array->filter\_by()
 - $array->uniq\_by()
+- $array->order\_by()
 - $array->group\_by()
 - $array->group\_by\_count()
 - $array->group\_by\_array()
@@ -182,18 +188,18 @@ and hashrefs.
 
 ## Transforming lists of objects vs list of hashrefs
 
-`map_by`, `filter_by` etc. (all methods named `*_by`) work with
-sets of hashrefs or objects.
+`map_by`, `filter_by` `order_by` etc. (all methods named `*_by`)
+work with sets of hashrefs or objects.
 
 These methods are called the same way regardless of whether the array
 contains objects or hashrefs. The items in the list must be either all
 objects or all hashrefs.
 
-If the array contains objects, a method is called on each object
-(possibly with the arguments provided).
-
 If the array contains hashrefs, the hash key is looked up on each
 item.
+
+If the array contains objects, a method is called on each object
+(possibly with the arguments provided).
 
 ### Calling accessor methods with arguments
 
@@ -240,10 +246,10 @@ whatever you use to avoid upgrading modules to incompatible versions.
 
 ## Filter predicates
 
-There are several methods that filter items, e.g. `@array-`filter>
-(duh), `@array-`filter\_by>, and `%hash-`filter\_each>. These methods
-take a $predicate argument to determine which items to retain or
-filter out.
+There are several methods that filter items,
+e.g. `@array->`filter> (duh), `@array->`filter\_by>, and
+`%hash->`filter\_each>. These methods take a $predicate argument to
+determine which items to retain or filter out.
 
 If $predicate is an _unblessed scalar_, it is compared to each value
 with `string eq`.
@@ -281,17 +287,21 @@ autobox::Core.
 
 Beware: you might be in list context when you need an arrayref.
 
-When in doubt, assume they work like `map` and `grep`, and convert
-the return value to references where you might have an unobvious list
-context. E.g.
+When in doubt, assume they work like `map` and `grep` (i.e. return a
+list), and convert the return value to references where you might have
+an unobvious list context. E.g.
+
+### Incorrect
 
     $self->my_method(
-        # Wrong, this is list context and wouldn't return an arrayref
+        # Wrong, this is list context and wouldn't return an array ref
         books => $books->filter_by("is_published"),
     );
 
+### Correct
+
     $self->my_method(
-        # Correct, convert the returned list to an arrayref
+        # Correct, put the returned list in an anonymous array ref
         books => [ $books->filter_by("is_published") ],
     );
     $self->my_method(
@@ -299,9 +309,9 @@ context. E.g.
         books => scalar $books->filter_by("is_published"),
     );
 
-    # Probably the nicest, since it goes at the end
+    # Probably the nicest, since ->to_ref goes at the end
     $self->my_method(
-        # Correct, use ->to_ref to ensure an array reference is returned
+        # Correct, use ->to_ref to ensure an array ref is returned
         books => $books->filter_by("is_published")->to_ref,
     );
 
@@ -317,9 +327,9 @@ autobox::Transform's `order`/`order_by`.
 
     # If the name is the same, compare age (oldest first)
     sort {
-        uc( $a->{name} ) cmp uc( $b->{name} )
+        uc( $a->{name} ) cmp uc( $b->{name} )           # first comparison
         ||
-        int( $b->{age} / 10 ) <=> int( $a->{age} / 10 )
+        int( $b->{age} / 10 ) <=> int( $a->{age} / 10 ) # second comparison
     } @users
 
 (note the opposite order of $a and $b for the age comparison,
@@ -327,11 +337,11 @@ something that's often difficult to discern at a glance)
 
 ### Sorting with order, order\_by
 
-- provide order options for how one value should be compared with the others
+- Provide order options for how one value should be compared with the others:
     - how to compare (cmp or <=>)
     - which direction to sort (ascending or descending)
-    - the value can be transformed using an optional subref, e.g. by uc($\_)
-- in case of a tie, provide another comparison
+    - which value to compare, using a subref, e.g. by uc($\_)
+- In case of a tie, provide another comparison
 
     # If the name is the same, compare age (oldest first)
 
@@ -376,16 +386,18 @@ There are comparison options for how to compare values
     ## A single comparison
 
     # order: the first arg is the comparison options (one or an
-    # arrayref with many)
+    # arrayref with many options)
     ->order()  # Defaults to str, asc, $_, just like sort
     ->order("num")
     ->order(sub { uc($_) })
+    # compare captured matches, e.g. "John" and "Doe" as "JohnDoe"
     ->order( qr/first_name: (\w+), last_name: (\w+)/ )
     ->order([ num => qr/id: (\d+)/ ])
     ->order([ sub { int($_) }, "num" ])
 
-    # order_by: the first arg is the accessor, second arg is the
-    # comparison options (one or an arrayref with many)
+    # order_by: the first arg is the accessor, just like with
+    # map_by. Second arg is the comparison options (one or an arrayref
+    # with many options)
     ->order_by("id")
     ->order_by("id", "num")
     ->order_by("id", [ "num", "desc" ])
@@ -393,7 +405,10 @@ There are comparison options for how to compare values
     ->order_by(log_line => qr/first_name: (\w+), last_name: (\w+)/ )
     ->order_by("log_line", [ num => qr/id: (\d+)/ ])
     ->order_by(age => [ sub { int($_) }, "num" ])
-    ->order_by([ age_by_interval => 10 ] => [ sub { int($_) }, "num" ])
+
+    # compare int( $a->age_by_interval(10) )
+    ->order_by([ age_by_interval => 10 ] => [ sub { int($_) }, "num" ]) 
+    # compare uc( $a->name_with_title($title) )
     ->order_by([ name_with_title => $title ], sub { uc($_) })
 
 
@@ -401,12 +416,12 @@ There are comparison options for how to compare values
     # order: subsequent comparison options are added as needed (one or
     # an arrayref with many, per comparison)
     ->order(
-        [ sub { uc($_) }, "desc" ],
-        "str",
-    )
-    ->order(
         [ sub { $_->{price} }, "num" ], # First a numeric comparison of price
         [ sub { $_->{name} }, "desc" ], # or if same, a reverse comparison of the name
+    )
+    ->order(
+        [ sub { uc($_) }, "desc" ],
+        "str",
     )
     ->order(
         qr/type: (\w+)/,
@@ -415,7 +430,7 @@ There are comparison options for how to compare values
         "str",
     )
 
-    # order_by:
+    # order_by: pairs of accessor-comparison options
     ->order(
         price => "num", # First a numeric comparison of price
         name => "desc", # or if same, a reverse comparison of the name
@@ -424,15 +439,12 @@ There are comparison options for how to compare values
         price => [ "num", "desc" ],
         name  => "str",
     )
+    # accessor is a method call with arg: $_->price_with_discount($discount)
     ->order(
         [ price_with_discount => $discount ] => [ "num", "desc" ],
         name                                 => [ str => sub { uc($_) } ],
         "id",
     )
-
-### Order methods
-
-See ["order"](#order) and ["order\_by"](#order_by)
 
 # METHODS ON ARRAYS
 
@@ -484,43 +496,6 @@ Examples:
     @books->order(
         [ sub { $_->{price} }, "desc", "num" ] # first price
         sub { $_->{name} },                    # then name
-    );
-
-## @array->order\_by(@accessor\_comparison\_pairs) : @array | @$array
-
-Return @array ordered according to the @accessor\_comparison\_pairs.
-
-The comparison value comes from an initial map\_by($accessor) on each
-@array item. It then works just like with `->`order\_by>.
-
-    $books->order_by(price => "num");
-    $books->order_by(price => [ "num", "desc" ]);
-
-It is important that the `map_by` call returns exactly a single
-scalar that can be compared with the other values.
-
-Just like with `order`, the value to actually compare can be
-transformed using a sub, or be matched against a regex.
-
-    $books->order_by(price => [ num => sub { int($_) } ]);
-
-    # Ignore leading "The" in book titles by optionally matching it
-    # with a non-capturing group and the rest with a capturing paren
-    $books->order_by( title => qr/^ (?: The \s+ )? (.+) /x );
-
-If a comparison is missing for the last pair, the default is a normal
-`str` comparison.
-
-    $books->order_by("name"); # default "str"
-
-If the first comparison ends in a tie, the next pair is used,
-etc. Note that in order to provide accessor-comparison pairs, it's
-often necessary to provide a default "str" comparison just to make it
-a pair.
-
-    $books->order_by(
-        author => "str",
-        price  => [ "num", "desc" ],
     );
 
 ## @array->flat() : @array | @$array
@@ -673,6 +648,45 @@ Examples:
 
     my @example_book_at_price_point = $books->uniq_by(
         [ price_with_tax => $tax_pct ],
+    );
+
+## @array->order\_by(@accessor\_comparison\_pairs) : @array | @$array
+
+Return @array ordered according to the @accessor\_comparison\_pairs.
+
+The comparison value comes from an initial `map_by($accessor)` on
+each @array item. It then works just like with `->order_by`.
+
+    $books->order_by("name");
+    $books->order_by(price => "num");
+    $books->order_by(price => [ "num", "desc" ]);
+
+It is important that the `map_by` call returns exactly a single
+scalar that can be compared with the other values.
+
+Just like with `order`, the value to actually compare can be
+transformed using a sub, or be matched against a regex.
+
+    $books->order_by(price => [ num => sub { int($_) } ]);
+
+    # Ignore leading "The" in book titles by optionally matching it
+    # with a non-capturing group and the rest with a capturing group
+    # paren
+    $books->order_by( title => qr/^ (?: The \s+ )? (.+) /x );
+
+If a comparison is missing for the last pair, the default is a normal
+`str` comparison.
+
+    $books->order_by("name"); # default "str"
+
+If the first comparison ends in a tie, the next pair is used,
+etc. Note that in order to provide accessor-comparison pairs, it's
+often necessary to provide a default "str" comparison just to make it
+a pair.
+
+    $books->order_by(
+        author => "str",
+        price  => [ "num", "desc" ],
     );
 
 ## @array->group\_by($accessor, $value\_subref = object) : %key\_value | %$key\_value

@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+1.027 2016-10-23T17:41:02Z
+
   * POD fixes for order, order_by
   * Other docs improvements
 
