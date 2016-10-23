@@ -38,6 +38,11 @@ sub price_with_tax {
     return $self->price + ( $self->price * $tax_percent );
 }
 
+sub title_uc {
+    my $self = shift;
+    return $self->title->uc;
+}
+
 package # hide from PAUSE
     Publisher;
 use Moo;
@@ -83,7 +88,7 @@ sub literature {
         title      => "The Name of the Wind",
         genre      => "Fantasy",
         page_count => 676,
-        price      => 8,
+        price      => 11,
     });
 
     my $a_corey = Author->new({

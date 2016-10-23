@@ -74,6 +74,24 @@ arrayref, use that format.
 *** SIG __WARN__
 **** warn from caller, or use Carp::longmess
 ** TODO Sorting using order and order_by (h2)
+*** TODO tasks
+**** DONE order
+**** DONE simple value
+**** DONE num/str
+**** DONE arg validation
+***** unknown
+**** DONE asc/desc
+**** DONE multiple options
+**** DONE arg validation - only one in each group, no repeating
+**** DONE subref
+**** DONE regex
+**** DONE multiple comparisons
+**** DONE order_by
+**** docs: order_by must return a single value that can be compared as a scalar
+**** bonus: rewrite map_by to take a subref transformer, so it can be used here
+***** and do the map_by and extractor in the same go, with just the map_by return values
+**** cache sorts?
+**** undef warnings?
 *** Sorting with sort
 
 - provide a sub that returns the comparison outcome of two values: $a and $b
@@ -274,6 +292,7 @@ For objects, call $_->$accessor(@args) to set the value.
 ** hash contains_key, contains_value -- checks the predicate for keys/values
 ** Ember Array, Enumerable
 *** http://emberjs.com/api/classes/Ember.Array.html
+** Fix croak, use throw
 * Hash
 ** DONE key_value($key, $new_key_name=$key) : ($new_key_name => $value) | { $new_key_name => $value }
 *** exists

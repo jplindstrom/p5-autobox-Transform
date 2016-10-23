@@ -41,6 +41,16 @@ particular when the values are hashrefs or objects.
     $book_types->filter("scifi");
     $book_types->filter({ fantasy => 1, scifi => 1 }); # hash key exists
 
+    $book_types->order;
+    $book_types->order("desc");
+    $book_prices->order([ "num", "desc" ]);
+    $books->order([ sub { $_->{price} }, "desc", "num" ]);
+    $log_lines->order([ num => qr/pid: "(\d+)"/ ]);
+    $books->order(
+        [ sub { $_->{price} }, "desc", "num" ] # first price
+        sub { $_->{name} },                    # then name
+    );
+
     # Flatten arrayrefs-of-arrayrefs
     $authors->map_by("books") # ->books returns an arrayref
     # [ [ $book1, $book2 ], [ $book3 ] ]
@@ -73,6 +83,20 @@ particular when the values are hashrefs or objects.
     $books->grep_by("is_sold_out");
 
     $books->uniq_by("id");
+
+    $books->order_by("name");
+    $books->order_by(name => "desc");
+    $books->order_by(price => "num");
+    $books->order_by(price => [ "num", "desc" ]);
+    $books->order_by(name => [ sub { uc($_) }, "desc" ]);
+    $books->order_by([ price_with_tax => $rate ] => "num");
+    $books->order_by(author => "str", price => [ "num", "desc" ]);
+    $books->order_by(
+        author                      => [ "desc", sub { uc($_) } ],
+        [ price_with_tax => $rate ] => [ "num", "desc" ],
+        "name",
+    );
+
 
     $books->group_by("title"),
     # {
@@ -459,6 +483,182 @@ context. E.g.
     );
 
 
+=head2 Sorting using order and order_by
+
+Let's first compare how sorting is done with Perl's C<sort> and
+autobox::Transform's C<order>/C<order_by>.
+
+
+=head3 Sorting with sort
+
+=over 4
+
+=item provide a sub that returns the comparison outcome of two values: $a and $b
+
+=item in case of a tie, provide another comparison of $a and $b
+
+=back
+
+    # If the name is the same, compare age (oldest first)
+    sort {
+        uc( $a->{name} ) cmp uc( $b->{name} )
+        ||
+        int( $b->{age} / 10 ) <=> int( $a->{age} / 10 )
+    } @users
+
+(note the opposite order of $a and $b for the age comparison,
+something that's often difficult to discern at a glance)
+
+=head3 Sorting with order, order_by
+
+=over 4
+
+=item provide order options for how one value should be compared with the others
+
+=over 8
+
+=item how to compare (cmp or <=>)
+
+=item which direction to sort (ascending or descending)
+
+=item the value can be transformed using an optional subref, e.g. by uc($_)
+
+=back
+
+=item in case of a tie, provide another comparison
+
+=back
+
+    # If the name is the same, compare age (oldest first)
+
+    @users->order(
+        sub { $_->{name} },                               # first comparison
+        [ "num", sub { int( $_->{age} / 10 ) }, "desc" ], # second comparison
+    )
+
+    @users->order_by(
+        name => "str",                                     # first comparison
+        age  => [ num => desc => sub { int( $_ / 10 ) } ], # second comparison
+    )
+
+=head3 Comparison Options
+
+If there's only one option for a comparison (e.g. C<num>), provide a
+single option (string/regex/subref) value. If there are many options,
+provide them in an arrayref in any order.
+
+There are comparison options for how to compare values
+(string/numeric), sort order, and how to get at the value to compare.
+
+=head3 Comparison operator
+
+=over 4
+
+=item C<str> (cmp) - default
+
+=item C<num> (<=>)
+
+=back
+
+
+=head3 Sort order
+
+=over 4
+
+=item C<asc> (ascending) - default
+
+=item C<desc> (descending)
+
+=back
+
+
+=head3 The value to compare
+
+=over 4
+
+=item A subref - default is: sub { $_ }
+
+=over 8
+
+=item The return value is used in the comparison
+
+=back
+
+=item A regex
+
+=over 8
+
+=item The value of join("", @captured_groups) are used in the comparison (@captured_groups are $1, $2, $3 etc.)
+
+=back
+
+=back
+
+=head3 Examples
+
+    ## A single comparison
+
+    # order: the first arg is the comparison options (one or an
+    # arrayref with many)
+    ->order()  # Defaults to str, asc, $_, just like sort
+    ->order("num")
+    ->order(sub { uc($_) })
+    ->order( qr/first_name: (\w+), last_name: (\w+)/ )
+    ->order([ num => qr/id: (\d+)/ ])
+    ->order([ sub { int($_) }, "num" ])
+
+    # order_by: the first arg is the accessor, second arg is the
+    # comparison options (one or an arrayref with many)
+    ->order_by("id")
+    ->order_by("id", "num")
+    ->order_by("id", [ "num", "desc" ])
+    ->order_by("name", sub { uc($_) })
+    ->order_by(log_line => qr/first_name: (\w+), last_name: (\w+)/ )
+    ->order_by("log_line", [ num => qr/id: (\d+)/ ])
+    ->order_by(age => [ sub { int($_) }, "num" ])
+    ->order_by([ age_by_interval => 10 ] => [ sub { int($_) }, "num" ])
+    ->order_by([ name_with_title => $title ], sub { uc($_) })
+
+
+    ## Multiple comparisons
+    # order: subsequent comparison options are added as needed (one or
+    # an arrayref with many, per comparison)
+    ->order(
+        [ sub { uc($_) }, "desc" ],
+        "str",
+    )
+    ->order(
+        [ sub { $_->{price} }, "num" ], # First a numeric comparison of price
+        [ sub { $_->{name} }, "desc" ], # or if same, a reverse comparison of the name
+    )
+    ->order(
+        qr/type: (\w+)/,
+        [ num => desc => qr/duration: (\d+)/ ]
+        [ num => sub { /id: (\d+)/ } ],
+        "str",
+    )
+
+    # order_by:
+    ->order(
+        price => "num", # First a numeric comparison of price
+        name => "desc", # or if same, a reverse comparison of the name
+    )
+    ->order(
+        price => [ "num", "desc" ],
+        name  => "str",
+    )
+    ->order(
+        [ price_with_discount => $discount ] => [ "num", "desc" ],
+        name                                 => [ str => sub { uc($_) } ],
+        "id",
+    )
+
+
+=head3 Order methods
+
+See L</order> and L</order_by>
+
+
 
 =head1 METHODS ON ARRAYS
 
@@ -468,13 +668,15 @@ package # hide from PAUSE
     autobox::Transform::Array;
 
 use autobox::Core;
+use Sort::Maker ();
+use List::MoreUtils ();
 
 
 
 =head2 @array->filter($predicate = *is_true_subref*) : @array | @$array
 
 Similar to Perl's C<grep>, return an @array with values for which
-$predicate yields a true value. 
+$predicate yields a true value.
 
 $predicate can be a subref, string, undef, regex, or hashref. See
 L</Filter predicates>.
@@ -515,6 +717,248 @@ sub filter {
 
     return wantarray ? @$result : $result;
 }
+
+
+
+my $option__group = {
+    str  => "operator",
+    num  => "operator",
+    asc  => "direction",
+    desc => "direction",
+};
+sub _group__value_from_order_options {
+    my ($method_name, $options) = @_;
+    my $group__value = {};
+    for my $option (grep { $_ } @$options) {
+        my $group;
+
+        my $ref_option = ref($option);
+        ( $ref_option eq "CODE" ) and $group = "extract";
+        if ( $ref_option eq "Regexp" ) {
+            my $regex = $option;
+            $option = sub { join("", m/$regex/) };
+            $group = "extract";
+        }
+
+        $group ||= $option__group->{ $option }
+            or Carp::croak("->$method_name(): Invalid comparison option ($option), did you mean ->order_by('$option')?");
+
+        exists $group__value->{ $group }
+            and Carp::croak("->$method_name(): Conflicting comparison options: ($group__value->{ $group }) and ($option)");
+
+        $group__value->{ $group } = $option;
+    }
+
+    return $group__value;
+}
+
+my $transform__sorter = {
+    str  => "string",
+    num  => "number",
+    asc  => "ascending",
+    desc => "descending",
+};
+sub _sorter_from_comparisons {
+    my ($method_name, $comparisons) = @_;
+
+    my @sorter_keys;
+    my @extracts;
+    for my $options (@$comparisons) {
+        ref($options) eq "ARRAY" or $options = [ $options ];
+
+        # Check one comparison
+        my $group__value = _group__value_from_order_options(
+            $method_name,
+            $options,
+        );
+
+        my $operator  = $group__value->{operator}  // "str";
+        my $direction = $group__value->{direction} // "asc";
+        my $extract   = $group__value->{extract}   // sub { $_ };
+
+        my $sorter_operator = $transform__sorter->{$operator};
+        my $sorter_direction = $transform__sorter->{$direction};
+
+        push(@extracts, $extract);
+        my $extract_index = @extracts;
+        push(
+            @sorter_keys,
+            $sorter_operator => [
+                $sorter_direction,
+                # Sort this one by the extracted value
+                code => "\$_->[ $extract_index ]",
+            ],
+        );
+    }
+
+    my $sorter = Sort::Maker::make_sorter(
+        "plain", "ref_in", "ref_out",
+        @sorter_keys,
+    ) or Carp::croak(__PACKAGE__ . " internal error: $@");
+
+    return ($sorter, \@extracts);
+}
+
+sub _item_values_array_from_array_item_extracts {
+    my ($array, $extracts) = @_;
+
+    # Custom Schwartzian Transform where each array item is arrayref of:
+    # 0: $array item; rest 1..n : comparison values
+    # The sorter keys are simply indexed into the nth value
+    return [
+        map { ## no critic
+            my $item = $_;
+            [
+                $item,                         # array item to compare
+                map {
+                    my $extract = $_; local $_ = $item;
+                    $extract->();
+                } @$extracts, # comparison values for array item
+            ];
+        }
+        @$array
+    ];
+}
+
+sub _item_values_array_from_map_by_extracts {
+    my ($array, $accessors, $extracts) = @_;
+
+    # Custom Schwartzian Transform where each array item is arrayref of:
+    # 0: $array item; rest 1..n : comparison values
+    # The sorter keys are simply indexed into the nth value
+    my $accessor_values = $accessors->map(
+        sub { [ map_by($array, $_) ] }
+    );
+    return [
+        map { ## no critic
+            my $item = $_;
+            my $accessor_index = 0;
+            [
+                $item, # array item to compare
+                map {
+                    my $extract = $_;
+                    my $value = shift @{$accessor_values->[ $accessor_index++ ]};
+
+                    local $_ = $value;
+                    $extract->();
+                } @$extracts, # comparison values for array item
+            ];
+        }
+        @$array
+    ];
+}
+
+=head2 @array->order(@comparisons = ("str")) : @array | @$array
+
+Return @array ordered according to the @comparisons. The default
+comparison is the same as the default sort, e.g. a normal string
+comparison of the @array values.
+
+If the first item in @comparison ends in a tie, the next one is used,
+etc.
+
+Each I<comparison> consists of a single I<option> or an I<arrayref of
+options>, e.g. C<str>/C<num>, C<asc>/C<desc>, or a subref/regex. See
+L</Sorting using order and order_by> for details about how these work.
+
+Examples:
+
+    @book_types->order;
+    @book_types->order("desc");
+    @book_prices->order([ "num", "desc" ]);
+    @books->order([ sub { $_->{price} }, "desc", "num" ]);
+    @log_lines->order([ num => qr/pid: "(\d+)"/ ]);
+    @books->order(
+        [ sub { $_->{price} }, "desc", "num" ] # first price
+        sub { $_->{name} },                    # then name
+    );
+
+=cut
+
+sub order {
+    my $array = shift;
+    my (@comparisons) = @_;
+    @comparisons or @comparisons = ("str");
+
+    my ($sorter, $extracts) = _sorter_from_comparisons("order", \@comparisons);
+
+    my $item_values_array = _item_values_array_from_array_item_extracts(
+        $array,
+        $extracts,
+    );
+    my $sorted_array = $sorter->($item_values_array);
+    my $result = [ map { $_->[0] } @$sorted_array ];
+
+    return wantarray ? @$result : $result;
+}
+
+=head2 @array->order_by(@accessor_comparison_pairs) : @array | @$array
+
+Return @array ordered according to the @accessor_comparison_pairs.
+
+The comparison value comes from an initial map_by($accessor) on each
+@array item. It then works just like with C<-E<gt>>order_by>.
+
+    $books->order_by(price => "num");
+    $books->order_by(price => [ "num", "desc" ]);
+
+It is important that the C<map_by> call returns exactly a single
+scalar that can be compared with the other values.
+
+Just like with C<order>, the value to actually compare can be
+transformed using a sub, or be matched against a regex.
+
+    $books->order_by(price => [ num => sub { int($_) } ]);
+
+    # Ignore leading "The" in book titles by optionally matching it
+    # with a non-capturing group and the rest with a capturing paren
+    $books->order_by( title => qr/^ (?: The \s+ )? (.+) /x );
+
+If a comparison is missing for the last pair, the default is a normal
+C<str> comparison.
+
+    $books->order_by("name"); # default "str"
+
+If the first comparison ends in a tie, the next pair is used,
+etc. Note that in order to provide accessor-comparison pairs, it's
+often necessary to provide a default "str" comparison just to make it
+a pair.
+
+    $books->order_by(
+        author => "str",
+        price  => [ "num", "desc" ],
+    );
+
+=cut
+
+sub order_by {
+    my $array = shift;
+    my (@accessors_and_comparisons) = @_;
+
+    my $i = 0;
+    my ($accessors, $comparisons) = List::MoreUtils::part
+        { $i++ %2 }
+        @accessors_and_comparisons;
+    $accessors   ||= [];
+    $comparisons ||= [];
+    @$accessors or Carp::croak("->order_by() missing argument: \$accessor");
+    # Default comparison
+    @$accessors == @$comparisons or push(@$comparisons, "str");
+
+    my ($sorter, $extracts) = _sorter_from_comparisons("order_by", $comparisons);
+
+    my $item_values_array = _item_values_array_from_map_by_extracts(
+        $array,
+        $accessors,
+        $extracts,
+    );
+    my $sorted_array = $sorter->($item_values_array);
+    my $result = [ map { $_->[0] } @$sorted_array ];
+
+    return wantarray ? @$result : $result;
+}
+
+
 
 =head2 @array->flat() : @array | @$array
 
