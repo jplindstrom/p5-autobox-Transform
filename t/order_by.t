@@ -77,33 +77,35 @@ subtest order_by_asc_desc => sub {
     );
 };
 
-done_testing();
-__END__
-
 
 subtest order_by_sub => sub {
     eq_or_diff(
-        $books->map_by("price")->order([ "num", sub { 0 - $_ } ])->to_ref,
+        $books->order_by(price => [ "num", sub { 0 - $_ } ])->map_by("price")->to_ref,
         $expected_prices_asc->reverse->to_ref,
         "order_by num, subref",
     );
 };
 
+
 subtest order_by_regex => sub {
     eq_or_diff(
-        $books->map_by("title")->order(qr/(.)$/)->to_ref,
-        $expected_titles_regex->to_ref,
+        $books->order_by(title => qr/(.)$/)->map_by("title")->to_ref,
+        $expected_titles_regex,
         "order_by regex",
     );
 };
 
+
 subtest order_by_multiple_options__num_desc => sub {
     eq_or_diff(
-        $books->map_by("price")->order([ "num", "desc" ])->to_ref,
+        $books->order_by(price => [ "num", "desc" ])->map_by("price")->to_ref,
         $expected_prices_asc->reverse->to_ref,
         "order_by num, desc",
     );
 };
+
+done_testing();
+__END__
 
 subtest comparison_args_validation => sub {
     throws_ok(
