@@ -50,21 +50,22 @@ subtest order_by_simple => sub {
 };
 
 
-done_testing();
-__END__
-
 subtest order_by_num_str => sub {
     eq_or_diff(
-        $books->map_by("price")->order("num")->to_ref,
+        $books->order_by(price => "num")->map_by("price")->to_ref,
         $expected_prices_asc,
         "order num",
     );
     eq_or_diff(
-        $books->map_by("title")->order("str")->to_ref,
+        $books->order_by(title => "str")->map_by("title")->to_ref,
         $expected_titles_str,
         "order str",
     );
 };
+
+done_testing();
+__END__
+
 
 subtest order_by_asc_desc => sub {
     eq_or_diff(
