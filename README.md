@@ -247,8 +247,8 @@ whatever you use to avoid upgrading modules to incompatible versions.
 ## Filter predicates
 
 There are several methods that filter items,
-e.g. `@array->`filter> (duh), `@array->`filter\_by>, and
-`%hash->`filter\_each>. These methods take a $predicate argument to
+e.g. `@array->filter` (duh), `@array->filter_by`, and
+`%hash->filter_each`. These methods take a $predicate argument to
 determine which items to retain or filter out.
 
 If $predicate is an _unblessed scalar_, it is compared to each value
@@ -278,6 +278,136 @@ The $predicate subref should return a true value to remain. $\_ is set
 to the current $value.
 
     $authors->filter_by(publisher => sub { $_->name =~ /Orbit/ });
+
+## Sorting using order and order\_by
+
+Let's first compare how sorting is done with Perl's `sort` and
+autobox::Transform's `order`/`order_by`.
+
+### Sorting with sort
+
+- provide a sub that returns the comparison outcome of two values: $a and $b
+- in case of a tie, provide another comparison of $a and $b
+
+    # If the name is the same, compare age (oldest first)
+    sort {
+        uc( $a->{name} ) cmp uc( $b->{name} )           # first comparison
+        ||
+        int( $b->{age} / 10 ) <=> int( $a->{age} / 10 ) # second comparison
+    } @users
+
+(note the opposite order of $a and $b for the age comparison,
+something that's often difficult to discern at a glance)
+
+### Sorting with order, order\_by
+
+- Provide order options for how one value should be compared with the others:
+    - how to compare (`cmp` or `<=`>)
+    - which direction to sort (`asc`ending or `desc`ending)
+    - which value to compare, using a regex or subref, e.g. by uc($\_)
+- In case of a tie, provide another comparison
+
+    # If the name is the same, compare age (oldest first)
+
+    # ->order
+    @users->order(
+        sub { $_->{name} },                               # first comparison
+        [ "num", sub { int( $_->{age} / 10 ) }, "desc" ], # second comparison
+    )
+
+    # ->order_by
+    @users->order_by(
+        name => "str",                                     # first comparison
+        age  => [ num => desc => sub { int( $_ / 10 ) } ], # second comparison
+    )
+
+### Comparison Options
+
+If there's only one option for a comparison (e.g. `num`), provide a
+single option (string/regex/subref) value. If there are many options,
+provide them in an arrayref in any order.
+
+### Comparison operator
+
+- `"str"` (cmp) - default
+- `"num"` (<=>)
+
+### Sort order
+
+- `"asc"` (ascending) - default
+- `"desc"` (descending)
+
+### The value to compare
+
+- A subref - default is: `sub { $_ }`
+    - The return value is used in the comparison
+- A regex, e.g. `qr/id: (\d+)/`
+    - The value of join("", @captured\_groups) are used in the comparison (@captured\_groups are $1, $2, $3 etc.)
+
+### Examples of a single comparison
+
+    # order: the first arg is the comparison options (one or an
+    # arrayref with many options)
+    ->order()  # Defaults to str, asc, $_, just like sort
+    ->order("num")
+    ->order(sub { uc($_) })
+    # compare captured matches, e.g. "John" and "Doe" as "JohnDoe"
+    ->order( qr/first_name: (\w+), last_name: (\w+)/ )
+    ->order([ num => qr/id: (\d+)/ ])
+    ->order([ sub { int($_) }, "num" ])
+
+    # order_by: the first arg is the accessor, just like with
+    # map_by. Second arg is the comparison options (one or an arrayref
+    # with many options)
+    ->order_by("id")
+    ->order_by("id", "num")
+    ->order_by("id", [ "num", "desc" ])
+    ->order_by("name", sub { uc($_) })
+    ->order_by(log_line => qr/first_name: (\w+), last_name: (\w+)/ )
+    ->order_by("log_line", [ num => qr/id: (\d+)/ ])
+    ->order_by(age => [ sub { int($_) }, "num" ])
+
+    # compare int( $a->age_by_interval(10) )
+    ->order_by([ age_by_interval => 10 ] => [ sub { int($_) }, "num" ]) 
+    # compare uc( $a->name_with_title($title) )
+    ->order_by([ name_with_title => $title ], sub { uc($_) })
+
+### Examples of fallback comparisons
+
+When the first comparison is a tie, the subsequenc ones are used.
+
+    # order: list of comparison options (one or an arrayref with many
+    # options, per comparison)
+    ->order(
+        [ sub { $_->{price} }, "num" ], # First a numeric comparison of price
+        [ sub { $_->{name} }, "desc" ], # or if same, a reverse comparison of the name
+    )
+    ->order(
+        [ sub { uc($_) }, "desc" ],
+        "str",
+    )
+    ->order(
+        qr/type: (\w+)/,
+        [ num => desc => qr/duration: (\d+)/ ]
+        [ num => sub { /id: (\d+)/ } ],
+        "str",
+    )
+
+    # order_by: pairs of accessor-comparison options
+    ->order(
+        price => "num", # First a numeric comparison of price
+        name => "desc", # or if same, a reverse comparison of the name
+    )
+    ->order(
+        price => [ "num", "desc" ],
+        name  => "str",
+    )
+    # accessor is a method call with arg: $_->price_with_discount($discount)
+    ->order(
+        [ price_with_discount => $discount ] => [ "num", "desc" ],
+        name                                 => [ str => sub { uc($_) } ],
+        "id",
+    )
 
 ## List and Scalar Context
 
@@ -314,137 +444,6 @@ an unobvious list context. E.g.
         # Correct, use ->to_ref to ensure an array ref is returned
         books => $books->filter_by("is_published")->to_ref,
     );
-
-## Sorting using order and order\_by
-
-Let's first compare how sorting is done with Perl's `sort` and
-autobox::Transform's `order`/`order_by`.
-
-### Sorting with sort
-
-- provide a sub that returns the comparison outcome of two values: $a and $b
-- in case of a tie, provide another comparison of $a and $b
-
-    # If the name is the same, compare age (oldest first)
-    sort {
-        uc( $a->{name} ) cmp uc( $b->{name} )           # first comparison
-        ||
-        int( $b->{age} / 10 ) <=> int( $a->{age} / 10 ) # second comparison
-    } @users
-
-(note the opposite order of $a and $b for the age comparison,
-something that's often difficult to discern at a glance)
-
-### Sorting with order, order\_by
-
-- Provide order options for how one value should be compared with the others:
-    - how to compare (cmp or <=>)
-    - which direction to sort (ascending or descending)
-    - which value to compare, using a subref, e.g. by uc($\_)
-- In case of a tie, provide another comparison
-
-    # If the name is the same, compare age (oldest first)
-
-    @users->order(
-        sub { $_->{name} },                               # first comparison
-        [ "num", sub { int( $_->{age} / 10 ) }, "desc" ], # second comparison
-    )
-
-    @users->order_by(
-        name => "str",                                     # first comparison
-        age  => [ num => desc => sub { int( $_ / 10 ) } ], # second comparison
-    )
-
-### Comparison Options
-
-If there's only one option for a comparison (e.g. `num`), provide a
-single option (string/regex/subref) value. If there are many options,
-provide them in an arrayref in any order.
-
-There are comparison options for how to compare values
-(string/numeric), sort order, and how to get at the value to compare.
-
-### Comparison operator
-
-- `str` (cmp) - default
-- `num` (<=>)
-
-### Sort order
-
-- `asc` (ascending) - default
-- `desc` (descending)
-
-### The value to compare
-
-- A subref - default is: sub { $\_ }
-    - The return value is used in the comparison
-- A regex
-    - The value of join("", @captured\_groups) are used in the comparison (@captured\_groups are $1, $2, $3 etc.)
-
-### Examples
-
-    ## A single comparison
-
-    # order: the first arg is the comparison options (one or an
-    # arrayref with many options)
-    ->order()  # Defaults to str, asc, $_, just like sort
-    ->order("num")
-    ->order(sub { uc($_) })
-    # compare captured matches, e.g. "John" and "Doe" as "JohnDoe"
-    ->order( qr/first_name: (\w+), last_name: (\w+)/ )
-    ->order([ num => qr/id: (\d+)/ ])
-    ->order([ sub { int($_) }, "num" ])
-
-    # order_by: the first arg is the accessor, just like with
-    # map_by. Second arg is the comparison options (one or an arrayref
-    # with many options)
-    ->order_by("id")
-    ->order_by("id", "num")
-    ->order_by("id", [ "num", "desc" ])
-    ->order_by("name", sub { uc($_) })
-    ->order_by(log_line => qr/first_name: (\w+), last_name: (\w+)/ )
-    ->order_by("log_line", [ num => qr/id: (\d+)/ ])
-    ->order_by(age => [ sub { int($_) }, "num" ])
-
-    # compare int( $a->age_by_interval(10) )
-    ->order_by([ age_by_interval => 10 ] => [ sub { int($_) }, "num" ]) 
-    # compare uc( $a->name_with_title($title) )
-    ->order_by([ name_with_title => $title ], sub { uc($_) })
-
-
-    ## Multiple comparisons
-    # order: subsequent comparison options are added as needed (one or
-    # an arrayref with many, per comparison)
-    ->order(
-        [ sub { $_->{price} }, "num" ], # First a numeric comparison of price
-        [ sub { $_->{name} }, "desc" ], # or if same, a reverse comparison of the name
-    )
-    ->order(
-        [ sub { uc($_) }, "desc" ],
-        "str",
-    )
-    ->order(
-        qr/type: (\w+)/,
-        [ num => desc => qr/duration: (\d+)/ ]
-        [ num => sub { /id: (\d+)/ } ],
-        "str",
-    )
-
-    # order_by: pairs of accessor-comparison options
-    ->order(
-        price => "num", # First a numeric comparison of price
-        name => "desc", # or if same, a reverse comparison of the name
-    )
-    ->order(
-        price => [ "num", "desc" ],
-        name  => "str",
-    )
-    # accessor is a method call with arg: $_->price_with_discount($discount)
-    ->order(
-        [ price_with_discount => $discount ] => [ "num", "desc" ],
-        name                                 => [ str => sub { uc($_) } ],
-        "id",
-    )
 
 # METHODS ON ARRAYS
 
@@ -654,17 +653,23 @@ Examples:
 
 Return @array ordered according to the @accessor\_comparison\_pairs.
 
-The comparison value comes from an initial `map_by($accessor)` on
-each @array item. It then works just like with `->order_by`.
+The comparison value comes from an initial
+`@array-`map\_by($accessor)> for each accessor-comparison pair. It is
+important that the $accessor call returns exactly a single scalar that
+can be compared with the other values.
 
-    $books->order_by("name");
+It then works just like with `->order`.
+
+    $books->order_by("name"); # default order, i.e. "str"
     $books->order_by(price => "num");
     $books->order_by(price => [ "num", "desc" ]);
 
-It is important that the `map_by` call returns exactly a single
-scalar that can be compared with the other values.
+As with `map_by`, if the $accessor is used on an object, the method
+call can include arguments.
 
-Just like with `order`, the value to actually compare can be
+    $books->order_by([ price_wih_tax => $tax_rate ] => "num");
+
+Just like with `order`, the value returned by the accessor can be
 transformed using a sub, or be matched against a regex.
 
     $books->order_by(price => [ num => sub { int($_) } ]);
