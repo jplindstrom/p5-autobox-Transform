@@ -184,7 +184,7 @@ particular when the values are hashrefs or objects.
         ->map_by("name")->uniq->join(", ");
 
     my $total_order_amount = $order->books
-        ->filter_by([ not_covered_by_vouchers => $vouchers ])
+        ->filter_by([ covered_by_vouchers => $vouchers ], sub { ! $_ })
         ->map_by([ price_with_tax => $tax_pct ])
         ->sum;
 
