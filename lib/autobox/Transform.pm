@@ -640,7 +640,7 @@ The value of join("", @captured_groups) are used in the comparison (@captured_gr
 
 =head3 Examples of fallback comparisons
 
-When the first comparison is a tie, the subsequenc ones are used.
+When the first comparison is a tie, the subsequent ones are used.
 
     # order: list of comparison options (one or an arrayref with many
     # options, per comparison)
