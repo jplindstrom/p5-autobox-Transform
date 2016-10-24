@@ -10,7 +10,7 @@ use autobox::Core;
 use lib "lib";
 use autobox::Transform;
 
-subtest "to_ref" => sub {
+subtest "array_to_ref" => sub {
     my $array = [ 1, 2 ];
     my @array = @$array;
     eq_or_diff(
@@ -22,6 +22,21 @@ subtest "to_ref" => sub {
         [ $array->to_ref ],
         [ $array ],
         "ArrayRef to_ref in list contect works",
+    );
+};
+
+subtest "hash_to_ref" => sub {
+    my $hash = { 1 => 2, 2 => 3 };
+    my %hash = %$hash;
+    eq_or_diff(
+        [ %hash->to_ref ],
+        [ $hash ],
+        "Hash to_ref in list contect works",
+    );
+    eq_or_diff(
+        [ $hash->to_ref ],
+        [ $hash ],
+        "HashRef to_ref in list contect works",
     );
 };
 
