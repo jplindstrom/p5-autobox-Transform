@@ -64,6 +64,9 @@ particular when the values are hashrefs or objects.
     # Return array, even in scalar context
     @books->to_array;
 
+    # Turn paired items into a hash
+    @titles_books->to_hash;
+
 
 =head2 Arrays with hashrefs/objects
 
@@ -165,6 +168,9 @@ particular when the values are hashrefs or objects.
 
     # Return hash, even in scalar context
     $author->book_count->to_hash;
+
+    # Turn key-value pairs into an array
+    %isbn__book->to_array;
 
 
 =head2 Combined examples
@@ -1017,6 +1023,23 @@ sub to_array {
     return @$array;
 }
 
+=head2 @array->to_hash() : %hash | %$hash
+
+Return the item pairs in the @array as the key-value pairs of a %hash
+(context sensitive).
+
+Useful if you need to continue calling %hash methods on it.
+
+Die if there aren't an even number of items in @array.
+
+=cut
+
+sub to_hash {
+    my $array = shift;
+    my %new_hash = @$array;
+    return wantarray ? %new_hash : \%new_hash;
+}
+
 
 
 =head1 METHODS ON ARRAYS CONTAINING OBJECTS/HASHES
@@ -1754,6 +1777,20 @@ called on a HashRef at the end of a chain of method calls.
 sub to_hash {
     my $hash = shift;
     return %$hash;
+}
+
+=head2 %hash->to_array() : @array | @$array
+
+Return the key-value pairs of the %hash as an @array.
+
+Useful if you need to continue calling @array methods on it.
+
+=cut
+
+sub to_array {
+    my $hash = shift;
+    my @new_array = %$hash;
+    return wantarray ? @new_array : \@new_array;
 }
 
 

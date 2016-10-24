@@ -63,9 +63,9 @@ arrayref, use that format.
 *** DONE filter_by
 *** DONE filter_each
 ** DONE Document filter_each, etc
-** TODO array->as_hash, hash->as_array
-** TODO map_each_value_by - replace the hashref/object value with the result of map_by
+** array->as_hash, hash->as_array
 ** TODO map_each_by
+** TODO map_each_value_by - replace the hashref/object value with the result of map_by
 ** TODO group
 ** TODO group_count
 ** TODO group_array
