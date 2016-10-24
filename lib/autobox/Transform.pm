@@ -1036,6 +1036,12 @@ Die if there aren't an even number of items in @array.
 
 sub to_hash {
     my $array = shift;
+    my $count = @$array;
+
+    $count % 2 and Carp::croak(
+        "\@array->to_hash on an array with an odd number of elements ($count)",
+    );
+
     my %new_hash = @$array;
     return wantarray ? %new_hash : \%new_hash;
 }
@@ -1781,7 +1787,8 @@ sub to_hash {
 
 =head2 %hash->to_array() : @array | @$array
 
-Return the key-value pairs of the %hash as an @array.
+Return the key-value pairs of the %hash as an @array, ordered by the
+keys.
 
 Useful if you need to continue calling @array methods on it.
 
@@ -1789,7 +1796,7 @@ Useful if you need to continue calling @array methods on it.
 
 sub to_array {
     my $hash = shift;
-    my @new_array = %$hash;
+    my @new_array = map_each_to_array($hash, sub { shift() => $_ });
     return wantarray ? @new_array : \@new_array;
 }
 
