@@ -199,51 +199,55 @@ and hashrefs.
 
 =item
 
-$array->filter()
+@array->filter()
 
 =item
 
-$array->order()
+@array->order()
 
 =item
 
-$array->flat()
+@array->flat()
 
 =item
 
-$array->as_ref()
+@array->to_ref()
 
 =item
 
-$array->as_array()
+@array->to_array()
 
 =item
 
-$array->map_by()
+@array->to_hash()
 
 =item
 
-$array->filter_by()
+@array->map_by()
 
 =item
 
-$array->uniq_by()
+@array->filter_by()
 
 =item
 
-$array->order_by()
+@array->uniq_by()
 
 =item
 
-$array->group_by()
+@array->order_by()
 
 =item
 
-$array->group_by_count()
+@array->group_by()
 
 =item
 
-$array->group_by_array()
+@array->group_by_count()
+
+=item
+
+@array->group_by_array()
 
 =back
 
@@ -252,27 +256,31 @@ $array->group_by_array()
 
 =item
 
-$hash->map_each
+%hash->map_each
 
 =item
 
-$hash->map_each_value
+%hash->map_each_value
 
 =item
 
-$hash->map_each_to_array
+%hash->map_each_to_array
 
 =item
 
-$hash->filter_each
+%hash->filter_each
 
 =item
 
-$array->as_ref()
+%hash->to_ref()
 
 =item
 
-$array->as_hash()
+%hash->to_hash()
+
+=item
+
+%hash->to_array()
 
 =back
 
