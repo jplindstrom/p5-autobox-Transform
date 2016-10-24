@@ -53,6 +53,9 @@ particular when the values are hashrefs or objects.
     # Return array, even in scalar context
     @books->to_array;
 
+    # Turn paired items into a hash
+    @titles_books->to_hash;
+
 ## Arrays with hashrefs/objects
 
     # $books and $authors below are arrayrefs with either objects or
@@ -119,6 +122,7 @@ particular when the values are hashrefs or objects.
 
 ## Hashes
 
+    # map over each pair
     # Upper-case the genre name, and make the count say "n books"
     #     (return a key => value pair)
     $genre_count->map_each(sub { uc( $_[0] ) => "$_ books" });
@@ -127,6 +131,7 @@ particular when the values are hashrefs or objects.
     #     "SCI-FI"  => "3 books",
     # },
 
+    # map over each value
     # Make the count say "n books"
     #     (return the new value)
     $genre_count->map_each_value(sub { "$_ books" });
@@ -135,29 +140,37 @@ particular when the values are hashrefs or objects.
     #     "Sci-fi"  => "3 books",
     # },
 
+    # map each pair into an array
     # Transform each pair to the string "n: genre"
     #     (return list of items)
     $genre_count->map_each_to_array(sub { "$_: $_[0]" });
     # [ "1: Fantasy", "3: Sci-fi" ]
 
+    # filter each pair
     # Genres with more than five books
     $genre_count->filter_each(sub { $_ > 5 });
 
     # Return reference, even in list context, e.g. in a parameter list
-    %genre_count->to_ref );
+    %genre_count->to_ref;
 
     # Return hash, even in scalar context
     $author->book_count->to_hash;
 
+    # Turn key-value pairs into an array
+    %isbn__book->to_array;
+
 ## Combined examples
 
     my $order_authors = $order->books
+        ->filter_by("title", qr/^The/)
         ->uniq_by("isbn")
         ->map_by("author")
-        ->map_by("name")->uniq->sort->join(", ");
+        ->uniq_by("name")
+        ->order_by(publisher => "str", name => "str")
+        ->map_by("name")->uniq->join(", ");
 
     my $total_order_amount = $order->books
-        ->filter_by([ not_covered_by_vouchers => $vouchers ])
+        ->filter_by([ covered_by_vouchers => $vouchers ], sub { ! $_ })
         ->map_by([ price_with_tax => $tax_pct ])
         ->sum;
 
@@ -166,25 +179,27 @@ particular when the values are hashrefs or objects.
 High level autobox methods you can call on arrays, arrayrefs, hashes
 and hashrefs.
 
-- $array->filter()
-- $array->order()
-- $array->flat()
-- $array->as\_ref()
-- $array->as\_array()
-- $array->map\_by()
-- $array->filter\_by()
-- $array->uniq\_by()
-- $array->order\_by()
-- $array->group\_by()
-- $array->group\_by\_count()
-- $array->group\_by\_array()
+- @array->filter()
+- @array->order()
+- @array->flat()
+- @array->to\_ref()
+- @array->to\_array()
+- @array->to\_hash()
+- @array->map\_by()
+- @array->filter\_by()
+- @array->uniq\_by()
+- @array->order\_by()
+- @array->group\_by()
+- @array->group\_by\_count()
+- @array->group\_by\_array()
 
-- $hash->map\_each
-- $hash->map\_each\_value
-- $hash->map\_each\_to\_array
-- $hash->filter\_each
-- $array->as\_ref()
-- $array->as\_hash()
+- %hash->map\_each
+- %hash->map\_each\_value
+- %hash->map\_each\_to\_array
+- %hash->filter\_each
+- %hash->to\_ref()
+- %hash->to\_hash()
+- %hash->to\_array()
 
 ## Transforming lists of objects vs list of hashrefs
 
@@ -374,7 +389,7 @@ provide them in an arrayref in any order.
 
 ### Examples of fallback comparisons
 
-When the first comparison is a tie, the subsequenc ones are used.
+When the first comparison is a tie, the subsequent ones are used.
 
     # order: list of comparison options (one or an arrayref with many
     # options, per comparison)
@@ -542,6 +557,15 @@ return an array, not an arrayref.
 Return the @array, regardless of context. This is mostly useful if
 called on a ArrayRef at the end of a chain of method calls.
 
+## @array->to\_hash() : %hash | %$hash
+
+Return the item pairs in the @array as the key-value pairs of a %hash
+(context sensitive).
+
+Useful if you need to continue calling %hash methods on it.
+
+Die if there aren't an even number of items in @array.
+
 # METHODS ON ARRAYS CONTAINING OBJECTS/HASHES
 
 ## @array->map\_by($accessor) : @array | @$array
@@ -552,22 +576,23 @@ string.
 Call the $accessor on each object in @array, or get the hash key value
 on each hashref in @array. Like:
 
-    map { $_->$accessor() }
+    map { $_->$accessor() } @array
     # or
-    map { $_->{$accessor} }
+    map { $_->{$accessor} } @array
 
 Examples:
 
-    my @ahthor_names = $authors->map_by("name");
-    my $author_names = @publishers->map_by("authors")->map_by("name");
+    my @author_names = $authors->map_by("name");
+    my $author_names = @publishers->map_by("authors")->flat->map_by("name");
 
 Or get the hash key value. Example:
 
     my @review_scores = $reviews->map_by("score");
 
-Alternatively the $accessor is an arrayref. The first item is the
-accessor name, and the rest of the items are passed as args the method
-call. This only works when working with objects, not with hashrefs.
+Alternatively for when @array contains objects, the $accessor can be
+an arrayref. The first item is the method name, and the rest of the
+items are passed as args in the method call. This obviously won't work
+when the @array contains hashrefs.
 
 Examples:
 
@@ -869,6 +894,13 @@ scalar context. Typically:
 
 Return the %hash, regardless of context. This is mostly useful if
 called on a HashRef at the end of a chain of method calls.
+
+## %hash->to\_array() : @array | @$array
+
+Return the key-value pairs of the %hash as an @array, ordered by the
+keys.
+
+Useful if you need to continue calling @array methods on it.
 
 # AUTOBOX AND VANILLA PERL
 
