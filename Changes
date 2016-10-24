@@ -2,6 +2,9 @@
 
 {{$NEXT}}
 
+  * @array->to_hash, and %hash->to_array
+
+
 1.028 2016-10-23T20:18:46Z
 
   * Even more docs improvements for ->order, ->order_by.
