@@ -38,12 +38,12 @@ particular when the values are hashrefs or objects.
     $book_locations->filter(); # true values
     $books->filter(sub { $_->is_in_library($library) });
     $book_names->filter( qr/lord/i );
-    $book_types->filter("scifi");
-    $book_types->filter({ fantasy => 1, scifi => 1 }); # hash key exists
+    $book_genres->filter("scifi");
+    $book_genres->filter({ fantasy => 1, scifi => 1 }); # hash key exists
 
     # order (like a more succinct sort)
-    $book_types->order;
-    $book_types->order("desc");
+    $book_genres->order;
+    $book_genres->order("desc");
     $book_prices->order([ "num", "desc" ]);
     $books->order([ sub { $_->{price} }, "desc", "num" ]);
     $log_lines->order([ num => qr/pid: "(\d+)"/ ]);
@@ -932,8 +932,8 @@ L</Sorting using order and order_by> for details about how these work.
 
 Examples:
 
-    @book_types->order;
-    @book_types->order("desc");
+    @book_genres->order;
+    @book_genres->order("desc");
     @book_prices->order([ "num", "desc" ]);
     @books->order([ sub { $_->{price} }, "desc", "num" ]);
     @log_lines->order([ num => qr/pid: "(\d+)"/ ]);
