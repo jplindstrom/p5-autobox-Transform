@@ -1075,22 +1075,23 @@ string.
 Call the $accessor on each object in @array, or get the hash key value
 on each hashref in @array. Like:
 
-    map { $_->$accessor() }
+    map { $_->$accessor() } @array
     # or
-    map { $_->{$accessor} }
+    map { $_->{$accessor} } @array
 
 Examples:
 
-    my @ahthor_names = $authors->map_by("name");
-    my $author_names = @publishers->map_by("authors")->map_by("name");
+    my @author_names = $authors->map_by("name");
+    my $author_names = @publishers->map_by("authors")->flat->map_by("name");
 
 Or get the hash key value. Example:
 
     my @review_scores = $reviews->map_by("score");
 
-Alternatively the $accessor is an arrayref. The first item is the
-accessor name, and the rest of the items are passed as args the method
-call. This only works when working with objects, not with hashrefs.
+Alternatively for when @array contains objects, the $accessor can be
+an arrayref. The first item is the method name, and the rest of the
+items are passed as args in the method call. This obviously won't work
+when the @array contains hashrefs.
 
 Examples:
 
