@@ -1352,18 +1352,14 @@ Example:
 
 =head3 The $value_subref
 
-This is a bit tricky to use, so the most common thing would probably
-be to use one of the more specific group_by-methods (see below). It
-should be capable enough to achieve what you need though, so here's
-how it works:
+For simple cases of just grouping a single key to a single value, the
+$value_subref is straightforward to use.
 
 The hash key is whatever is returned from C<$object-E<gt>$accessor>.
 
 The hash value is whatever is returned from
 
     my $new_value = $value_sub->($current_value, $object, $key);
-
-where:
 
 =over 4
 
@@ -1380,6 +1376,18 @@ C<$object> is the current item in the list. The current $_ is also set to this.
 C<$key> is the key returned by $object->$accessor(@$args)
 
 =back
+
+A simple example would be to group by the accessor, but instead of the
+object used as the value you want to look up an attribute on each
+object:
+
+    my $book_id__author = $books->group_by("id", sub { $_->author });
+    # keys: book id; values: author
+
+If you want to create an aggregate value the $value_subref can be a
+bit tricky to use, so the most common thing would probably be to use
+one of the more specific group_by-methods (see below). It should be
+capable enough to achieve what you need though.
 
 =cut
 

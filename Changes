@@ -2,6 +2,9 @@
 
 {{$NEXT}}
 
+  * Document simple case for group_by $value_sub
+
+
 1.029 2016-10-24T22:09:19Z
 
   * @array->to_hash, and %hash->to_array
