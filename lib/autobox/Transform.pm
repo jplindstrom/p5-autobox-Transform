@@ -52,6 +52,11 @@ particular when the values are hashrefs or objects.
         sub { $_->{name} },                    # then name
     );
 
+    # group (aggregate) array into hash
+    $book_genres->group;       # "Sci-fi" => "Sci-fi"
+    $book_genres->group_count; # "Sci-fi" => 3
+    $book_genres->group_array; # "Sci-fi" => [ "Sci-fi", "Sci-fi", "Sci-fi"]
+
     # Flatten arrayrefs-of-arrayrefs
     $authors->map_by("books") # ->books returns an arrayref
     # [ [ $book1, $book2 ], [ $book3 ] ]
