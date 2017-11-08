@@ -4,6 +4,8 @@
 
   * Document simple case for group_by $value_sub
 
+  * New @array methods ->group, ->group_count, ->group_array
+
 
 1.029 2016-10-24T22:09:19Z
 
