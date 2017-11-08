@@ -212,6 +212,18 @@ and hashrefs.
 
 =item
 
+@array->group()
+
+=item
+
+@array->group_count()
+
+=item
+
+@array->group_array()
+
+=item
+
 @array->flat()
 
 =item
