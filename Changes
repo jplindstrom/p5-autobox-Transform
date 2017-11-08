@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+1.030 2017-11-08T23:42:36Z
+
   * Document simple case for group_by $value_sub
 
   * New @array methods ->group, ->group_count, ->group_array
