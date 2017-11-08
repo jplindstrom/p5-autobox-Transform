@@ -963,6 +963,74 @@ sub order {
 
 
 
+=head2 @array->group($value_subref = object) : %key_value | %$key_value
+
+Group the @array items into a hashref with the items as keys.
+
+The default $value_subref puts each object in the list as the hash
+value. If the key is repeated, the value is overwritten with the last
+object.
+
+Example:
+
+    my $title_book = $book_titles->group;
+    # {
+    #     "Leviathan Wakes"       => "Leviathan Wakes",
+    #     "Caliban's War"         => "Caliban's War",
+    #     "The Tree-Body Problem" => "The Tree-Body Problem",
+    #     "The Name of the Wind"  => "The Name of the Wind",
+    # },
+
+=head3 The $value_subref
+
+For simple cases of just grouping a single key to a single value, the
+$value_subref is straightforward to use.
+
+The hash key is the array item. The hash value is whatever is returned
+from
+
+    my $new_value = $value_sub->($current_value, $object, $key);
+
+=over 4
+
+=item
+
+C<$current> value is the current hash value for this key (or undef if
+the first one).
+
+=item
+
+C<$object> is the current item in the list. The current $_ is also set
+to this.
+
+=item
+
+C<$key> is the array item.
+
+=back
+
+See also: C<-E<gt>group_by>. 
+
+=cut
+
+sub group {
+    ###JPL:
+}
+
+
+
+sub group_count {
+
+}
+
+
+
+sub group_array {
+
+}
+
+
+
 =head2 @array->flat() : @array | @$array
 
 Return a (one level) flattened array, assuming the array items
