@@ -58,10 +58,10 @@ particular when the values are hashrefs or objects.
     $book_genres->group_array; # "Sci-fi" => [ "Sci-fi", "Sci-fi", "Sci-fi"]
 
     # Flatten arrayrefs-of-arrayrefs
-    $authors->map_by("books") # ->books returns an arrayref
-    # [ [ $book1, $book2 ], [ $book3 ] ]
-    $authors->map_by("books")->flat;
-    # [ $book1, $book2, $book3 ]
+      $authors->map_by("books") # ->books returns an arrayref
+      # [ [ $book1, $book2 ], [ $book3 ] ]
+      $authors->map_by("books")->flat;
+      # [ $book1, $book2, $book3 ]
 
     # Return reference, even in list context, e.g. in a parameter list
     $book_locations->filter()->to_ref;
@@ -76,7 +76,9 @@ particular when the values are hashrefs or objects.
 =head2 Arrays with hashrefs/objects
 
     # $books and $authors below are arrayrefs with either objects or
-    # hashrefs (the call syntax is the same)
+    # hashrefs (the call syntax is the same). These have methods/hash
+    # keys like C<$book->genre()>, C<$book->{is_sold_out}>,
+    # C<$book->is_in_library($library)>, etc.
 
     $books->map_by("genre");
     $books->map_by([ price_with_tax => $tax_pct ]);
