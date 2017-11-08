@@ -64,24 +64,16 @@ subtest group_count => sub {
 
 
 
-# subtest group__sub_ref => sub {
-#     eq_or_diff(
-#         { $books->group("genre", [], sub { 1 }) },
-#         {
-#             "Sci-fi"  => 1,
-#             "Fantasy" => 1,
-#         },
-#         "group with sub_ref works",
-#     );
-#     eq_or_diff(
-#         { $books->group([ "genre" ], sub { 1 }) },
-#         {
-#             "Sci-fi"  => 1,
-#             "Fantasy" => 1,
-#         },
-#         "group with sub_ref works",
-#     );
-# };
+subtest group__sub_ref => sub {
+    eq_or_diff(
+        { $books->map_by("genre")->group(sub { 1 }) },
+        {
+            "Sci-fi"  => 1,
+            "Fantasy" => 1,
+        },
+        "group with sub_ref works",
+    );
+};
 
 subtest group__array => sub {
     my $genres = $books->map_by("genre");
@@ -96,9 +88,9 @@ subtest group__array => sub {
     );
 };
 
-# subtest examples => sub {
-#     ok(1);
-# };
+subtest examples => sub {
+    ok(1);
+};
 
 
 

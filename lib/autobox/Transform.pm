@@ -1033,7 +1033,7 @@ sub __core_group {
 
 sub group {
     my $array = shift;
-    my ($args, $value_sub) = _normalized_accessor_args_subref(@_);
+    my ($value_sub) = _normalized_accessor_args_subref(@_);
 
     $value_sub //= sub { $_ };
     ref($value_sub) eq "CODE"
