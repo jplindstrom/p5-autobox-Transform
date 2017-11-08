@@ -45,29 +45,22 @@ subtest group => sub {
     );
 };
 
-# subtest group_count => sub {
-#     note "ArrayRef call, list context result";
+subtest group_count => sub {
 
-#     my $genre_count = {
-#         "Sci-fi"  => 3,
-#         "Fantasy" => 1,
-#     };
+    my $book_title__count = {
+        "Leviathan Wakes"       => 1,
+        "Caliban's War"         => 1,
+        "The Tree-Body Problem" => 1,
+        "The Name of the Wind"  => 2,
+    };
 
-#     eq_or_diff(
-#         { $books->group_count("genre") },
-#         $genre_count,
-#         "Group by simple method call works",
-#     );
+    eq_or_diff(
+        { [ @$titles, "The Name of the Wind" ]->group_count },
+        $book_title__count,
+        "Group count works",
+    );
 
-#     note "list call, list context result";
-#     my @books = @$books;
-#     my $genre_exists = @books->group_count("genre");
-#     eq_or_diff(
-#         $genre_exists,
-#         $genre_count,
-#         "Group by simple method call works",
-#     );
-# };
+};
 
 
 

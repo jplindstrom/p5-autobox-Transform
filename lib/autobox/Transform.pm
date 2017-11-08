@@ -1044,9 +1044,33 @@ sub group {
 
 
 
-sub group_count {
+=head2 @array->group_count : %key_count | %$key_count
 
+Just like C<group>, but the hash values are the the number of
+instances each item occurs in the list.
+
+Example:
+
+    $book_genres->group_count;
+    # {
+    #     "Sci-fi"  => 3,
+    #     "Fantasy" => 1,
+    # },
+
+There are three books counted for the "Sci-fi" key.
+
+=cut
+
+sub group_count {
+    my $array = shift;
+
+    my $value_sub = sub {
+        my $count = shift // 0; return ++$count;
+    };
+
+    return __core_group("group_count", $array, $value_sub);
 }
+
 
 
 
