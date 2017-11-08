@@ -83,27 +83,18 @@ subtest group_count => sub {
 #     );
 # };
 
-# subtest group__array => sub {
-#     my $genre_books = $books->group_array("genre");
-#     my $genre_books2 = $books->group_array([ "genre" ]);
-#     eq_or_diff($genre_books, $genre_books2, "Same output");
+subtest group__array => sub {
+    my $genres = $books->map_by("genre");
 
-#     my $genre_book_titles = {
-#         map {
-#             $_ => $genre_books->{$_}->map_by("title")->sort->join(", ");
-#         }
-#         $genre_books->keys
-#     };
-
-#     eq_or_diff(
-#         $genre_book_titles,
-#         {
-#             "Sci-fi"  => "Caliban's War, Leviathan Wakes, The Tree-Body Problem",
-#             "Fantasy" => "The Name of the Wind",
-#         },
-#         "group_array work",
-#     );
-# };
+    eq_or_diff(
+        $genres->group_array,
+        {
+            "Sci-fi"  => [ "Sci-fi", "Sci-fi", "Sci-fi" ],
+            "Fantasy" => [ "Fantasy" ],
+        },
+        "group_array works",
+    );
+};
 
 # subtest examples => sub {
 #     ok(1);

@@ -1074,8 +1074,33 @@ sub group_count {
 
 
 
-sub group_array {
+=head2 @array->group_array : %key_objects | %$key_objects
 
+Just like C<group>, but the hash values are arrayrefs containing those
+same array items.
+
+Example:
+
+    $book_genres->group_array;
+    # {
+    #     "Sci-fi"  => [ "Sci-fi", "Sci-fi", "Sci-fi" ],
+    #     "Fantasy" => [ "Fantasy" ],
+    # },
+
+The three Sci-fi genres are collected under the Sci-fi key.
+
+=cut
+
+sub group_array {
+    my $array = shift;
+
+    my $value_sub = sub {
+        my $array = shift // [];
+        push( @$array, $_ );
+        return $array;
+    };
+
+    return __core_group("group_array", $array, $value_sub);
 }
 
 
