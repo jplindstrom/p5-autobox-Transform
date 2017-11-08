@@ -647,7 +647,7 @@ The value of join("", @captured_groups) are used in the comparison (@captured_gr
     ->order_by(age => [ sub { int($_) }, "num" ])
 
     # compare int( $a->age_by_interval(10) )
-    ->order_by([ age_by_interval => 10 ] => [ sub { int($_) }, "num" ]) 
+    ->order_by([ age_by_interval => 10 ] => [ sub { int($_) }, "num" ])
     # compare uc( $a->name_with_title($title) )
     ->order_by([ name_with_title => $title ], sub { uc($_) })
 
@@ -1009,12 +1009,37 @@ C<$key> is the array item.
 
 =back
 
-See also: C<-E<gt>group_by>. 
+See also: C<-E<gt>group_by>.
 
 =cut
 
+sub __core_group {
+    my( $name, $array, $value_sub ) = @_;
+    @$array or return wantarray ? () : { };
+
+    my %key_value;
+    for my $item (@$array) {
+        my $key = $item;
+
+        my $current_value = $key_value{ $key };
+        local $_ = $item;
+        my $new_value = $value_sub->($current_value, $item, $key);
+
+        $key_value{ $key } = $new_value;
+    }
+
+    return wantarray ? %key_value : \%key_value;
+}
+
 sub group {
-    ###JPL:
+    my $array = shift;
+    my ($args, $value_sub) = _normalized_accessor_args_subref(@_);
+
+    $value_sub //= sub { $_ };
+    ref($value_sub) eq "CODE"
+        or Carp::croak("group(\$value_sub): \$value_sub ($value_sub) is not a sub ref");
+
+    return __core_group("group", $array, $value_sub);
 }
 
 
