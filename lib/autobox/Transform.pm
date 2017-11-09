@@ -143,7 +143,7 @@ particular when the values are hashrefs or objects.
 =head2 Hashes
 
     # map over each pair
-    # Upper-case the genre name, and make the count say "n books"
+    # e.g. Upper-case the genre name, and make the count say "n books"
     #     (return a key => value pair)
     $genre_count->map_each(sub { uc( $_[0] ) => "$_ books" });
     # {
@@ -152,7 +152,7 @@ particular when the values are hashrefs or objects.
     # },
 
     # map over each value
-    # Make the count say "n books"
+    # e.g. Make the count say "n books"
     #     (return the new value)
     $genre_count->map_each_value(sub { "$_ books" });
     # {
@@ -161,7 +161,7 @@ particular when the values are hashrefs or objects.
     # },
 
     # map each pair into an array
-    # Transform each pair to the string "n: genre"
+    # e.g. Transform each pair to the string "n: genre"
     #     (return list of items)
     $genre_count->map_each_to_array(sub { "$_: $_[0]" });
     # [ "1: Fantasy", "3: Sci-fi" ]
