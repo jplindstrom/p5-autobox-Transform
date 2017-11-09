@@ -611,9 +611,9 @@ When the first comparison is a tie, the subsequent ones are used.
 
 Almost all of the methods are context sensitive, i.e. they return a
 list in list context and an arrayref in scalar context, just like
-autobox::Core.
+L<autobox::Core>.
 
-Beware: you might be in list context when you need an arrayref.
+B<Beware>: I<you might be in list context when you need an arrayref.>
 
 When in doubt, assume they work like C<map> and C<grep> (i.e. return a
 list), and convert the return value to references where you might have
