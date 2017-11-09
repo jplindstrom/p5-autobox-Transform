@@ -1012,9 +1012,9 @@ sub group_array {
     my $array = shift;
 
     my $value_sub = sub {
-        my $array = shift // [];
-        push( @$array, $_ );
-        return $array;
+        my $value_array = shift // [];
+        push( @$value_array, $_ );
+        return $value_array;
     };
 
     return __core_group("group_array", $array, $value_sub);
