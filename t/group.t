@@ -79,7 +79,7 @@ subtest group__array => sub {
     my $genres = $books->map_by("genre");
 
     eq_or_diff(
-        $genres->group_array,
+        { $genres->group_array },
         {
             "Sci-fi"  => [ "Sci-fi", "Sci-fi", "Sci-fi" ],
             "Fantasy" => [ "Fantasy" ],
