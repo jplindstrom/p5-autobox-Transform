@@ -5,7 +5,7 @@ use warnings;
 use 5.010;
 use parent qw/autobox/;
 
-our $VERSION = "1.030";
+our $VERSION = "1.031";
 
 =head1 NAME
 

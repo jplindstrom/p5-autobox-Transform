@@ -47,10 +47,10 @@ particular when the values are hashrefs or objects.
     $book_genres->group_array; # "Sci-fi" => [ "Sci-fi", "Sci-fi", "Sci-fi"]
 
     # Flatten arrayrefs-of-arrayrefs
-    $authors->map_by("books") # ->books returns an arrayref
-    # [ [ $book1, $book2 ], [ $book3 ] ]
-    $authors->map_by("books")->flat;
-    # [ $book1, $book2, $book3 ]
+      $authors->map_by("books") # ->books returns an arrayref
+      # [ [ $book1, $book2 ], [ $book3 ] ]
+      $authors->map_by("books")->flat;
+      # [ $book1, $book2, $book3 ]
 
     # Return reference, even in list context, e.g. in a parameter list
     $book_locations->filter()->to_ref;
@@ -64,7 +64,9 @@ particular when the values are hashrefs or objects.
 ## Arrays with hashrefs/objects
 
     # $books and $authors below are arrayrefs with either objects or
-    # hashrefs (the call syntax is the same)
+    # hashrefs (the call syntax is the same). These have methods/hash
+    # keys like C<$book->genre()>, C<$book->{is_sold_out}>,
+    # C<$book->is_in_library($library)>, etc.
 
     $books->map_by("genre");
     $books->map_by([ price_with_tax => $tax_pct ]);
@@ -128,7 +130,7 @@ particular when the values are hashrefs or objects.
 ## Hashes
 
     # map over each pair
-    # Upper-case the genre name, and make the count say "n books"
+    # e.g. Upper-case the genre name, and make the count say "n books"
     #     (return a key => value pair)
     $genre_count->map_each(sub { uc( $_[0] ) => "$_ books" });
     # {
@@ -137,7 +139,7 @@ particular when the values are hashrefs or objects.
     # },
 
     # map over each value
-    # Make the count say "n books"
+    # e.g. Make the count say "n books"
     #     (return the new value)
     $genre_count->map_each_value(sub { "$_ books" });
     # {
@@ -146,7 +148,7 @@ particular when the values are hashrefs or objects.
     # },
 
     # map each pair into an array
-    # Transform each pair to the string "n: genre"
+    # e.g. Transform each pair to the string "n: genre"
     #     (return list of items)
     $genre_count->map_each_to_array(sub { "$_: $_[0]" });
     # [ "1: Fantasy", "3: Sci-fi" ]
@@ -184,31 +186,6 @@ particular when the values are hashrefs or objects.
 High level autobox methods you can call on arrays, arrayrefs, hashes
 and hashrefs.
 
-- @array->filter()
-- @array->order()
-- @array->group()
-- @array->group\_count()
-- @array->group\_array()
-- @array->flat()
-- @array->to\_ref()
-- @array->to\_array()
-- @array->to\_hash()
-- @array->map\_by()
-- @array->filter\_by()
-- @array->uniq\_by()
-- @array->order\_by()
-- @array->group\_by()
-- @array->group\_by\_count()
-- @array->group\_by\_array()
-
-- %hash->map\_each
-- %hash->map\_each\_value
-- %hash->map\_each\_to\_array
-- %hash->filter\_each
-- %hash->to\_ref()
-- %hash->to\_hash()
-- %hash->to\_array()
-
 ## Transforming lists of objects vs list of hashrefs
 
 `map_by`, `filter_by` `order_by` etc. (all methods named `*_by`)
@@ -228,21 +205,21 @@ If the array contains objects, a method is called on each object
 
 For method calls, it's possible to provide arguments to the method.
 
-Consider `filter_by`:
+Consider `map_by`:
 
-    $array->filter_by($accessor, $predicate)
+    $array->map_by($accessor)
 
 If the $accessor is a string, it's a simple method call.
 
     # method call without args
-    $books->filter_by("price", sub { $_ < 15.0 })
+    $books->map_by("price")
     # becomes $_->price() or $_->{price}
 
 If the $accessor is an arrayref, the first item is the method name,
 and the rest of the items are the arguments to the method.
 
     # method call with args
-    $books->filter_by([ price_with_discount => 5.0 ], sub { $_ < 15.0 })
+    $books->map_by([ price_with_discount => 5.0 ])
     # becomes $_->price_with_discount(5.0)
 
 ### Deprecated syntax
@@ -325,7 +302,7 @@ something that's often difficult to discern at a glance)
 ### Sorting with order, order\_by
 
 - Provide order options for how one value should be compared with the others:
-    - how to compare (`cmp` or `<=`>)
+    - how to compare (`cmp` or `<=>`)
     - which direction to sort (`asc`ending or `desc`ending)
     - which value to compare, using a regex or subref, e.g. by uc($\_)
 - In case of a tie, provide another comparison
@@ -334,13 +311,13 @@ something that's often difficult to discern at a glance)
 
     # ->order
     @users->order(
-        sub { $_->{name} },                               # first comparison
+        sub { uc( $_->{name} ) },                         # first comparison
         [ "num", sub { int( $_->{age} / 10 ) }, "desc" ], # second comparison
     )
 
     # ->order_by
     @users->order_by(
-        name => "str",                                     # first comparison
+        name => sub { uc },                                # first comparison
         age  => [ num => desc => sub { int( $_ / 10 ) } ], # second comparison
     )
 
@@ -417,16 +394,16 @@ When the first comparison is a tie, the subsequent ones are used.
     )
 
     # order_by: pairs of accessor-comparison options
-    ->order(
+    ->order_by(
         price => "num", # First a numeric comparison of price
         name => "desc", # or if same, a reverse comparison of the name
     )
-    ->order(
+    ->order_by(
         price => [ "num", "desc" ],
         name  => "str",
     )
     # accessor is a method call with arg: $_->price_with_discount($discount)
-    ->order(
+    ->order_by(
         [ price_with_discount => $discount ] => [ "num", "desc" ],
         name                                 => [ str => sub { uc($_) } ],
         "id",
@@ -436,9 +413,9 @@ When the first comparison is a tie, the subsequent ones are used.
 
 Almost all of the methods are context sensitive, i.e. they return a
 list in list context and an arrayref in scalar context, just like
-autobox::Core.
+[autobox::Core](https://metacpan.org/pod/autobox::Core).
 
-Beware: you might be in list context when you need an arrayref.
+**Beware**: _you might be in list context when you need an arrayref._
 
 When in doubt, assume they work like `map` and `grep` (i.e. return a
 list), and convert the return value to references where you might have
@@ -520,11 +497,11 @@ Examples:
         sub { $_->{name} },                    # then name
     );
 
-## @array->group($value\_subref = object) : %key\_value | %$key\_value
+## @array->group($value\_subref = item) : %key\_value | %$key\_value
 
 Group the @array items into a hashref with the items as keys.
 
-The default $value\_subref puts each object in the list as the hash
+The default $value\_subref puts each item in the list as the hash
 value. If the key is repeated, the value is overwritten with the last
 object.
 
