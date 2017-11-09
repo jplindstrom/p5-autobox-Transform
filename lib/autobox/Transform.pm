@@ -195,115 +195,6 @@ particular when the values are hashrefs or objects.
         ->map_by([ price_with_tax => $tax_pct ])
         ->sum;
 
-
-
-=head1 DESCRIPTION
-
-High level autobox methods you can call on arrays, arrayrefs, hashes
-and hashrefs.
-
-=over 4
-
-=item
-
-@array->filter()
-
-=item
-
-@array->order()
-
-=item
-
-@array->group()
-
-=item
-
-@array->group_count()
-
-=item
-
-@array->group_array()
-
-=item
-
-@array->flat()
-
-=item
-
-@array->to_ref()
-
-=item
-
-@array->to_array()
-
-=item
-
-@array->to_hash()
-
-=item
-
-@array->map_by()
-
-=item
-
-@array->filter_by()
-
-=item
-
-@array->uniq_by()
-
-=item
-
-@array->order_by()
-
-=item
-
-@array->group_by()
-
-=item
-
-@array->group_by_count()
-
-=item
-
-@array->group_by_array()
-
-=back
-
-
-=over 4
-
-=item
-
-%hash->map_each
-
-=item
-
-%hash->map_each_value
-
-=item
-
-%hash->map_each_to_array
-
-=item
-
-%hash->filter_each
-
-=item
-
-%hash->to_ref()
-
-=item
-
-%hash->to_hash()
-
-=item
-
-%hash->to_array()
-
-=back
-
-
 =cut
 
 
@@ -396,6 +287,12 @@ sub _predicate {
     Carp::croak("->$name() \$predicate: ($predicate) is not one of: subref, string, regex");
 }
 
+
+
+=head1 DESCRIPTION
+
+High level autobox methods you can call on arrays, arrayrefs, hashes
+and hashrefs.
 
 
 =head2 Transforming lists of objects vs list of hashrefs
