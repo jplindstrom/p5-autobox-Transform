@@ -879,11 +879,11 @@ sub order {
 
 
 
-=head2 @array->group($value_subref = object) : %key_value | %$key_value
+=head2 @array->group($value_subref = item) : %key_value | %$key_value
 
 Group the @array items into a hashref with the items as keys.
 
-The default $value_subref puts each object in the list as the hash
+The default $value_subref puts each item in the list as the hash
 value. If the key is repeated, the value is overwritten with the last
 object.
 
