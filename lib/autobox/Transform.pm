@@ -314,21 +314,21 @@ If the array contains objects, a method is called on each object
 
 For method calls, it's possible to provide arguments to the method.
 
-Consider C<filter_by>:
+Consider C<map_by>:
 
-    $array->filter_by($accessor, $predicate)
+    $array->map_by($accessor)
 
 If the $accessor is a string, it's a simple method call.
 
     # method call without args
-    $books->filter_by("price", sub { $_ < 15.0 })
+    $books->map_by("price")
     # becomes $_->price() or $_->{price}
 
 If the $accessor is an arrayref, the first item is the method name,
 and the rest of the items are the arguments to the method.
 
     # method call with args
-    $books->filter_by([ price_with_discount => 5.0 ], sub { $_ < 15.0 })
+    $books->map_by([ price_with_discount => 5.0 ])
     # becomes $_->price_with_discount(5.0)
 
 =head3 Deprecated syntax
