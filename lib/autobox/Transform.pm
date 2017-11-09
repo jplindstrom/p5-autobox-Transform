@@ -981,7 +981,8 @@ sub group_count {
     my $array = shift;
 
     my $value_sub = sub {
-        my $count = shift // 0; return ++$count;
+        my $count = shift // 0;
+        return ++$count;
     };
 
     return __core_group("group_count", $array, $value_sub);
