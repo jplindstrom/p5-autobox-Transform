@@ -463,13 +463,13 @@ In case of a tie, provide another comparison
 
     # ->order
     @users->order(
-        sub { $_->{name} },                               # first comparison
+        sub { uc( $_->{name} ) },                         # first comparison
         [ "num", sub { int( $_->{age} / 10 ) }, "desc" ], # second comparison
     )
 
     # ->order_by
     @users->order_by(
-        name => "str",                                     # first comparison
+        name => sub { uc },                                # first comparison
         age  => [ num => desc => sub { int( $_ / 10 ) } ], # second comparison
     )
 
