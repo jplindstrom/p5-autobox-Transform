@@ -441,7 +441,7 @@ Provide order options for how one value should be compared with the others:
 
 =item *
 
-how to compare (C<cmp> or C<<=>>)
+how to compare (C<cmp> or C<<=E<gt>>)
 
 =item *
 
