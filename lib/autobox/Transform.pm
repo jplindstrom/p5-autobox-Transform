@@ -590,16 +590,16 @@ When the first comparison is a tie, the subsequent ones are used.
     )
 
     # order_by: pairs of accessor-comparison options
-    ->order(
+    ->order_by(
         price => "num", # First a numeric comparison of price
         name => "desc", # or if same, a reverse comparison of the name
     )
-    ->order(
+    ->order_by(
         price => [ "num", "desc" ],
         name  => "str",
     )
     # accessor is a method call with arg: $_->price_with_discount($discount)
-    ->order(
+    ->order_by(
         [ price_with_discount => $discount ] => [ "num", "desc" ],
         name                                 => [ str => sub { uc($_) } ],
         "id",
