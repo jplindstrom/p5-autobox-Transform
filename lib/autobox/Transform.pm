@@ -2090,9 +2090,9 @@ Perl equivalent.
     my $books_in_library = [ grep { $_->is_in_library($library) } @$books ];
     my $books_in_library = $books->filter_by([ is_in_library => $library ]);
 
-    ### filter_by - hash key: $books are book hashrefs
-    my $sold_out_books = [ grep { $_->{is_sold_out} } @$books ];
-    my $sold_out_books = $books->filter_by("is_sold_out");
+    ### reject_by - hash key: $books are book hashrefs
+    my $sold_out_books = [ grep { ! $_->{is_sold_out} } @$books ];
+    my $sold_out_books = $books->reject_by("is_sold_out");
 
 
 
