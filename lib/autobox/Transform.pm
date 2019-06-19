@@ -176,6 +176,11 @@ particular when the values are hashrefs or objects.
     # Genres with more than five books
     $genre_count->filter_each(sub { $_ > 5 });
 
+    # filter out each pair
+    # Genres with no more than five books
+    $genre_count->reject_each(sub { $_ > 5 });
+
+
     # Return reference, even in list context, e.g. in a parameter list
     %genre_count->to_ref;
 
@@ -1911,6 +1916,57 @@ sub filter_each_defined {
 {
     no warnings "once";
     *grep_each_defined = \&filter_each_defined;
+}
+
+
+
+=head2 %hash->reject_each($predicate = *is_false_subref*) : @hash | @$hash
+
+C<reject_each> is the same as L<C<filter_each>>, except it I<filters out>
+items that matches the $predicate.
+
+Examples:
+
+    my @apples     = $fruit->reject("apple");
+    my @any_apple  = $fruit->reject( qr/apple/i );
+    my @publishers = $authors->reject(
+        sub { $_->publisher->name =~ /Orbit/ },
+    );
+
+The default (no $predicate) is a subref which I<filters out> true
+values in the %hash.
+
+=cut
+
+sub reject_each {
+    my $hash = shift;
+    my ($predicate) = @_;
+    my $subref = autobox::Transform::_predicate(
+        "reject_each",
+        $predicate,
+        sub { !! $_ }, # true?
+    );
+
+    my $new_hash = {
+        map { ## no critic
+            my $key = $_;
+            my $value = $hash->{$key};
+            {
+                local $_ = $value;
+                ( ! $subref->($key, $value) )
+                    ? ( $key => $value )
+                    : ();
+            }
+        }
+        keys %$hash,
+    };
+
+    return wantarray ? %$new_hash : $new_hash;
+}
+
+sub reject_each_defined {
+    my $hash = shift;
+    return &reject_each($hash, sub { defined($_) });
 }
 
 

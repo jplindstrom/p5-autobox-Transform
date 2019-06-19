@@ -2,8 +2,9 @@
 
 {{$NEXT}}
 
-  * New @array method: ->reject,    the opposite of Array->filter
-  * New @array method: ->reject_by, the opposite of Array->filter_by
+  * New @array method: ->reject,      the opposite of Array->filter
+  * New @array method: ->reject_by,   the opposite of Array->filter_by
+  * New @array method: ->reject_each, the opposite of Array->filter_each
 
 
 1.031 2017-11-09T00:48:09Z

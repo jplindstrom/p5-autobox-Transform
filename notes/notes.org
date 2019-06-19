@@ -18,11 +18,12 @@
 ** contains value
 ** compact - without undefined
 ** compactTrue - without false
-** TODO reject - grep -v value
+** DONE reject - grep -v value
 *** DONE reject
-*** reject_by
-*** TODO reject_each
-*** TODO reject_each_defined
+*** DONE reject_by
+*** DONE reject_each
+*** DONE reject_each_defined
+*** release
 ** DONE grep --> filter
 *** DONE so I can write "grep" instead of autobox::Core
 *** DONE deprecate grep, but keep the alias
