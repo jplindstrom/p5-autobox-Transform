@@ -96,6 +96,9 @@ particular when the values are hashrefs or objects.
     # grep_by is an alias for filter_by
     $books->grep_by("is_sold_out");
 
+    # reject_by: the inverse of filter_by
+    $books->reject_by("is_sold_out");
+
     $books->uniq_by("id");
 
     $books->order_by("name");
@@ -194,6 +197,7 @@ particular when the values are hashrefs or objects.
         ->map_by("name")->uniq->join(", ");
 
     my $total_order_amount = $order->books
+        ->reject_by("is_sold_out")
         ->filter_by([ covered_by_vouchers => $vouchers ], sub { ! $_ })
         ->map_by([ price_with_tax => $tax_pct ])
         ->sum;
@@ -384,7 +388,7 @@ with C<string eq>.
 
 If $predicate is a I<regex>, it is compared to each value with C<=~>.
 
-    $books->filter_by("author", qr/Corey/);
+    $books->reject_by("author", qr/Corey/);
 
 If $predicate is a I<hashref>, values in @array are retained if the
 $predicate hash key C<exists> (the hash values are irrelevant).
@@ -1195,8 +1199,10 @@ sub __invoke_by {
     my $invoke_sub = {
         map        => sub { [ CORE::map  { $_->$accessor( @$args ) } @$array ] },
         map_key    => sub { [ CORE::map  { $_->{$accessor}         } @$array ] },
-        filter     => sub { [ CORE::grep { $subref->( local $_ = $_->$accessor( @$args ) ) } @$array ] },
-        filter_key => sub { [ CORE::grep { $subref->( local $_ = $_->{$accessor}         ) } @$array ] },
+        filter     => sub { [ CORE::grep {   $subref->( local $_ = $_->$accessor( @$args ) ) } @$array ] },
+        filter_key => sub { [ CORE::grep {   $subref->( local $_ = $_->{$accessor}         ) } @$array ] },
+        reject     => sub { [ CORE::grep { ! $subref->( local $_ = $_->$accessor( @$args ) ) } @$array ] },
+        reject_key => sub { [ CORE::grep { ! $subref->( local $_ = $_->{$accessor}         ) } @$array ] },
         uniq       => sub { [ CORE::grep { ! $seen{ $_->$accessor( @$args ) // "" }++ } @$array ] },
         uniq_key   => sub { [ CORE::grep { ! $seen{ $_->{$accessor}         // "" }++ } @$array ] },
     }->{$invoke};
@@ -1320,6 +1326,40 @@ sub filter_by {
 }
 
 *grep_by = \&filter_by;
+
+
+
+=head2 @array->reject_by($accessor, $predicate = *is_false_subref*) : @array | @$array
+
+C<reject_by> is the same as L<C<filter_by>>, except it I<filters out>
+items that matches the $predicate.
+
+Example:
+
+    my @unproductive_authors = $authors->reject_by("is_prolific");
+
+The default (no $predicate) is a subref which I<filters out> true
+values in the result @array.
+
+=cut
+
+sub reject_by {
+    my $array = shift;
+    my ($accessor, $args, $predicate) = _normalized_accessor_args_predicate(@_);
+    my $subref = autobox::Transform::_predicate(
+        "reject_by",
+        $predicate,
+        sub { !! $_ },
+    );
+    # filter_by $value, if passed the method value must match the value?
+    return __invoke_by(
+        "reject",
+        $array,
+        $accessor,
+        $args,
+        reject_subref => $subref,
+    );
+}
 
 
 
