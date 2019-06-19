@@ -409,8 +409,8 @@ $predicate hash key C<exists> (the hash values are irrelevant).
 If $predicate is a I<subref>, the subref is called for each value to
 check whether this item should remain in the list.
 
-The $predicate subref should return a true value to remain. $_ is set
-to the current $value.
+The $predicate subref should return a true value to remain. C<$_> is
+set to the current $value.
 
     $authors->filter_by(publisher => sub { $_->name =~ /Orbit/ });
 
@@ -427,7 +427,8 @@ autobox::Transform's C<order>/C<order_by>.
 
 =item *
 
-provide a sub that returns the comparison outcome of two values: $a and $b
+provide a sub that returns the comparison outcome of two values: C<$a>
+and C<$b>
 
 =item *
 
@@ -442,7 +443,7 @@ in case of a tie, provide another comparison of $a and $b
         int( $b->{age} / 10 ) <=> int( $a->{age} / 10 ) # second comparison
     } @users
 
-(note the opposite order of $a and $b for the age comparison,
+(note the opposite order of C<$a> and C<$b> for the age comparison,
 something that's often difficult to discern at a glance)
 
 =head3 Sorting with order, order_by
@@ -549,7 +550,7 @@ A regex, e.g. C<qr/id: (\d+)/>
 
 =item *
 
-The value of join("", @captured_groups) are used in the comparison (@captured_groups are $1, $2, $3 etc.)
+The value of C<join("", @captured_groups)> are used in the comparison (C<@captured_groups> are C<$1>, C<$2>, C<$3> etc.)
 
 =back
 
@@ -676,16 +677,16 @@ use List::MoreUtils ();
 
 =head2 @array->filter($predicate = *is_true_subref*) : @array | @$array
 
-Similar to Perl's C<grep>, return an @array with values for which
+Similar to Perl's C<grep>, return an C<@array> with values for which
 $predicate yields a true value.
 
 $predicate can be a subref, string, undef, regex, or hashref. See
 L</Filter predicates>.
 
-The default (no $predicate) is a subref which retains true values in
-the @array.
+The default (no C<$predicate>) is a subref which retains true values
+in the @array.
 
-Examples:
+=head3 Examples
 
     my @apples     = $fruit->filter("apple");
     my @any_apple  = $fruit->filter( qr/apple/i );
@@ -722,13 +723,13 @@ sub filter {
 =head2 @array->reject($predicate = *is_false_subref*) : @array | @$array
 
 Similar to the Unix command C<grep -v>, return an @array with values
-for which $predicate yields a I<false> value.
+for which C<$predicate> yields a I<false> value.
 
 $predicate can be a subref, string, undef, regex, or hashref. See
 L</Filter predicates>.
 
 The default (no $predicate) is a subref which I<filters out> true
-values in the @array.
+values in the C<@array>.
 
 Examples:
 
@@ -888,12 +889,12 @@ sub _item_values_array_from_map_by_extracts {
 
 =head2 @array->order(@comparisons = ("str")) : @array | @$array
 
-Return @array ordered according to the @comparisons. The default
+Return C<@array> ordered according to the C<@comparisons>. The default
 comparison is the same as the default sort, e.g. a normal string
-comparison of the @array values.
+comparison of the C<@array> values.
 
-If the first item in @comparison ends in a tie, the next one is used,
-etc.
+If the first item in C<@comparison> ends in a tie, the next one is
+used, etc.
 
 Each I<comparison> consists of a single I<option> or an I<arrayref of
 options>, e.g. C<str>/C<num>, C<asc>/C<desc>, or a subref/regex. See
@@ -934,9 +935,9 @@ sub order {
 
 =head2 @array->group($value_subref = item) : %key_value | %$key_value
 
-Group the @array items into a hashref with the items as keys.
+Group the C<@array> items into a hashref with the items as keys.
 
-The default $value_subref puts each item in the list as the hash
+The default C<$value_subref> puts each item in the list as the hash
 value. If the key is repeated, the value is overwritten with the last
 object.
 
@@ -953,7 +954,7 @@ Example:
 =head3 The $value_subref
 
 For simple cases of just grouping a single key to a single value, the
-$value_subref is straightforward to use.
+C<$value_subref> is straightforward to use.
 
 The hash key is the array item. The hash value is whatever is returned
 from
