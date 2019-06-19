@@ -634,7 +634,7 @@ B<Beware>: I<you might be in list context when you need an arrayref.>
 
 When in doubt, assume they work like C<map> and C<grep> (i.e. return a
 list), and convert the return value to references where you might have
-an unobvious list context. E.g.
+an non-obvious list context. E.g.
 
 =head3 Incorrect
 
