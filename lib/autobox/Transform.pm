@@ -303,8 +303,8 @@ sub _predicate {
 
 =head1 DESCRIPTION
 
-High level autobox methods you can call on arrays, arrayrefs, hashes
-and hashrefs.
+C<autobox::Transform> provides high level autobox methods you can call
+on arrays, arrayrefs, hashes and hashrefs.
 
 
 =head2 Transforming lists of objects vs list of hashrefs
