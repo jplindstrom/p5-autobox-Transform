@@ -1857,7 +1857,7 @@ $predicate can be a subref, string, undef, regex, or hashref. See
 L</Filter predicates>.
 
 The default (no $predicate) is a subref which retains true values in
-the @array.
+the %hash.
 
 Examples:
 
