@@ -41,6 +41,9 @@ particular when the values are hashrefs or objects.
     $book_genres->filter("scifi");
     $book_genres->filter({ fantasy => 1, scifi => 1 }); # hash key exists
 
+    # reject: the inverse of filter
+    $book_genres->reject("fantasy");
+
     # order (like a more succinct sort)
     $book_genres->order;
     $book_genres->order("desc");
@@ -367,8 +370,12 @@ whatever you use to avoid upgrading modules to incompatible versions.
 
 There are several methods that filter items,
 e.g. C<@array-E<gt>filter> (duh), C<@array-E<gt>filter_by>, and
-C<%hash-E<gt>filter_each>. These methods take a $predicate argument to
-determine which items to retain or filter out.
+C<%hash-E<gt>filter_each>. These methods take a C<$predicate> argument
+to determine which items to retain or filter out.
+
+The C<reject> family of methods do the opposite, and I<filter out>
+items that match the predicate, i.e. the opposite of the filter
+methods.
 
 If $predicate is an I<unblessed scalar>, it is compared to each value
 with C<string eq>.
@@ -698,6 +705,43 @@ sub filter {
 
     my $result = eval {
         [ CORE::grep { $subref->( $_ ) } @$array ]
+    } or autobox::Transform::throw($@);
+
+    return wantarray ? @$result : $result;
+}
+
+=head2 @array->reject($predicate = *is_false_subref*) : @array | @$array
+
+Similar to the Unix command C<grep -v>, return an @array with values
+for which $predicate yields a I<false> value.
+
+$predicate can be a subref, string, undef, regex, or hashref. See
+L</Filter predicates>.
+
+The default (no $predicate) is a subref which I<filters out> true
+values in the @array.
+
+Examples:
+
+    my @apples     = $fruit->reject("apple");
+    my @any_apple  = $fruit->reject( qr/apple/i );
+    my @publishers = $authors->reject(
+        sub { $_->publisher->name =~ /Orbit/ },
+    );
+
+=cut
+
+sub reject {
+    my $array = shift;
+    my ($predicate) = @_;
+    my $subref = autobox::Transform::_predicate(
+        "reject",
+        $predicate,
+        sub { !! $_ },
+    );
+
+    my $result = eval {
+        [ CORE::grep { ! $subref->( $_ ) } @$array ]
     } or autobox::Transform::throw($@);
 
     return wantarray ? @$result : $result;
