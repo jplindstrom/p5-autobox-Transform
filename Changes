@@ -2,10 +2,13 @@
 
 {{$NEXT}}
 
-1.033 2019-06-19T20:15:20Z
-
   * Documentation improvements to go with new "reject", "reject_by",
     "reject_each" methods
+
+
+1.033 2019-06-19T20:15:20Z
+
+  * Doc fixes
 
 
 1.032 2019-06-19T19:22:20Z

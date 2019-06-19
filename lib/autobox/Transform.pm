@@ -1862,21 +1862,16 @@ L</Filter predicates>.
 The default (no $predicate) is a subref which retains true values in
 the C<%hash>.
 
-Examples:
-
-    my @apples     = $fruit->filter("apple");
-    my @any_apple  = $fruit->filter( qr/apple/i );
-    my @publishers = $authors->filter(
-        sub { $_->publisher->name =~ /Orbit/ },
-    );
-
 If the $predicate is a subref, C<$predicate-E<gt>($key, $value)> is
 called for each pair (with C<$_> set to the value).
 
 The subref should return a true value to retain the key-value pair in
 the result C<%hash>.
 
-=head3 Example
+=head3 Examples
+
+    { a => 1, b => 2 }->filter_each(sub { $_ == 2 });
+    # Returns { b => 2 }
 
     $book_author->filter_each(sub { $_->name =~ /Corey/ });
 
@@ -1930,11 +1925,8 @@ items that matches the $predicate.
 
 Examples:
 
-    my @apples     = $fruit->reject("apple");
-    my @any_apple  = $fruit->reject( qr/apple/i );
-    my @publishers = $authors->reject(
-        sub { $_->publisher->name =~ /Orbit/ },
-    );
+    { a => 1, b => 2 }->reject_each(sub { $_ == 2 });
+    # Returns { a => 1 }
 
 The default (no $predicate) is a subref which I<filters out> true
 values in the C<%hash>.
