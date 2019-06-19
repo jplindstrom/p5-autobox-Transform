@@ -73,7 +73,7 @@
          "web" : "https://github.com/jplindstrom/p5-autobox-Transform"
       }
    },
-   "version" : "1.032",
+   "version" : "1.033",
    "x_authority" : "cpan:JOHANL",
    "x_contributors" : [
       "Johan Lindstrom <johan.lindstrom@broadbean.com>",
