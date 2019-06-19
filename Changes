@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+1.032 2019-06-19T19:22:20Z
+
   * New @array method: ->reject,      the opposite of Array->filter
   * New @array method: ->reject_by,   the opposite of Array->filter_by
   * New @array method: ->reject_each, the opposite of Array->filter_each

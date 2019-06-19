@@ -30,6 +30,9 @@ particular when the values are hashrefs or objects.
     $book_genres->filter("scifi");
     $book_genres->filter({ fantasy => 1, scifi => 1 }); # hash key exists
 
+    # reject: the inverse of filter
+    $book_genres->reject("fantasy");
+
     # order (like a more succinct sort)
     $book_genres->order;
     $book_genres->order("desc");
@@ -80,6 +83,9 @@ particular when the values are hashrefs or objects.
 
     # grep_by is an alias for filter_by
     $books->grep_by("is_sold_out");
+
+    # reject_by: the inverse of filter_by
+    $books->reject_by("is_sold_out");
 
     $books->uniq_by("id");
 
@@ -157,6 +163,11 @@ particular when the values are hashrefs or objects.
     # Genres with more than five books
     $genre_count->filter_each(sub { $_ > 5 });
 
+    # filter out each pair
+    # Genres with no more than five books
+    $genre_count->reject_each(sub { $_ > 5 });
+
+
     # Return reference, even in list context, e.g. in a parameter list
     %genre_count->to_ref;
 
@@ -177,6 +188,7 @@ particular when the values are hashrefs or objects.
         ->map_by("name")->uniq->join(", ");
 
     my $total_order_amount = $order->books
+        ->reject_by("is_sold_out")
         ->filter_by([ covered_by_vouchers => $vouchers ], sub { ! $_ })
         ->map_by([ price_with_tax => $tax_pct ])
         ->sum;
@@ -248,8 +260,12 @@ whatever you use to avoid upgrading modules to incompatible versions.
 
 There are several methods that filter items,
 e.g. `@array->filter` (duh), `@array->filter_by`, and
-`%hash->filter_each`. These methods take a $predicate argument to
-determine which items to retain or filter out.
+`%hash->filter_each`. These methods take a `$predicate` argument
+to determine which items to retain or filter out.
+
+The `reject` family of methods do the opposite, and _filter out_
+items that match the predicate, i.e. the opposite of the filter
+methods.
 
 If $predicate is an _unblessed scalar_, it is compared to each value
 with `string eq`.
@@ -258,7 +274,7 @@ with `string eq`.
 
 If $predicate is a _regex_, it is compared to each value with `=~`.
 
-    $books->filter_by("author", qr/Corey/);
+    $books->reject_by("author", qr/Corey/);
 
 If $predicate is a _hashref_, values in @array are retained if the
 $predicate hash key `exists` (the hash values are irrelevant).
@@ -471,6 +487,25 @@ Examples:
 [autobox::Core](https://metacpan.org/pod/autobox::Core)'s `grep` method takes a subref, just like this
 method. `filter` also supports the other predicate types, like
 string, regex, etc.
+
+## @array->reject($predicate = \*is\_false\_subref\*) : @array | @$array
+
+Similar to the Unix command `grep -v`, return an @array with values
+for which $predicate yields a _false_ value.
+
+$predicate can be a subref, string, undef, regex, or hashref. See
+["Filter predicates"](#filter-predicates).
+
+The default (no $predicate) is a subref which _filters out_ true
+values in the @array.
+
+Examples:
+
+    my @apples     = $fruit->reject("apple");
+    my @any_apple  = $fruit->reject( qr/apple/i );
+    my @publishers = $authors->reject(
+        sub { $_->publisher->name =~ /Orbit/ },
+    );
 
 ## @array->order(@comparisons = ("str")) : @array | @$array
 
@@ -700,6 +735,18 @@ might be easier and more readable to simply use
 `grep_by` is an alias for `filter_by`. Unlike `grep` vs `filter`,
 this one works exaclty the same way.
 
+## @array->reject\_by($accessor, $predicate = \*is\_false\_subref\*) : @array | @$array
+
+`reject_by` is the same as [`filter_by`](https://metacpan.org/pod/filter_by), except it _filters out_
+items that matches the $predicate.
+
+Example:
+
+    my @unproductive_authors = $authors->reject_by("is_prolific");
+
+The default (no $predicate) is a subref which _filters out_ true
+values in the result @array.
+
 ## @array->uniq\_by($accessor) : @array | @$array
 
 $accessor is either a string, or an arrayref where the first item is a
@@ -918,7 +965,7 @@ $predicate can be a subref, string, undef, regex, or hashref. See
 ["Filter predicates"](#filter-predicates).
 
 The default (no $predicate) is a subref which retains true values in
-the @array.
+the %hash.
 
 Examples:
 
@@ -937,6 +984,22 @@ the result %hash.
 ### Example
 
     $book_author->filter_each(sub { $_->name =~ /Corey/ });
+
+## %hash->reject\_each($predicate = \*is\_false\_subref\*) : @hash | @$hash
+
+`reject_each` is the same as [`filter_each`](https://metacpan.org/pod/filter_each), except it _filters out_
+items that matches the $predicate.
+
+Examples:
+
+    my @apples     = $fruit->reject("apple");
+    my @any_apple  = $fruit->reject( qr/apple/i );
+    my @publishers = $authors->reject(
+        sub { $_->publisher->name =~ /Orbit/ },
+    );
+
+The default (no $predicate) is a subref which _filters out_ true
+values in the %hash.
 
 ## %hash->to\_ref() : $hashref
 
