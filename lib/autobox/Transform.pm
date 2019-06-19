@@ -1098,9 +1098,9 @@ on. Example:
     # ->books returns an arrayref of Book objects with a ->title
     $authors->map_by("books")->flat->map_by("title")
 
-Note: This is different from autobox::Core's ->flatten, which reurns a
-list rather than an array and therefore can't be used in this
-way.
+Note: This is different from L<autobox::Core>'s C<-E<gt>flatten>,
+which reurns a list rather than an array and therefore can't be used
+in this way.
 
 =cut
 
@@ -1113,7 +1113,7 @@ sub flat {
 
 =head2 @array->to_ref() : $arrayref
 
-Return the reference to the @array, regardless of context.
+Return the reference to the C<@array>, regardless of context.
 
 Useful for ensuring the last array method return a reference while in
 scalar context. Typically:
@@ -1122,8 +1122,8 @@ scalar context. Typically:
         books => $author->map_by("books")->to_ref,
     );
 
-map_by is called in list context, so without ->to_ref it would have
-return an array, not an arrayref.
+map_by is called in list context, so without C<-E<gt>to_ref> it would
+have return an array, not an arrayref.
 
 =cut
 
@@ -1134,7 +1134,7 @@ sub to_ref {
 
 =head2 @array->to_array() : @array
 
-Return the @array, regardless of context. This is mostly useful if
+Return the C<@array>, regardless of context. This is mostly useful if
 called on a ArrayRef at the end of a chain of method calls.
 
 =cut
@@ -1146,12 +1146,12 @@ sub to_array {
 
 =head2 @array->to_hash() : %hash | %$hash
 
-Return the item pairs in the @array as the key-value pairs of a %hash
-(context sensitive).
+Return the item pairs in the C<@array> as the key-value pairs of a
+C<%hash> (context sensitive).
 
-Useful if you need to continue calling %hash methods on it.
+Useful if you need to continue calling C<%hash> methods on it.
 
-Die if there aren't an even number of items in @array.
+Die if there aren't an even number of items in C<@array>.
 
 =cut
 
@@ -1221,11 +1221,11 @@ sub __invoke_by {
 
 =head2 @array->map_by($accessor) : @array | @$array
 
-$accessor is either a string, or an arrayref where the first item is a
-string.
+C<$accessor> is either a string, or an arrayref where the first item
+is a string.
 
-Call the $accessor on each object in @array, or get the hash key value
-on each hashref in @array. Like:
+Call the C<$accessor> on each object in C<@array>, or get the hash key
+value on each hashref in C<@array>. Like:
 
     map { $_->$accessor() } @array
     # or
@@ -1240,10 +1240,10 @@ Or get the hash key value. Example:
 
     my @review_scores = $reviews->map_by("score");
 
-Alternatively for when @array contains objects, the $accessor can be
-an arrayref. The first item is the method name, and the rest of the
+Alternatively for when C<@array> contains objects, the $accessor can
+be an arrayref. The first item is the method name, and the rest of the
 items are passed as args in the method call. This obviously won't work
-when the @array contains hashrefs.
+when the C<@array> contains hashrefs.
 
 Examples:
 
@@ -1262,17 +1262,17 @@ sub map_by {
 
 =head2 @array->filter_by($accessor, $predicate = *is_true_subref*) : @array | @$array
 
-$accessor is either a string, or an arrayref where the first item is a
-string.
+C<$accessor> is either a string, or an arrayref where the first item
+is a string.
 
-Call the $accessor on each object in the list, or get the hash key
+Call the C<$accessor> on each object in the list, or get the hash key
 value on each hashref in the list.
 
 Example:
 
     my @prolific_authors = $authors->filter_by("is_prolific");
 
-Alternatively the $accessor is an arrayref. The first item is the
+Alternatively the C<$accessor> is an arrayref. The first item is the
 accessor name, and the rest of the items are passed as args the method
 call. This only works when working with objects, not with hashrefs.
 
@@ -1280,12 +1280,12 @@ Example:
 
     my @books_to_charge_for = $books->filter_by([ price_with_tax => $tax_pct ]);
 
-Use the $predicate to determine whether the value should remain.
-$predicate can be a subref, string, undef, regex, or hashref. See
+Use the C<$predicate> to determine whether the value should remain.
+C<$predicate> can be a subref, string, undef, regex, or hashref. See
 L</Filter predicates>.
 
-The default (no $predicate) is a subref which retains true values in
-the result @array.
+The default (no C<$predicate>) is a subref which retains true values
+in the result C<@array>.
 
 Examples:
 
@@ -1345,7 +1345,7 @@ Example:
     my @unproductive_authors = $authors->reject_by("is_prolific");
 
 The default (no $predicate) is a subref which I<filters out> true
-values in the result @array.
+values in the result C<@array>.
 
 =cut
 
@@ -1371,10 +1371,10 @@ sub reject_by {
 
 =head2 @array->uniq_by($accessor) : @array | @$array
 
-$accessor is either a string, or an arrayref where the first item is a
-string.
+C<$accessor> is either a string, or an arrayref where the first item
+is a string.
 
-Call the $accessor on each object in the list, or get the hash key
+Call the $C<accessor> on each object in the list, or get the hash key
 value on each hashref in the list. Return list of items wich have a
 unique set of return values. The order is preserved. On duplicates,
 keep the first occurrence.
@@ -1384,7 +1384,7 @@ Examples:
     # You have gathered multiple Author objects with duplicate ids
     my @authors = $authors->uniq_by("author_id");
 
-Alternatively the $accessor is an arrayref. The first item is the
+Alternatively the C<$accessor> is an arrayref. The first item is the
 accessor name, and the rest of the items are passed as args the method
 call. This only works when working with objects, not with hashrefs.
 
@@ -1404,7 +1404,8 @@ sub uniq_by {
 
 =head2 @array->order_by(@accessor_comparison_pairs) : @array | @$array
 
-Return @array ordered according to the @accessor_comparison_pairs.
+Return C<@array> ordered according to the
+C<@accessor_comparison_pairs>.
 
 The comparison value comes from an initial
 C<@array->map_by($accessor)> for each accessor-comparison pair. It is
@@ -1478,14 +1479,14 @@ sub order_by {
 
 =head2 @array->group_by($accessor, $value_subref = object) : %key_value | %$key_value
 
-$accessor is either a string, or an arrayref where the first item is a
-string.
+C<$accessor> is either a string, or an arrayref where the first item
+is a string.
 
 Call C<-E<gt>$accessor> on each object in the array, or get the hash
 key for each hashref in the array (just like C<-E<gt>map_by>) and
 group the values as keys in a hashref.
 
-The default $value_subref puts each object in the list as the hash
+The default C<$value_subref> puts each object in the list as the hash
 value. If the key is repeated, the value is overwritten with the last
 object.
 
@@ -1502,7 +1503,7 @@ Example:
 =head3 The $value_subref
 
 For simple cases of just grouping a single key to a single value, the
-$value_subref is straightforward to use.
+C<$value_subref> is straightforward to use.
 
 The hash key is whatever is returned from C<$object-E<gt>$accessor>.
 
@@ -1533,7 +1534,7 @@ object:
     my $book_id__author = $books->group_by("id", sub { $_->author });
     # keys: book id; values: author
 
-If you want to create an aggregate value the $value_subref can be a
+If you want to create an aggregate value the C<$value_subref> can be a
 bit tricky to use, so the most common thing would probably be to use
 one of the more specific group_by-methods (see below). It should be
 capable enough to achieve what you need though.
@@ -1595,8 +1596,8 @@ sub group_by {
 
 =head2 @array->group_by_count($accessor) : %key_count | %$key_count
 
-$accessor is either a string, or an arrayref where the first item is a
-string.
+C<$accessor> is either a string, or an arrayref where the first item
+is a string.
 
 Just like C<group_by>, but the hash values are the the number of
 instances each $accessor value occurs in the list.
@@ -1627,8 +1628,8 @@ sub group_by_count {
 
 =head2 @array->group_by_array($accessor) : %key_objects | %$key_objects
 
-$accessor is either a string, or an arrayref where the first item is a
-string.
+C<$accessor> is either a string, or an arrayref where the first item
+is a string.
 
 Just like C<group_by>, but the hash values are arrayrefs containing
 the objects which has each $accessor value.
@@ -1725,15 +1726,15 @@ sub key_value_if_defined {
 =head2 %hash->map_each($key_value_subref) : %new_hash | %$new_hash
 
 Map each key-value pair in the hash using the
-$key_value_subref. Similar to how to how map transforms a list into
+C<$key_value_subref>. Similar to how to how map transforms a list into
 another list, map_each transforms a hash into another hash.
 
 C<$key_value_subref-E<gt>($key, $value)> is called for each pair (with
 $_ set to the value).
 
 The subref should return an even-numbered list with zero or more
-key-value pairs which will make up the %new_hash. Typically two items
-are returned in the list (the key and the value).
+key-value pairs which will make up the C<%new_hash>. Typically two
+items are returned in the list (the key and the value).
 
 =head3 Example
 
@@ -1767,14 +1768,14 @@ sub map_each {
 
 =head2 %hash->map_each_value($value_subref) : %new_hash | %$new_hash
 
-Map each value in the hash using the $value_subref, but keep the keys
-the same.
+Map each value in the hash using the C<$value_subref>, but keep the
+keys the same.
 
-C<$value_subref-E<gt>($key, $value)> is called for each pair (with $_
-set to the value).
+C<$value_subref-E<gt>($key, $value)> is called for each pair (with
+C<$_> set to the value).
 
 The subref should return a single value for each key which will make
-up the %new_hash (with the same keys but with new mapped values).
+up the C<%new_hash> (with the same keys but with new mapped values).
 
 =head3 Example
 
@@ -1813,13 +1814,13 @@ sub map_each_value {
 =head2 %hash->map_each_to_array($item_subref) : @new_array | @$new_array
 
 Map each key-value pair in the hash into a list using the
-$item_subref.
+C<$item_subref>.
 
-C<$item_subref-E<gt>($key, $value)> is called for each pair (with $_
-set to the value) in key order.
+C<$item_subref-E<gt>($key, $value)> is called for each pair (with
+C<$_> set to the value) in key order.
 
 The subref should return zero or more list items which will make up
-the @new_array. Typically one item is returned.
+the C<@new_array>. Typically one item is returned.
 
 =head3 Example
 
@@ -1852,13 +1853,14 @@ sub map_each_to_array {
 
 =head2 %hash->filter_each($predicate = *is_true_subref*) : @hash | @$hash
 
-Return a %hash with values for which $predicate yields a true value.
+Return a C<%hash> with values for which C<$predicate> yields a true
+value.
 
-$predicate can be a subref, string, undef, regex, or hashref. See
+C<$predicate> can be a subref, string, undef, regex, or hashref. See
 L</Filter predicates>.
 
 The default (no $predicate) is a subref which retains true values in
-the %hash.
+the C<%hash>.
 
 Examples:
 
@@ -1868,11 +1870,11 @@ Examples:
         sub { $_->publisher->name =~ /Orbit/ },
     );
 
-If the $predicate is a subref, C<$predicate-E<gt>($key,
-$value)> is called for each pair (with $_ set to the value).
+If the $predicate is a subref, C<$predicate-E<gt>($key, $value)> is
+called for each pair (with C<$_> set to the value).
 
 The subref should return a true value to retain the key-value pair in
-the result %hash.
+the result C<%hash>.
 
 =head3 Example
 
@@ -1935,7 +1937,7 @@ Examples:
     );
 
 The default (no $predicate) is a subref which I<filters out> true
-values in the %hash.
+values in the C<%hash>.
 
 =cut
 
@@ -1974,7 +1976,7 @@ sub reject_each_defined {
 
 =head2 %hash->to_ref() : $hashref
 
-Return the reference to the %hash, regardless of context.
+Return the reference to the C<%hash>, regardless of context.
 
 Useful for ensuring the last hash method return a reference while in
 scalar context. Typically:
@@ -1992,7 +1994,7 @@ sub to_ref {
 
 =head2 %hash->to_hash() : %hash
 
-Return the %hash, regardless of context. This is mostly useful if
+Return the C<%hash>, regardless of context. This is mostly useful if
 called on a HashRef at the end of a chain of method calls.
 
 =cut
@@ -2004,10 +2006,10 @@ sub to_hash {
 
 =head2 %hash->to_array() : @array | @$array
 
-Return the key-value pairs of the %hash as an @array, ordered by the
-keys.
+Return the key-value pairs of the C<%hash> as an C<@array>, ordered by
+the keys.
 
-Useful if you need to continue calling @array methods on it.
+Useful if you need to continue calling C<@array> methods on it.
 
 =cut
 
@@ -2051,16 +2053,16 @@ methods for mapping, filtering and sorting common cases which are easier
 to read and write.
 
 Since they are at a slightly higher semantic level, once you know them
-they also provide a more specific meaning than just "map" or "grep".
+they also provide a more specific meaning than just C<map> or C<grep>.
 
-(Compare the difference between seeing a "map" and seeing a "foreach"
-loop. Just seeing the word "map" hints at what type of thing is going
-on here: transforming a list into another list).
+(Compare the difference between seeing a C<map> and seeing a
+C<foreach> loop. Just seeing the word C<map> hints at what type of
+thing is going on here: transforming a list into another list).
 
-The methods of autobox::Transform are not suitable for all
-cases, but when used appropriately they will lead to much more clear,
+The methods of C<autobox::Transform> are not suitable for all cases,
+but when used appropriately they will lead to much more clear,
 succinct and direct code, especially in conjunction with
-autobox::Core.
+C<autobox::Core>.
 
 
 =head2 Code Comparison
