@@ -5,7 +5,7 @@ use warnings;
 use 5.010;
 use parent qw/autobox/;
 
-our $VERSION = "1.031";
+our $VERSION = "1.032";
 
 =head1 NAME
 
@@ -40,6 +40,9 @@ particular when the values are hashrefs or objects.
     $book_names->filter( qr/lord/i );
     $book_genres->filter("scifi");
     $book_genres->filter({ fantasy => 1, scifi => 1 }); # hash key exists
+
+    # reject: the inverse of filter
+    $book_genres->reject("fantasy");
 
     # order (like a more succinct sort)
     $book_genres->order;
@@ -92,6 +95,9 @@ particular when the values are hashrefs or objects.
 
     # grep_by is an alias for filter_by
     $books->grep_by("is_sold_out");
+
+    # reject_by: the inverse of filter_by
+    $books->reject_by("is_sold_out");
 
     $books->uniq_by("id");
 
@@ -170,6 +176,11 @@ particular when the values are hashrefs or objects.
     # Genres with more than five books
     $genre_count->filter_each(sub { $_ > 5 });
 
+    # filter out each pair
+    # Genres with no more than five books
+    $genre_count->reject_each(sub { $_ > 5 });
+
+
     # Return reference, even in list context, e.g. in a parameter list
     %genre_count->to_ref;
 
@@ -191,6 +202,7 @@ particular when the values are hashrefs or objects.
         ->map_by("name")->uniq->join(", ");
 
     my $total_order_amount = $order->books
+        ->reject_by("is_sold_out")
         ->filter_by([ covered_by_vouchers => $vouchers ], sub { ! $_ })
         ->map_by([ price_with_tax => $tax_pct ])
         ->sum;
@@ -367,8 +379,12 @@ whatever you use to avoid upgrading modules to incompatible versions.
 
 There are several methods that filter items,
 e.g. C<@array-E<gt>filter> (duh), C<@array-E<gt>filter_by>, and
-C<%hash-E<gt>filter_each>. These methods take a $predicate argument to
-determine which items to retain or filter out.
+C<%hash-E<gt>filter_each>. These methods take a C<$predicate> argument
+to determine which items to retain or filter out.
+
+The C<reject> family of methods do the opposite, and I<filter out>
+items that match the predicate, i.e. the opposite of the filter
+methods.
 
 If $predicate is an I<unblessed scalar>, it is compared to each value
 with C<string eq>.
@@ -377,7 +393,7 @@ with C<string eq>.
 
 If $predicate is a I<regex>, it is compared to each value with C<=~>.
 
-    $books->filter_by("author", qr/Corey/);
+    $books->reject_by("author", qr/Corey/);
 
 If $predicate is a I<hashref>, values in @array are retained if the
 $predicate hash key C<exists> (the hash values are irrelevant).
@@ -698,6 +714,43 @@ sub filter {
 
     my $result = eval {
         [ CORE::grep { $subref->( $_ ) } @$array ]
+    } or autobox::Transform::throw($@);
+
+    return wantarray ? @$result : $result;
+}
+
+=head2 @array->reject($predicate = *is_false_subref*) : @array | @$array
+
+Similar to the Unix command C<grep -v>, return an @array with values
+for which $predicate yields a I<false> value.
+
+$predicate can be a subref, string, undef, regex, or hashref. See
+L</Filter predicates>.
+
+The default (no $predicate) is a subref which I<filters out> true
+values in the @array.
+
+Examples:
+
+    my @apples     = $fruit->reject("apple");
+    my @any_apple  = $fruit->reject( qr/apple/i );
+    my @publishers = $authors->reject(
+        sub { $_->publisher->name =~ /Orbit/ },
+    );
+
+=cut
+
+sub reject {
+    my $array = shift;
+    my ($predicate) = @_;
+    my $subref = autobox::Transform::_predicate(
+        "reject",
+        $predicate,
+        sub { !! $_ },
+    );
+
+    my $result = eval {
+        [ CORE::grep { ! $subref->( $_ ) } @$array ]
     } or autobox::Transform::throw($@);
 
     return wantarray ? @$result : $result;
@@ -1151,8 +1204,10 @@ sub __invoke_by {
     my $invoke_sub = {
         map        => sub { [ CORE::map  { $_->$accessor( @$args ) } @$array ] },
         map_key    => sub { [ CORE::map  { $_->{$accessor}         } @$array ] },
-        filter     => sub { [ CORE::grep { $subref->( local $_ = $_->$accessor( @$args ) ) } @$array ] },
-        filter_key => sub { [ CORE::grep { $subref->( local $_ = $_->{$accessor}         ) } @$array ] },
+        filter     => sub { [ CORE::grep {   $subref->( local $_ = $_->$accessor( @$args ) ) } @$array ] },
+        filter_key => sub { [ CORE::grep {   $subref->( local $_ = $_->{$accessor}         ) } @$array ] },
+        reject     => sub { [ CORE::grep { ! $subref->( local $_ = $_->$accessor( @$args ) ) } @$array ] },
+        reject_key => sub { [ CORE::grep { ! $subref->( local $_ = $_->{$accessor}         ) } @$array ] },
         uniq       => sub { [ CORE::grep { ! $seen{ $_->$accessor( @$args ) // "" }++ } @$array ] },
         uniq_key   => sub { [ CORE::grep { ! $seen{ $_->{$accessor}         // "" }++ } @$array ] },
     }->{$invoke};
@@ -1276,6 +1331,40 @@ sub filter_by {
 }
 
 *grep_by = \&filter_by;
+
+
+
+=head2 @array->reject_by($accessor, $predicate = *is_false_subref*) : @array | @$array
+
+C<reject_by> is the same as L<C<filter_by>>, except it I<filters out>
+items that matches the $predicate.
+
+Example:
+
+    my @unproductive_authors = $authors->reject_by("is_prolific");
+
+The default (no $predicate) is a subref which I<filters out> true
+values in the result @array.
+
+=cut
+
+sub reject_by {
+    my $array = shift;
+    my ($accessor, $args, $predicate) = _normalized_accessor_args_predicate(@_);
+    my $subref = autobox::Transform::_predicate(
+        "reject_by",
+        $predicate,
+        sub { !! $_ },
+    );
+    # filter_by $value, if passed the method value must match the value?
+    return __invoke_by(
+        "reject",
+        $array,
+        $accessor,
+        $args,
+        reject_subref => $subref,
+    );
+}
 
 
 
@@ -1768,7 +1857,7 @@ $predicate can be a subref, string, undef, regex, or hashref. See
 L</Filter predicates>.
 
 The default (no $predicate) is a subref which retains true values in
-the @array.
+the %hash.
 
 Examples:
 
@@ -1827,6 +1916,57 @@ sub filter_each_defined {
 {
     no warnings "once";
     *grep_each_defined = \&filter_each_defined;
+}
+
+
+
+=head2 %hash->reject_each($predicate = *is_false_subref*) : @hash | @$hash
+
+C<reject_each> is the same as L<C<filter_each>>, except it I<filters out>
+items that matches the $predicate.
+
+Examples:
+
+    my @apples     = $fruit->reject("apple");
+    my @any_apple  = $fruit->reject( qr/apple/i );
+    my @publishers = $authors->reject(
+        sub { $_->publisher->name =~ /Orbit/ },
+    );
+
+The default (no $predicate) is a subref which I<filters out> true
+values in the %hash.
+
+=cut
+
+sub reject_each {
+    my $hash = shift;
+    my ($predicate) = @_;
+    my $subref = autobox::Transform::_predicate(
+        "reject_each",
+        $predicate,
+        sub { !! $_ }, # true?
+    );
+
+    my $new_hash = {
+        map { ## no critic
+            my $key = $_;
+            my $value = $hash->{$key};
+            {
+                local $_ = $value;
+                ( ! $subref->($key, $value) )
+                    ? ( $key => $value )
+                    : ();
+            }
+        }
+        keys %$hash,
+    };
+
+    return wantarray ? %$new_hash : $new_hash;
+}
+
+sub reject_each_defined {
+    my $hash = shift;
+    return &reject_each($hash, sub { defined($_) });
 }
 
 
