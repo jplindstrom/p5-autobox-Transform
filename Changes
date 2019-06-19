@@ -2,6 +2,9 @@
 
 {{$NEXT}}
 
+  * Documentation improvements
+
+
 1.032 2019-06-19T19:22:20Z
 
   * New @array method: ->reject,      the opposite of Array->filter
