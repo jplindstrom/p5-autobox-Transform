@@ -2,6 +2,11 @@
 
 {{$NEXT}}
 
+  * Fixed #7: removed dependency on "true", thanks TBSliver/Tom Bloor
+  * Fixed #6: improved pod, thanks manwar/Mohammad S Anwar
+  * POD polish
+
+
 1.034 2019-06-19T20:22:58Z
 
   * Documentation improvements to go with new "reject", "reject_by",
