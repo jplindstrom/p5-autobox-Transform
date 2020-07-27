@@ -342,36 +342,6 @@ and the rest of the items are the arguments to the method.
     $books->map_by([ price_with_discount => 5.0 ])
     # becomes $_->price_with_discount(5.0)
 
-=head3 Deprecated syntax
-
-There is an older syntax for calling methods with arguments. It was
-abandoned to open up more powerful ways to use grep/filter type
-methods. Here it is for reference, in case you run into existing code.
-
-    $array->filter_by($accessor, $args, $subref)
-    $books->filter_by("price_with_discount", [ 5.0 ], sub { $_ < 15.0 })
-
-Call the method $accessor on each object using the arguments in the
-$args arrayref like so:
-
-    $object->$accessor(@$args)
-
-I<This style is deprecated>, and planned for removal in version 2.000,
-so if you have code with the old call style, please:
-
-=over 4
-
-=item
-
-Replace your existing code with the new style as soon as possible. The
-change is trivial and the code easily found by grep/ack.
-
-=item
-
-If need be, pin your version to < 2.000 in your cpanfile, dist.ini or
-whatever you use to avoid upgrading modules to incompatible versions.
-
-=back
 
 
 =head2 Filter predicates
