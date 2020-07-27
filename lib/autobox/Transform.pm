@@ -1374,7 +1374,7 @@ C<$accessor> is either a string, or an arrayref where the first item
 is a string.
 
 Call the $C<accessor> on each object in the list, or get the hash key
-value on each hashref in the list. Return list of items wich have a
+value on each hashref in the list. Return list of items which have a
 unique set of return values. The order is preserved. On duplicates,
 keep the first occurrence.
 
