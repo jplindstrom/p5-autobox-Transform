@@ -76,17 +76,17 @@ particular when the values are hashrefs or objects.
     @titles_books->to_hash;
 
 
-=head2 Arrays with hashrefs/objects
+=head2 Arrays where the items are hashrefs/objects
 
     # $books and $authors below are arrayrefs with either objects or
     # hashrefs (the call syntax is the same). These have methods/hash
-    # keys like C<$book->genre()>, C<$book->{is_sold_out}>,
+    # keys like C<$book->genre()>, C<$book->{is_in_stock}>,
     # C<$book->is_in_library($library)>, etc.
 
     $books->map_by("genre");
     $books->map_by([ price_with_tax => $tax_pct ]);
 
-    $books->filter_by("is_sold_out");
+    $books->filter_by("is_in_stock");
     $books->filter_by([ is_in_library => $library ]);
     $books->filter_by([ price_with_tax => $rate ], sub { $_ > 56.00 });
     $books->filter_by("price", sub { $_ > 56.00 });
@@ -94,7 +94,7 @@ particular when the values are hashrefs or objects.
     $books->filter_by("author", qr/corey/i);
 
     # grep_by is an alias for filter_by
-    $books->grep_by("is_sold_out");
+    $books->grep_by("is_in_stock");
 
     # reject_by: the inverse of filter_by
     $books->reject_by("is_sold_out");
@@ -177,8 +177,8 @@ particular when the values are hashrefs or objects.
     $genre_count->filter_each(sub { $_ > 5 });
 
     # filter out each pair
-    # Genres with no more than five books
-    $genre_count->reject_each(sub { $_ > 5 });
+    # Genres with more than five books
+    $genre_count->reject_each(sub { $_ <= 5 });
 
 
     # Return reference, even in list context, e.g. in a parameter list
@@ -2082,16 +2082,16 @@ Perl equivalent.
 
 
     ### filter_by - method call: $books are Book objects
-    my $sold_out_books = [ grep { $_->is_sold_out } @$books ];
-    my $sold_out_books = $books->filter_by("is_sold_out");
-    my $sold_out_books = $books->grep_by("is_sold_out");
+    my $sold_out_books = [ grep { $_->is_in_stock } @$books ];
+    my $sold_out_books = $books->filter_by("is_in_stock");
+    my $sold_out_books = $books->grep_by("is_in_stock");
 
     my $books_in_library = [ grep { $_->is_in_library($library) } @$books ];
     my $books_in_library = $books->filter_by([ is_in_library => $library ]);
 
     ### reject_by - hash key: $books are book hashrefs
-    my $sold_out_books = [ grep { ! $_->{is_sold_out} } @$books ];
-    my $sold_out_books = $books->reject_by("is_sold_out");
+    my $sold_out_books = [ grep { ! $_->{is_in_stock} } @$books ];
+    my $sold_out_books = $books->reject_by("is_in_stock");
 
 
 
