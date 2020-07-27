@@ -2,6 +2,8 @@
 
 {{$NEXT}}
 
+1.035 2020-07-27T15:00:22Z
+
   * Fixed #7: removed dependency on "true", thanks TBSliver/Tom Bloor
   * Fixed #6: improved pod, thanks manwar/Mohammad S Anwar
   * POD polish
