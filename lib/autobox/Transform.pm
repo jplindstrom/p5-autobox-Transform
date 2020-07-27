@@ -2075,8 +2075,8 @@ Perl equivalent.
 
 
     #### flat - $author->books returns an arrayref of Books
-    my $author_books = [ map { @{$_->books} } @$authors ]
-    my $author_books = $authors->map_by("books")->flat
+    my $author_books = [ map { @{$_->books} } @$authors ];
+    my $author_books = $authors->map_by("books")->flat;
 
 
 
