@@ -435,7 +435,7 @@ which direction to sort (C<asc>ending or C<desc>ending)
 
 =item *
 
-which value to compare, using a regex or subref, e.g. by uc($_)
+which value to compare, using a regex or subref, e.g. by C<uc($_)>
 
 =back
 
