@@ -703,7 +703,7 @@ values in the C<@array>.
 Examples:
 
     my @apples     = $fruit->reject("apple");
-    my @any_apple  = $fruit->reject( qr/apple/i );
+    my @no_apples  = $fruit->reject( qr/apple/i );
     my @publishers = $authors->reject(
         sub { $_->publisher->name =~ /Orbit/ },
     );
