@@ -48,8 +48,7 @@
             "autobox" : "0",
             "autobox::Core" : "0",
             "parent" : "0",
-            "perl" : "5.010",
-            "true" : "0"
+            "perl" : "5.010"
          }
       },
       "test" : {
